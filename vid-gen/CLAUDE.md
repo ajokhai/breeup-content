@@ -150,10 +150,13 @@ each machine renders its own; commit the inputs, never a half-written video.
 
 ## 10. Keep the folder organized
 
-Josh opens the `videos` folder and should see only two things:
+New people (agents and humans) must understand the `videos` folder without anyone explaining it. The top level is
+exactly: `START HERE.md`, `Final videos/`, `Marketing/`, `vid-gen/` (plus hidden `.git`, `.gitignore`, `.claude/`).
 - `Final videos/`: finished, cleaned MP4s with plain names (`T2 How to pay your service charge online (phone).mp4`).
-  `make.mjs` copies them there after a full render. Nothing else goes in it: no drafts, stills or sidecars.
-- `vid-gen/`: everything agents use. Nothing else at the top level (hidden `.git`, `.gitignore`, `.claude/` are fine).
+  `make.mjs` copies them there after a full render. Nothing else goes in it.
+- `Marketing/`: the marketing plans and `Asset list.md`. When you publish a new or changed video, update its row
+  in `Marketing/Asset list.md` and add its copy to `Marketing/5 YouTube plan.md` in the same commit.
+- `vid-gen/`: everything agents use to make videos.
 
 Inside `vid-gen/`, keep to the map at the top of `README.md`:
 - A new film goes in `films/<ID>-<short-name>/` with `docs/shotlist.md`; its generated pictures in
