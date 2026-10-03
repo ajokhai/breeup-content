@@ -122,14 +122,15 @@ function ring(ctx, u, { r, a, b, tap }) {
 function scenePhone(ctx, u, IMG) {
   fill(ctx, C.green);
   // whip in: the phone slides up fast with a little overshoot
-  const k = springU(u, 6.3, SPRING.snappy);
+  const k = 1;
   const [z, fx, fy] = camAt(u);
   const fpx = PH.x + fx * PH.w, fpy = PH.y + fy * PH.h, zk = clamp((z - 1) / 0.5);
   const ax = lerp(fpx, W / 2, zk), ay = lerp(fpy, H * 0.45, zk);
   ctx.save();
   ctx.translate(0, (1 - k) * H);
   ctx.save();
-  ctx.translate(ax, ay); ctx.scale(z, z); ctx.translate(-fpx, -fpy);
+  ctx.translate(ax + 10 * Math.sin(u * 0.45), ay + 8 * Math.cos(u * 0.37)); ctx.rotate(0.012 * Math.sin(u * 0.3));
+  ctx.scale(z * (1 + 0.015 * Math.sin(u * 0.25)), z * (1 + 0.015 * Math.sin(u * 0.25))); ctx.translate(-fpx, -fpy);
   ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 80; ctx.shadowOffsetY = 30;
   rrect(ctx, PH.x - 18, PH.y - 18, PH.w + 36, PH.h + 36, 70); ctx.fillStyle = '#0d0f0d'; ctx.fill();
   ctx.shadowColor = 'transparent';
@@ -142,9 +143,7 @@ function scenePhone(ctx, u, IMG) {
   RINGS.forEach((r) => ring(ctx, u, r));
   ctx.restore();
   pill(ctx, 'Any Nigerian bank app', W / 2, 300, 50, C.cream, C.green, springU(u, 15.8, SPRING.bouncy) * (1 - E.inCubic(prog(u, 18.6, 19))));
-  // whip out
-  const out = E.inCubic(prog(u, 18.6, 19));
-  if (out > 0) { ctx.fillStyle = C.deep; ctx.globalAlpha = out; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+
 }
 
 // ------------------------------------------------------------ receipt (u 19..24)
@@ -152,8 +151,9 @@ function sceneWhy(ctx, u, IMG) {
   fill(ctx, C.deep);
   cover(ctx, IMG.why, 0, 0, W, H, { fx: 0.5, fy: 0.4, zoom: 1.18 - 0.1 * E.outCubic(prog(u, 19, 24)) });
   scrim(ctx, H * 0.4, H, 0.7);
-  const fade = 1 - E.outCubic(prog(u, 19, 19.5));
-  if (fade > 0) { ctx.fillStyle = C.deep; ctx.globalAlpha = fade; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+  // the receipt pill gets a soft dark pool behind it so it reads on the bright sky
+  const pk = springU(u, 21.5, SPRING.bouncy);
+  if (pk > 0) { ctx.save(); ctx.globalAlpha = Math.min(1, pk) * 0.5; ctx.shadowColor = '#000'; ctx.shadowBlur = 90; rrect(ctx, W / 2 - 330, 270, 660, 120, 60); ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fill(); ctx.restore(); }
   pill(ctx, '✓  Paid · receipt sent', W / 2, 330, 50, C.white, C.green, springU(u, 21.5, SPRING.bouncy));
 }
 
@@ -164,7 +164,9 @@ function sceneEnd(ctx, u, IMG) {
   ctx.fillStyle = C.green; ctx.fillRect(0, H * (1 - k), W, H);
   ctx.save(); ctx.translate(0, H * (1 - k));
   const lk = springU(u, 24.3, SPRING.bouncy);
-  if (IMG.logo && lk > 0) { ctx.save(); ctx.translate(W / 2, 560); ctx.scale(lk, lk); ctx.drawImage(IMG.logo, -110, -110, 220, 220); ctx.restore(); }
+  const br = 1 + 0.035 * Math.sin((u - 24) * 1.6), dr = -14 * prog(u, 24, 30);
+  ctx.translate(0, dr);
+  if (IMG.logo && lk > 0) { ctx.save(); ctx.translate(W / 2, 560); ctx.scale(lk * br, lk * br); ctx.drawImage(IMG.logo, -110, -110, 220, 220); ctx.restore(); }
   const f = font(124, 400, DISPLAY);
   ['Service charge,', 'sorted.'].forEach((ln, i) => {
     const kk = springU(u, 24.6 + i * 0.4, SPRING.gentle), y = 860 + i * 140;
@@ -172,6 +174,8 @@ function sceneEnd(ctx, u, IMG) {
     text(ctx, ln, W / 2, y + (1 - kk) * 140, f, i ? C.gold : C.cream, 'center');
     ctx.restore();
   });
+  const rk = E.inOutCubic(prog(u, 25.6, 26.6));
+  if (rk > 0) { ctx.fillStyle = C.gold; ctx.fillRect(W / 2 - 230, 1030, 460 * rk, 6); }
   const bk = E.outCubic(prog(u, 26, 26.8));
   text(ctx, 'breeup.com', W / 2, 1180, font(64, 500, UI), `rgba(246,244,238,${bk})`, 'center');
   ctx.restore();
@@ -183,11 +187,18 @@ M.film({
     why: 'assets/photos/why-9x16.jpg', logo: 'assets/logo.svg',
     home: 'assets/screens/res-home.jpg', bills: 'assets/screens/res-bills.jpg',
   },
-  videos: { clip: 'assets/clips/woman-pays-9x16.webm' },
+  videos: { clip: 'assets/clips/man-balcony-9x16.webm' },
   hits: HITS,
   draw(ctx, u, t, IMG) {
-    if (u < 6.5) sceneHook(ctx, u, IMG);
-    else if (u < 19) scenePhone(ctx, u, IMG);
+    const whip = (at, a, b) => {
+      const p = E.inOutCubic(prog(u, at - 0.35, at + 0.35));
+      ctx.save(); ctx.translate(-p * W, 0); a(ctx, u, IMG); ctx.restore();
+      ctx.save(); ctx.translate((1 - p) * W, 0); b(ctx, u, IMG); ctx.restore();
+    };
+    if (u < 6.15) sceneHook(ctx, u, IMG);
+    else if (u < 6.85) whip(6.5, sceneHook, scenePhone);
+    else if (u < 18.65) scenePhone(ctx, u, IMG);
+    else if (u < 19.35) whip(19, scenePhone, sceneWhy);
     else if (u < 24) sceneWhy(ctx, u, IMG);
     else sceneEnd(ctx, u, IMG);
     if (u < 24) drawCaptions(ctx, t, u >= 6.5 && u < 19 ? 1500 : 1330);

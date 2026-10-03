@@ -1,0 +1,7 @@
+If your estate charges the same service charge every month, set it up once as a recurring bill. BreeUp bills every household on schedule.
+Open Recurring bills in the admin sidebar, and click New bill.
+Give it a name residents will recognise, like Service charge.
+Enter the amount per household, choose how often it's charged, and pick the date of the first bill.
+Tick Let residents pay ahead. They can cover several months at once, with an optional discount, like one month free for a year.
+Click Save bill. Every household is billed on the first bill date, then every period after that.
+Tip: a small discount for paying a year ahead means fewer people fall behind.

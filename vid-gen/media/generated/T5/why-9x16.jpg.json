@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A stylish young Nigerian mother in a bright Ankara dress walks hand in hand with her smiling small son along a clean, quiet street inside a gated Abuja estate, duplexes, painted fences and palms either side. Relaxed, carefree mood. Warm early-evening light.",
+ "house": true,
+ "created": "2026-10-03T23:43:42.915Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "High-quality shot featuring an upscale Nigerian residential estate setting, great lighting, and well-styled subjects."
+ }
+}

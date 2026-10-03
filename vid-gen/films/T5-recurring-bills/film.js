@@ -1,0 +1,71 @@
+// T5 How to set up recurring bills and let residents pay ahead (admins). Pure data on the shared kit,
+// laptop device (2160x1350 admin screenshots). Times are seconds, matched to film.json "vo_at".
+import { tutorial } from '/kit/tutorial.js';
+
+const HITS = [
+  [0, 'hook photo', 'sub', { len: 0.8 }],
+  [5.3, 'green wipe', 'whoosh', { len: 0.5 }],
+  [10.6, 'laptop lands', 'thud'],
+  [10.9, 'step 1', 'pop', { pitch: 'A5' }],
+  [11.4, 'ring sidebar', 'blip', { pitch: 'C6' }],
+  [12.4, 'click', 'click'],
+  [13.8, 'new bill', 'click'],
+  [14.3, 'form', 'whoosh', { len: 0.3, from: 2400, to: 700 }],
+  [16.7, 'step 2', 'pop', { pitch: 'A5' }],
+  [17.2, 'name', 'type', { len: 0.8, n: 7 }],
+  [21.8, 'step 3', 'pop', { pitch: 'A5' }],
+  [22.3, 'amount', 'type', { len: 0.5, n: 5 }],
+  [24.4, 'schedule chip', 'tick'],
+  [26, 'first bill', 'blip', { pitch: 'C6' }],
+  [30.2, 'step 4', 'pop', { pitch: 'A5' }],
+  [31.2, 'tick pay ahead', 'click'],
+  [35.5, 'discount chip', 'bell', { pitch: 'C6' }],
+  [40.8, 'step 5', 'pop', { pitch: 'A5' }],
+  [42.3, 'save', 'click'],
+  [42.8, 'back to list', 'whoosh', { len: 0.3, from: 2400, to: 700 }],
+  [44, 'ring new bill', 'blip', { pitch: 'D6' }],
+  [47.6, 'swell', 'whoosh', { len: 0.6, from: 500, to: 3000 }],
+  [48.6, 'tip photo', 'sub', { len: 0.6 }],
+  [55.8, 'end card', 'impact'],
+  [56, 'logo', 'bell', { pitch: 'F6' }],
+];
+
+tutorial({
+  kicker: 'BREEUP TUTORIAL · ESTATE ADMINS',
+  photos: { hook: 'hook', why: 'why', tip: 'tip' },
+  hook: { to: 5.3, gold: 'once.', lines: { '16x9': ['Set up your service', 'charge once.'], '9x16': ['Set up your', 'service charge', 'once.'] } },
+  why: { to: 10.6, text: 'Every household is billed on schedule. Nobody creates invoices by hand.' },
+  steps: [
+    { t: 10.9, title: 'Open Recurring bills', body: 'In the admin sidebar, choose Recurring bills, then click New bill.' },
+    { t: 16.7, title: 'Name it', body: 'Use a name residents will recognise, like Service charge.' },
+    { t: 21.8, title: 'Amount and schedule', body: 'Amount per household, how often, and the date of the first bill.' },
+    { t: 30.2, title: 'Allow paying ahead', body: 'Residents cover several months at once, with an optional discount.' },
+    { t: 40.8, title: 'Save the bill', body: 'Every household is billed on the first date, then every period.' },
+  ],
+  phone: {
+    device: 'laptop',
+    to: 48.6,
+    screens: { list: 'assets/screens/admin-autobill.jpg', rule: 'assets/screens/admin-autobill-rule.jpg' },
+    seq: [['list', 0], ['rule', 14.3], ['list', 42.8]],
+    regions: {
+      sidebar: [16, 584, 340, 52], newBill: [1954, 170, 152, 52], card: [426, 262, 1680, 200],
+      name: [762, 320, 636, 52], amount: [786, 544, 284, 54], charged: [1090, 544, 306, 54], firstBill: [762, 654, 636, 54],
+      payAhead: [770, 750, 620, 80], recommended: [762, 858, 636, 192], save: [1274, 1080, 122, 52],
+    },
+    cam: [
+      [11.2, [2.2, 0.1, 0.45]], [12.9, [2.3, 0.92, 0.15]], [14.5, [1.6, 0.5, 0.4]], [17, [2.1, 0.5, 0.26]],
+      [22, [2.1, 0.5, 0.42]], [25.6, [2.1, 0.5, 0.5]], [30.4, [2, 0.5, 0.59]], [33.6, [2, 0.5, 0.7]],
+      [41, [2.2, 0.6, 0.8]], [43, [1.4, 0.55, 0.28]],
+    ],
+    rings: [
+      { r: 'sidebar', a: 11.4, b: 13, tap: 12.4 }, { r: 'newBill', a: 13, b: 14.2, tap: 13.8 },
+      { r: 'name', a: 17.2, b: 21.2 }, { r: 'amount', a: 22.3, b: 24.2 }, { r: 'charged', a: 24.2, b: 26 },
+      { r: 'firstBill', a: 26, b: 29.6 }, { r: 'payAhead', a: 30.6, b: 33.5, tap: 31.2 }, { r: 'recommended', a: 33.5, b: 40.2 },
+      { r: 'save', a: 41.2, b: 42.7, tap: 42.3 }, { r: 'card', a: 44, b: 47.9, tap: 47 },
+    ],
+  },
+  chips: [{ text: 'Once · Monthly · Quarterly · Bi-annual · Annual', a: 24.4, b: 26.6 }, { text: '1 year: 1 month free', a: 35.5, b: 40.2 }],
+  tip: { to: 55.8, kicker: 'GOOD TO KNOW', title: 'A small discount goes a long way.', body: 'One month free for paying a year ahead means fewer people fall behind.' },
+  end: { tagline: 'Dues, gate access, approvals and notices in one place.' },
+  hits: HITS,
+});

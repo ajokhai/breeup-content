@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A good-looking Nigerian couple in their forties sit together at their dining table in an elegant estate home, the woman smiling at her phone while the man looks on approvingly, cups of tea on the table. Large window onto a gated estate street with palms. Soft daylight, lower third of the frame in shade. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:44:14.276Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Clean, realistic composition with authentic Nigerian residential aesthetic, good lighting, and natural styling."
+ }
+}

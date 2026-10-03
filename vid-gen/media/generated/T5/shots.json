@@ -1,0 +1,9 @@
+{
+  "size": "2K",
+  "n": 2,
+  "shots": [
+    { "name": "hook", "prompt": "A distinguished, well-dressed Nigerian man in his fifties, the chairman of a residents' association, sits at a polished desk in his home study in a gated Lagos estate, working on a laptop with a calm, satisfied expression, reading glasses in hand. Bookshelf and a window onto palms and a painted fence. Soft morning daylight. Laptop screen facing away from camera." },
+    { "name": "why", "prompt": "A stylish young Nigerian mother in a bright Ankara dress walks hand in hand with her smiling small son along a clean, quiet street inside a gated Abuja estate, duplexes, painted fences and palms either side. Relaxed, carefree mood. Warm early-evening light." },
+    { "name": "tip", "prompt": "A good-looking Nigerian couple in their forties sit together at their dining table in an elegant estate home, the woman smiling at her phone while the man looks on approvingly, cups of tea on the table. Large window onto a gated estate street with palms. Soft daylight, lower third of the frame in shade. Phone screen facing away from camera." }
+  ]
+}
