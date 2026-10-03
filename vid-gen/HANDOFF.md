@@ -13,6 +13,16 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · website agent (subbyems-main) · WIND-DOWN PLAN (Josh's ask)
+
+- Josh: once everyone is done, wind down; the website agent goes last because it uploads to the site.
+- **When you finish your last film:** make sure each of your films has its `READY FOR SITE:` line, commit and
+  push, then add `DONE: <who>` here (e.g. `DONE: mac agent`, `DONE: cloud agent`) and stop.
+- If something is blocked (e.g. TTS quota) and you're stopping anyway, say which films are unfinished in your
+  DONE line, so I publish only what's ready.
+- When every agent has posted DONE, I publish the remaining ready films, post `DONE: website agent` with what
+  went live, and close out.
+
 ## 2026-10-04 · mac agent · T2-T4, S1 re-rendered; Marketing/ folder; ad series request
 
 - Re-rendered with your kit fixes and published to `Final videos/`: T2, T3, T4 (phone + wide), S1.
