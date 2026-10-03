@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A friendly, well-groomed young Nigerian delivery rider in a clean branded-free jacket and helmet held under his arm waits beside his motorbike outside the barrier of a gated Lagos estate gatehouse, holding a parcel. Palms, painted gatehouse and razor wire in soft focus. Bright daylight, number plates out of frame.",
+ "house": true,
+ "created": "2026-10-03T23:39:05.496Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian gated estate environment with realistic, neat subjects and strong lighting."
+ }
+}

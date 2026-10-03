@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "First, open your estate's sign-in link, and sign in with your phone number and four-digit PIN.",
+ "created": "2026-10-03T23:39:48.788Z",
+ "key": "4cab0ba1751d"
+}

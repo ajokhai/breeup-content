@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A stylish, good-looking Nigerian woman in her thirties in a smart casual outfit stands at the open front door of her duplex in a gated Lekki estate, looking at her smartphone and smiling as she waits for a guest. Interlocking paving, potted plants and a painted fence behind. Soft late-morning daylight. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:39:05.784Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with a professional, well-cast subject. Natural lighting and clean composition suitable for marketing."
+ }
+}

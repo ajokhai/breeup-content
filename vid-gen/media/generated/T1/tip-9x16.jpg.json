@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A smart, good-looking Nigerian estate security guard in a neat dark uniform and cap stands at the gatehouse window, checking a code on his phone with a calm, professional half-smile. Barrier arm, painted gatehouse wall and palms behind. Warm afternoon light, lower third of the frame in shade. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:39:25.780Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting featuring a well-groomed security officer. Natural lighting and clear composition make it suitable for campaign usage."
+ }
+}

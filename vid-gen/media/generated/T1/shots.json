@@ -1,0 +1,9 @@
+{
+  "size": "2K",
+  "n": 2,
+  "shots": [
+    { "name": "hook", "prompt": "A stylish, good-looking Nigerian woman in her thirties in a smart casual outfit stands at the open front door of her duplex in a gated Lekki estate, looking at her smartphone and smiling as she waits for a guest. Interlocking paving, potted plants and a painted fence behind. Soft late-morning daylight. Phone screen facing away from camera." },
+    { "name": "why", "prompt": "A friendly, well-groomed young Nigerian delivery rider in a clean branded-free jacket and helmet held under his arm waits beside his motorbike outside the barrier of a gated Lagos estate gatehouse, holding a parcel. Palms, painted gatehouse and razor wire in soft focus. Bright daylight, number plates out of frame." },
+    { "name": "tip", "prompt": "A smart, good-looking Nigerian estate security guard in a neat dark uniform and cap stands at the gatehouse window, checking a code on his phone with a calm, professional half-smile. Barrier arm, painted gatehouse wall and palms behind. Warm afternoon light, lower third of the frame in shade. Phone screen facing away from camera." }
+  ]
+}

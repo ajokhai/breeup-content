@@ -1,9 +1,20 @@
 {
  "title": "How to send a visitor pass on WhatsApp",
- "duration": 40,
+ "duration": 48,
  "formats": [
   "16x9",
   "9x16"
  ],
- "poster": 34.8
+ "voice": {
+  "gap": 0.5
+ },
+ "music": "About fifty seconds of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending.",
+ "vo_at": [
+  0.3,
+  9.6,
+  17.1,
+  21.8,
+  28.3,
+  34
+ ]
 }
