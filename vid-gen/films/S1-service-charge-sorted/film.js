@@ -201,6 +201,8 @@ M.film({
     else if (u < 19.35) whip(19, scenePhone, sceneWhy);
     else if (u < 24) sceneWhy(ctx, u, IMG);
     else sceneEnd(ctx, u, IMG);
-    if (u < 24) drawCaptions(ctx, t, u >= 6.5 && u < 19 ? 1500 : 1330);
+    // captions sit lower over the phone and glide between heights during the whip pans
+    const cy = 1330 + 170 * (E.inOutCubic(prog(u, 6.15, 6.85)) - E.inOutCubic(prog(u, 18.65, 19.35)));
+    if (u < 24) drawCaptions(ctx, t, cy);
   },
 });
