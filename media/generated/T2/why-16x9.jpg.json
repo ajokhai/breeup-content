@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A well-groomed, handsome Nigerian man in his early forties in a crisp white kaftan stands at the gate of his duplex in a gated Abuja estate, glancing at his phone with a relaxed, satisfied expression. Behind him: interlocking paving, a black water tank on a stand, a neat hedge and a painted fence. Warm early-evening light. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T22:48:18.220Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate aesthetic, strong lighting, and clean composition suitable for marketing."
+ }
+}

@@ -26,6 +26,26 @@ import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+// Image conversion: sips on macOS, ffmpeg everywhere else (Linux, cloud agents, CI).
+const HAS_SIPS = process.platform === 'darwin';
+function convert(src, out, { maxSide, height, quality } = {}) {
+  if (HAS_SIPS) {
+    const args = [];
+    if (maxSide) args.push('-Z', String(maxSide));
+    if (height) args.push('--resampleHeight', String(height));
+    args.push('-s', 'format', out.endsWith('.bmp') ? 'bmp' : 'jpeg');
+    if (quality) args.push('-s', 'formatOptions', String(quality));
+    execFileSync('sips', [...args, src, '--out', out], { stdio: 'ignore' });
+    return;
+  }
+  const vf = maxSide ? `scale='if(gt(iw,ih),min(${maxSide},iw),-2)':'if(gt(iw,ih),-2,min(${maxSide},ih))'`
+    : height ? `scale=-2:${height}` : null;
+  const args = ['-v', 'error', '-y', '-i', src, ...(vf ? ['-vf', vf] : [])];
+  if (out.endsWith('.bmp')) args.push('-pix_fmt', 'bgr24');
+  else args.push('-q:v', String(quality ? Math.round(2 + (100 - quality) / 10) : 3));
+  execFileSync('ffmpeg', [...args, out], { stdio: 'ignore' });
+}
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
 const API = 'https://generativelanguage.googleapis.com/v1beta';
@@ -293,7 +313,7 @@ Reply as JSON only.`;
 async function checkOne(file) {
   const tmp = path.join(os.tmpdir(), `gchk-${process.pid}-${path.basename(file)}.jpg`);
   // send a 1024 px copy: enough to judge, a fraction of the upload
-  execFileSync('sips', ['-Z', '1024', '-s', 'format', 'jpeg', file, '--out', tmp], { stdio: 'ignore' });
+  convert(file, tmp, { maxSide: 1024 });
   const res = await call('POST', `models/gemini-flash-latest:generateContent`, {
     contents: [{ parts: [inline(tmp), { text: RUBRIC }] }],
     generationConfig: {
@@ -329,7 +349,7 @@ async function check(a) {
 
 // ------------------------------------------------------------ sheet (one small contact sheet)
 // Tiles images into one numbered-order JPEG ~1600 px wide, so reviewing 8 pictures costs one small image read.
-// No dependencies: sips makes BMP thumbnails, Node tiles the pixels.
+// No dependencies: sips (macOS) or ffmpeg makes BMP thumbnails, Node tiles the pixels.
 function readBmp(file) {
   const b = fs.readFileSync(file);
   const off = b.readUInt32LE(10), w = b.readInt32LE(18), hRaw = b.readInt32LE(22), bpp = b.readUInt16LE(28);
@@ -360,7 +380,7 @@ function sheet(a) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsheet-'));
   const thumbs = files.map((f, i) => {
     const t = path.join(tmp, `${i}.bmp`);
-    execFileSync('sips', ['--resampleHeight', String(rowH), '-s', 'format', 'bmp', f, '--out', t], { stdio: 'ignore' });
+    convert(f, t, { height: rowH });
     return readBmp(t);
   });
   const rows = [[]];
@@ -379,7 +399,7 @@ function sheet(a) {
   const bmp = path.join(tmp, 'sheet.bmp');
   writeBmp(bmp, W, H, px);
   fs.mkdirSync(path.dirname(path.resolve(a.out)), { recursive: true });
-  execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '70', bmp, '--out', a.out], { stdio: 'ignore' });
+  convert(bmp, a.out, { quality: 70 });
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log(`${a.out}  (${W}x${H}, left to right, top to bottom)`);
   files.forEach((f, i) => console.log(`  ${i + 1}. ${path.basename(f)}`));

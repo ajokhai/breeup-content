@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Two elegant Nigerian estate committee members, a woman in her fifties wearing a gele and a man in his sixties in a tailored senator suit, talk warmly on the shaded veranda of an estate clubhouse, one holding a printed folder. Palms and a generator housing in the soft background. Bright overcast daylight, neutral white balance.",
+ "house": true,
+ "created": "2026-10-03T22:48:38.182Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "ESTATE COMMITTEE REPORT",
+  "note": "Authentic Nigerian estate setting with elegant subjects and natural lighting, suitable for marketing."
+ }
+}

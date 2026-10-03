@@ -1,0 +1,8 @@
+{
+ "kind": "tts",
+ "model": "gemini-3.8-flash-tts",
+ "voice": "Kore",
+ "style": "Read this clearly and warmly, like a friendly Nigerian neighbour explaining something useful. Nigerian English accent, unhurried, natural pauses.",
+ "text": "First, open your estate's sign-in link, and sign in with your phone number and four-digit PIN.",
+ "created": "2026-10-03T22:49:37.107Z"
+}

@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A stylish, attractive Nigerian woman in her early thirties, natural hair neatly styled, wearing a fitted Ankara-print top, sits on a cream sofa in a bright, modern living room of a Lekki estate duplex, holding her smartphone in both hands and smiling slightly as she completes a payment. Through the window behind her: interlocking paving, a painted perimeter fence and palms. Soft late-morning daylight. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T22:48:19.097Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate aesthetic with clean composition, natural lighting, and sharp subject details."
+ }
+}

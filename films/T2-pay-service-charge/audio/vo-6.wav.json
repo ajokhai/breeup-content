@@ -1,0 +1,8 @@
+{
+ "kind": "tts",
+ "model": "gemini-3.8-flash-tts",
+ "voice": "Kore",
+ "style": "Read this clearly and warmly, like a friendly Nigerian neighbour explaining something useful. Nigerian English accent, unhurried, natural pauses.",
+ "text": "Want fewer reminders? Pay a few months ahead, and you won't be billed for them again.",
+ "created": "2026-10-03T22:49:36.776Z"
+}
