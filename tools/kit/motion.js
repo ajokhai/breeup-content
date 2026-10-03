@@ -215,8 +215,9 @@ export function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y,
 export function zoomAbout(ctx, s, x, y) { ctx.translate(x, y); ctx.scale(s, s); ctx.translate(-x, -y); }
 // Draw a real asset cover-fit into a box. fx/fy (0..1) pick the focal point; zoom >= 1 pushes in.
 export function cover(ctx, img, x, y, w, h, { fx = 0.5, fy = 0.5, zoom = 1, radius = 0 } = {}) {
-  const s = Math.max(w / img.width, h / img.height) * zoom;
-  const dw = img.width * s, dh = img.height * s;
+  const iw = img.videoWidth || img.naturalWidth || img.width, ih = img.videoHeight || img.naturalHeight || img.height;
+  const s = Math.max(w / iw, h / ih) * zoom;
+  const dw = iw * s, dh = ih * s;
   ctx.save();
   if (radius) { rrect(ctx, x, y, w, h, radius); ctx.clip(); } else { ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); }
   ctx.drawImage(img, x + (w - dw) * fx, y + (h - dh) * fy, dw, dh);
@@ -233,7 +234,9 @@ export const TS = (u) => GRID.offset + u * GRID.period;   // beats -> seconds
 
 // ------------------------------------------------------------------ harness
 
-export async function film({ draw, init, fonts = [], images = {}, hits = [], samples = 16, shutter = 0.5 }) {
+// videos: { name: 'assets/clip.webm' } become <video> elements in VID; each seek waits until every video shows
+// the frame at its own time (videoTime(t) maps film time to clip time; default: same as film time).
+export async function film({ draw, init, fonts = [], images = {}, videos = {}, videoTime = {}, hits = [], samples = 16, shutter = 0.5 }) {
   const canvas = document.getElementById('film');
   canvas.width = W; canvas.height = H;
   if (RENDER) document.body.classList.add('render');
@@ -255,6 +258,20 @@ export async function film({ draw, init, fonts = [], images = {}, hits = [], sam
     try { await im.decode(); IMG[k] = im; } catch { console.error(`image "${k}" failed to load: ${src}`); }
   }));
 
+  const VID = {};
+  await Promise.all(Object.entries(videos).map(async ([k, src]) => {
+    const v = document.createElement('video');
+    v.muted = true; v.preload = 'auto'; v.playsInline = true; v.src = src;
+    try {
+      await new Promise((r, j) => { v.addEventListener('loadeddata', r, { once: true }); v.addEventListener('error', () => j(v.error), { once: true }); });
+      VID[k] = v; IMG[k] = v;
+    } catch { console.error(`video "${k}" failed to load: ${src} (use VP9 WebM; Playwright's Chromium has no H.264)`); }
+  }));
+  const syncVideos = async (t) => Promise.all(Object.entries(VID).map(([k, v]) => {
+    const vt = Math.max(0, Math.min(v.duration - 0.04, videoTime[k] ? videoTime[k](t) : t));
+    if (Math.abs(v.currentTime - vt) < 1e-3) return null;
+    return new Promise((r) => { v.addEventListener('seeked', r, { once: true }); v.currentTime = vt; });
+  }));
   const mctx = canvas.getContext('2d', { alpha: false });
   const buf = document.createElement('canvas');
   buf.width = W; buf.height = H;
@@ -270,8 +287,9 @@ export async function film({ draw, init, fonts = [], images = {}, hits = [], sam
 
   // Each frame samples from half a frame after its timestamp: the frame nearest a beat is the
   // first frame of that beat's hit, and the forward shutter never smears a cut back a shot.
-  window.seek = (t) => {
+  window.seek = async (t) => {
     const t0 = t + 0.5 / fps;
+    if (Object.keys(VID).length) await syncVideos(t0);
     if (!blur) { frame(mctx, t0); return; }
     for (let k = 0; k < samples; k++) {
       frame(bctx, t0 + (k / samples) * (shutter / fps));
@@ -283,7 +301,7 @@ export async function film({ draw, init, fonts = [], images = {}, hits = [], sam
   window.HITS = hits;
   window.DURATION = Number(cfg.duration || 15);
   window.filmReady = true;
-  window.seek(0);
+  await window.seek(0);
   if (!RENDER) preview(canvas, window.DURATION);
 }
 

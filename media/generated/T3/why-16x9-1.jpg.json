@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "An elegant Nigerian woman in her late fifties, wearing a vibrant Ankara dress and a neat gele, sits on a cushioned armchair on the covered terrace of her bungalow in a gated Abuja estate, holding her smartphone comfortably and smiling as she reads it. Potted plants, painted fence and a water tank in the soft background. Warm late-afternoon light. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:13:36.594Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting featuring a stylishly dressed woman outdoors, with natural lighting and good composition."
+ }
+}

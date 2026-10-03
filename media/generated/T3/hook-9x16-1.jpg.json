@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A stylish, good-looking Nigerian man in his late twenties, neat low haircut and trimmed beard, wearing a fitted polo shirt, stands in the bright open-plan kitchen of a modern apartment in a gated Lagos estate, reading a WhatsApp message on his smartphone with a pleased half-smile. Window behind him shows interlocking paving and palms. Soft morning daylight. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:13:35.415Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "High-quality, natural photo featuring a well-groomed Black man in an authentic Nigerian residential environment."
+ }
+}

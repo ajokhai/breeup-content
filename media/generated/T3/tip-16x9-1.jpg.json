@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A fashionable young Nigerian couple in their early thirties relax side by side on a modern sofa in their estate home's living room, the woman showing the man something on her smartphone, both smiling. Clean, bright interior with large windows onto a gated estate street with palms. Soft daylight, neutral white balance. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:13:57.153Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "High-quality, realistic shot of an attractive Black couple in an authentic Nigerian estate setting."
+ }
+}

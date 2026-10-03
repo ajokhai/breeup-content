@@ -127,13 +127,15 @@ Most BreeUp users watch on a phone (WhatsApp status, Reels, Shorts, the blog on 
 ## 9b. Sharing work between machines
 
 This folder is the GitHub repo `ajokhai/breeup-content`. Josh works on his Mac; agents may work in the cloud.
-`git pull` before you start, commit and push when you finish a piece of work, so the other side can pull it.
-Never commit `.env` (the key) or `node_modules/`. `renders/_stills/` and `tools/usage.log` are local-only.
+`git pull` before you start and read the top of `HANDOFF.md`; when you finish a piece of work, add an entry there,
+commit and push. HANDOFF.md says who is working on what, so two agents never edit the same film at once.
+Never commit `.env` (keys) or `node_modules/`. `renders/` (videos and stills) and `tools/usage.log` are local-only:
+each machine renders its own; commit the inputs, never a half-written video.
 
 ## 10. Keep the folder organized
 
 Josh needs to understand this folder at a glance. The map is at the top of `README.md`; keep it true.
-- Only these at the top level: `CLAUDE.md`, `AGENTS.md`, `README.md`, `films/`, `renders/`, `media/`, `moodboard/`,
+- Only these at the top level: `CLAUDE.md`, `AGENTS.md`, `README.md`, `HANDOFF.md`, `films/`, `renders/`, `media/`, `moodboard/`,
   `tools/`, `archive/`, plus package files, `node_modules/` and `.env`. Nothing else.
 - A new film goes in `films/<ID>-<short-name>/` with `docs/shotlist.md`. Its generated pictures go in
   `media/generated/<ID>/`, its finished videos in `renders/`. No loose files anywhere.

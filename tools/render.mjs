@@ -60,8 +60,11 @@ const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/jav
   '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2',
   '.otf': 'font/otf', '.ttf': 'font/ttf', '.wav': 'audio/wav', '.webm': 'video/webm', '.mp4': 'video/mp4' };
 const server = http.createServer((req, res) => {
-  const p = path.join(filmDir, decodeURIComponent(new URL(req.url, 'http://x').pathname));
-  if (!p.startsWith(filmDir) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
+  // /kit/* is the shared film kit (tools/kit), everything else is the film's own folder
+  const url = decodeURIComponent(new URL(req.url, 'http://x').pathname), KIT = path.join(ROOT, 'tools', 'kit');
+  const base = url.startsWith('/kit/') ? KIT : filmDir;
+  const p = path.join(base, url.startsWith('/kit/') ? url.slice(5) : url);
+  if (!p.startsWith(base) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
   const size = fs.statSync(p).size, range = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '');
   const type = MIME[path.extname(p).toLowerCase()] || 'application/octet-stream';
   if (range) {   // video seeking needs range requests

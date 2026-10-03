@@ -3,3 +3,4 @@ node_modules/
 tools/usage.log
 renders/_stills/
 .DS_Store
+renders/*.mp4

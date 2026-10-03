@@ -1,0 +1,301 @@
+// The BreeUp tutorial film, as data. A film's film.js is just: import { tutorial } from '/kit/tutorial.js'; tutorial({...}).
+// All times are in SECONDS (the film's beats.json is { "period": 1, "offset": 0 }), so they line up with the
+// voice-over starts that tools/make.mjs writes into film.json "vo". Looks: green stage with the real phone screen,
+// cream caption column, step counter, gold rings on the exact control, photo scenes, green end card.
+//
+// Config (every scene optional except phone + steps):
+//   kicker: 'BREEUP TUTORIAL · RESIDENTS'
+//   photos: { hook: 'hook', why: 'why', tip: 'tip' }      -> assets/photos/<name>-<16x9|9x16>.jpg
+//   hook:  { to: 4.8, lines: { '16x9': [...], '9x16': [...] }, gold: 'minutes' }
+//   why:   { to: 10.3, text: '...' }
+//   intro: { to: 12, lines: ["Here's how,", 'in four steps.'] }
+//   phone: { screens: { login: 'assets/screens/x.jpg', ... }, seq: [['login', 0], ['home', 27]],
+//            regions: { pin: [x, y, w, h] (screenshot px, 780x1688) }, cam: [[t, [zoom, fx, fy]], ...],
+//            rings: [{ r: 'pin', a: 21, b: 24, tap: 23 }], to: 49 }
+//   steps: [{ t: 11, title: 'Sign in', body: '...' }]       (the counter says STEP n OF steps.length)
+//   chips: [{ text: '...', a: 33, b: 38 }]                 (a pill under the step text)
+//   codes: [{ text: 'GE-D3', label: 'YOUR UNIT REFERENCE', a: 32, b: 38 }]   (a big stamped code)
+//   tip:   { title: '...', body: '...', kicker: 'GOOD TO KNOW', to: 55.5 }
+//   end:   { tagline: 'Dues, gate access, approvals and notices in one place.' }
+//   hits:  the same list as `const HITS` in film.js (seconds), for tools/sfx.mjs
+import * as M from '/kit/motion.js';
+
+const { W, H, FORMAT, E, prog, lerp, clamp, springU, springKeys, SPRING, wobble, font, layout, text, fill, cover, rrect } = M;
+export const C = { green: '#1a472a', deep: '#123220', cream: '#f6f4ee', gold: '#c9a84c', ink: '#1c1f1b', mute: '#5d645c', white: '#ffffff' };
+const DISPLAY = 'Display', UI = 'UI';
+const P = FORMAT.portrait;
+
+export function wrap(ctx, str, f, maxW) {
+  ctx.font = f;
+  const out = []; let line = '';
+  for (const w of str.split(' ')) {
+    const t = line ? line + ' ' + w : w;
+    if (ctx.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t;
+  }
+  if (line) out.push(line);
+  return out;
+}
+export function riseLines(ctx, lines, x, y, lh, f, color, u, u0, { stagger = 0.22, align = 'left' } = {}) {
+  lines.forEach((ln, i) => {
+    const k = springU(u, u0 + i * stagger, SPRING.gentle);
+    if (k <= 0) return;
+    const by = y + i * lh;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, by - lh * 0.95, W, lh * 1.25); ctx.clip();
+    text(ctx, ln, x, by + (1 - k) * lh * 0.9, f, color, align);
+    ctx.restore();
+  });
+}
+export function scrim(ctx, y0, y1, a) {
+  const g = ctx.createLinearGradient(0, y0, 0, y1);
+  g.addColorStop(0, 'rgba(10,22,14,0)'); g.addColorStop(1, `rgba(10,22,14,${a})`);
+  ctx.fillStyle = g; ctx.fillRect(0, y0, W, y1 - y0);
+}
+function logo(ctx, IMG, cx, cy, size, k = 1) {
+  if (!IMG.logo || k <= 0) return;
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); ctx.drawImage(IMG.logo, -size / 2, -size / 2, size, size); ctx.restore();
+}
+function pill(ctx, str, x, y, size, bg, fg, k = 1) {
+  if (k <= 0) return;
+  const f = font(size, 500, UI); ctx.font = f;
+  const w = ctx.measureText(str).width + 56, h = size * 1.9;
+  ctx.save(); ctx.translate(x + w / 2, y); ctx.scale(k, k);
+  rrect(ctx, -w / 2, -h / 2, w, h, h / 2); ctx.fillStyle = bg; ctx.fill();
+  text(ctx, str, 0, size * 0.35, f, fg, 'center');
+  ctx.restore();
+}
+
+// layout per format; 9:16 type follows the rules (body >= 56 px, headings >= 96 px)
+const L = FORMAT.pick({
+  '16x9': { stage: [0, 0, 1080, 1080], phoneH: 940, cap: { x: 1170, y: 260, w: 650 }, num: 200, title: 84, body: 42, extraY: 860 },
+  '9x16': { stage: [0, 880, 1080, 1040], phoneH: 1000, cap: { x: 72, y: 250, w: 936 }, num: 96, title: 96, body: 56, extraY: 730 },
+});
+const SRC = { w: 780, h: 1688 };
+const [sx0, sy0, sw0, sh0] = L.stage;
+const PH = { w: L.phoneH * SRC.w / SRC.h, h: L.phoneH };
+PH.x = sx0 + (sw0 - PH.w) / 2; PH.y = P ? sy0 + 46 : sy0 + (sh0 - L.phoneH) / 2;
+
+export function tutorial(cfg) {
+  const ph = cfg.phone, steps = cfg.steps;
+  const t0 = steps[0].t - 0.4;                       // the phone rises just before step 1
+  const tEnd = ph.to;                                // the phone scene ends (green swell) here
+  const tipTo = cfg.tip?.to ?? tEnd;
+  const cam = [[t0, [1, 0.5, 0.5]], ...(ph.cam || [])];
+  const camAt = (u) => springKeys(u, cam, SPRING.gentle);
+  const toFrame = (u, x, y) => {
+    const [z, fx, fy] = camAt(u);
+    const fpx = PH.x + fx * PH.w, fpy = PH.y + fy * PH.h, zk = clamp((z - 1) / 0.5);
+    const ax = lerp(fpx, sx0 + sw0 / 2, zk), ay = lerp(fpy, sy0 + sh0 / 2, zk);
+    return [ax + (PH.x + x * PH.w / SRC.w - fpx) * z, ay + (PH.y + y * PH.h / SRC.h - fpy) * z];
+  };
+  const photo = (k) => cfg.photos?.[k] && `assets/photos/${cfg.photos[k]}-${P ? '9x16' : '16x9'}.jpg`;
+
+  // ---------------------------------------------------------- scenes
+  function sceneHook(ctx, u, IMG) {
+    fill(ctx, C.deep);
+    if (IMG.hook) cover(ctx, IMG.hook, 0, 0, W, H, { fx: 0.5, fy: P ? 0.4 : 0.45, zoom: 1.12 - 0.06 * prog(u, 0, cfg.hook.to + 1) });
+    scrim(ctx, H * 0.35, H, 0.85);
+    const s = FORMAT.safe, size = FORMAT.pick({ '16x9': 124, '9x16': 118 }), f = font(size, 400, DISPLAY);
+    const lines = cfg.hook.lines[FORMAT.name] || cfg.hook.lines['16x9'];
+    const y0 = P ? H - 440 - (lines.length - 1) * size * 1.02 : H - 150 - (lines.length - 1) * size * 1.02;
+    let wi = 0;
+    lines.forEach((ln, li) => {
+      let x = s.x;
+      ln.split(' ').forEach((w) => {
+        const k = springU(u, 0.2 + wi * 0.25 - (wi === 0 ? 0.2 : 0), SPRING.snappy);
+        const Lw = layout(ctx, w, f, -0.01 * size);
+        if (k > 0) {
+          const by = y0 + li * size * 1.02;
+          ctx.save(); ctx.beginPath(); ctx.rect(0, by - size, W, size * 1.3); ctx.clip();
+          text(ctx, w, x, by + (1 - k) * size, f, cfg.hook.gold && w.includes(cfg.hook.gold) ? C.gold : C.cream, 'left', -0.01 * size);
+          ctx.restore();
+        }
+        x += Lw.width + size * 0.26; wi++;
+      });
+    });
+    const kk = E.outCubic(prog(u, 0, 0.6));
+    if (cfg.kicker) text(ctx, cfg.kicker, s.x, y0 - size * 1.05, font(30, 500, UI), `rgba(246,244,238,${0.85 * kk})`, 'left', 3);
+  }
+  function sceneWhy(ctx, u, IMG) {
+    const a = cfg.hook.to;
+    const wipe = E.inOutCubic(prog(u, a - 0.25, a + 0.35)), reveal = E.inOutCubic(prog(u, a + 0.2, a + 0.8));
+    if (wipe < 1) sceneHook(ctx, u, IMG);
+    ctx.fillStyle = C.green; ctx.fillRect(0, H * (1 - wipe), W, H);
+    if (reveal > 0 && IMG.why) {
+      ctx.save(); ctx.beginPath(); ctx.rect(0, H * (1 - reveal), W, H); ctx.clip();
+      cover(ctx, IMG.why, 0, 0, W, H, { fx: 0.5, fy: 0.4, zoom: 1.05 + 0.05 * prog(u, a, cfg.why.to) });
+      scrim(ctx, H * 0.4, H, 0.8);
+      ctx.restore();
+    }
+    const s = FORMAT.safe, size = FORMAT.pick({ '16x9': 76, '9x16': 96 }), f = font(size, 400, DISPLAY);
+    const lines = wrap(ctx, cfg.why.text, f, P ? s.w : 1300);
+    riseLines(ctx, lines, s.x, H - (P ? 440 : 130) - (lines.length - 1) * size * 1.1, size * 1.1, f, C.cream, u, a + 0.6);
+  }
+  const prevScene = (u, IMG, ctx) => (cfg.why ? sceneWhy : sceneHook)(ctx, u, IMG);
+  const prevTo = () => (cfg.why ? cfg.why.to : cfg.hook.to);
+  function sceneIntro(ctx, u, IMG) {
+    const a = prevTo(), inn = E.inOutCubic(prog(u, a - 0.4, a + 0.1));
+    if (inn < 1) prevScene(u, IMG, ctx);
+    const top = H * (1 - inn);
+    ctx.fillStyle = C.cream; ctx.fillRect(0, top, W, H);
+    ctx.save(); ctx.translate(0, top);
+    const ls = FORMAT.pick({ '16x9': 150, '9x16': 190 }), cx = P ? W / 2 : W * 0.32, cy = P ? H * 0.38 : H / 2;
+    logo(ctx, IMG, cx, cy, ls, springU(u, a, SPRING.bouncy));
+    const size = FORMAT.pick({ '16x9': 92, '9x16': 100 }), f = font(size, 400, DISPLAY);
+    if (P) riseLines(ctx, cfg.intro.lines, W / 2, cy + ls * 0.9 + size, size * 1.1, f, C.green, u, a + 0.4, { align: 'center' });
+    else riseLines(ctx, cfg.intro.lines, cx + ls * 0.75, cy - 10, size * 1.1, f, C.green, u, a + 0.4);
+    ctx.restore();
+  }
+
+  function ring(ctx, u, { r, a, b, tap }) {
+    if (u < a - 0.05 || u > b + 0.3) return;
+    const [x, y, w, h] = ph.regions[r], pad = 10;
+    const [x0, y0] = toFrame(u, x - pad, y - pad), [x1, y1] = toFrame(u, x + w + pad, y + h + pad);
+    const sc = (x1 - x0) / (w + 2 * pad), per = 2 * ((x1 - x0) + (y1 - y0));
+    ctx.save(); ctx.globalAlpha = 1 - E.inCubic(prog(u, b, b + 0.25));
+    ctx.lineWidth = Math.max(5, 7 * sc); ctx.strokeStyle = C.gold; ctx.lineCap = 'round';
+    ctx.setLineDash([per * E.outCubic(prog(u, a, a + 0.5)), per]);
+    rrect(ctx, x0, y0, x1 - x0, y1 - y0, 16 * sc); ctx.stroke(); ctx.setLineDash([]);
+    if (tap != null && u >= tap) {
+      const tk = prog(u, tap, tap + 0.6);
+      ctx.globalAlpha *= (1 - tk) * 0.9; ctx.fillStyle = C.gold;
+      ctx.beginPath(); ctx.arc((x0 + x1) / 2, (y0 + y1) / 2, (20 + 70 * E.outCubic(tk)) * sc, 0, M.TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function scenePhone(ctx, u, IMG) {
+    fill(ctx, C.cream);
+    ctx.fillStyle = C.green; ctx.fillRect(...L.stage);
+    const k = springU(u, t0, SPRING.gentle), q = 0.03 * wobble(u - t0 - 0.35, 3.5, 9);
+    const [z, fx, fy] = camAt(u);
+    const fpx = PH.x + fx * PH.w, fpy = PH.y + fy * PH.h, zk = clamp((z - 1) / 0.5);
+    const ax = lerp(fpx, sx0 + sw0 / 2, zk), ay = lerp(fpy, sy0 + sh0 / 2, zk);
+    ctx.save(); ctx.beginPath(); ctx.rect(...L.stage); ctx.clip();
+    ctx.translate(0, (1 - k) * (sh0 + 200));
+    ctx.save(); ctx.translate(ax, ay); ctx.scale(z * (1 + q), z * (1 - q)); ctx.translate(-fpx, -fpy);
+    ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 24;
+    rrect(ctx, PH.x - 16, PH.y - 16, PH.w + 32, PH.h + 32, 64); ctx.fillStyle = '#0d0f0d'; ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.save(); rrect(ctx, PH.x, PH.y, PH.w, PH.h, 50); ctx.clip();
+    ph.seq.forEach(([key, at], i) => {   // each screen slides up over the last
+      const img = IMG[key], s = i === 0 ? 1 : E.inOutCubic(prog(u, at, at + 0.5));
+      const nx = ph.seq[i + 1] ? E.inOutCubic(prog(u, ph.seq[i + 1][1], ph.seq[i + 1][1] + 0.5)) : 0;
+      if (s > 0 && nx < 1 && img) ctx.drawImage(img, PH.x, PH.y + (1 - s) * PH.h - nx * PH.h * 0.3, PH.w, PH.h);
+    });
+    ctx.restore(); ctx.restore();
+    (ph.rings || []).forEach((r) => ring(ctx, u, r));
+    if (u >= tEnd - 1) {   // green swell from the last tapped control into the next scene
+      const last = [...(ph.rings || [])].reverse().find((r) => r.tap != null);
+      const g = E.inCubic(prog(u, tEnd - 1, tEnd));
+      const [X, Y] = last ? toFrame(tEnd - 1, ph.regions[last.r][0] + ph.regions[last.r][2] / 2, ph.regions[last.r][1] + ph.regions[last.r][3] / 2) : [W / 2, H / 2];
+      ctx.fillStyle = C.green; ctx.beginPath(); ctx.arc(X, Y, 30 + g * Math.hypot(W, H) * 1.2, 0, M.TAU); ctx.fill();
+    }
+    ctx.restore();
+    const i = steps.findLastIndex((s) => u >= s.t - 0.2);
+    drawStep(ctx, u, Math.max(0, i));
+    drawDots(ctx, u);
+    (cfg.chips || []).forEach((c) => {
+      if (u < c.a || u > c.b + 0.3) return;
+      ctx.save(); ctx.globalAlpha = 1 - E.inCubic(prog(u, c.b, c.b + 0.3));
+      pill(ctx, c.text, L.cap.x, L.extraY + 40, P ? 50 : 36, C.green, C.cream, springU(u, c.a, SPRING.bouncy));
+      ctx.restore();
+    });
+    (cfg.codes || []).forEach((c) => drawCode(ctx, u, c));
+    if (u >= tEnd - 0.6) { ctx.fillStyle = C.green; ctx.globalAlpha = E.inCubic(prog(u, tEnd - 0.6, tEnd)); ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+  }
+  function drawStep(ctx, u, i) {
+    const st = steps[i], c = L.cap, next = steps[i + 1];
+    const exitU = next ? next.t - 0.35 : tEnd - 0.8;
+    const nk = springU(u, st.t + 0.15, SPRING.bouncy), ex = E.inCubic(prog(u, exitU, exitU + 0.3));
+    const bf = font(L.body, 400, UI), bl = wrap(ctx, st.body, bf, c.w), n = String(i + 1);
+    ctx.save(); ctx.globalAlpha = 1 - ex;
+    text(ctx, `STEP ${n} OF ${steps.length}`, c.x, c.y, font(P ? 30 : 24, 500, UI), C.mute, 'left', 3);
+    if (P) {
+      const ty = c.y + L.title + 30;
+      ctx.save(); ctx.translate(c.x, ty); ctx.scale(nk, nk); text(ctx, n, 0, 0, font(L.num * 1.25, 400, DISPLAY), C.gold); ctx.restore();
+      riseLines(ctx, [st.title], c.x + L.title * 0.95, ty, L.title * 1.1, font(L.title, 400, DISPLAY), C.green, u, st.t + 0.25);
+      riseLines(ctx, bl, c.x, ty + 100, L.body * 1.35, bf, C.ink, u, st.t + 0.5, { stagger: 0.15 });
+    } else {
+      ctx.save(); ctx.translate(c.x, c.y + L.num * 0.95); ctx.scale(nk, nk); text(ctx, n, 0, 0, font(L.num, 400, DISPLAY), C.gold); ctx.restore();
+      riseLines(ctx, [st.title], c.x, c.y + L.num + 110, L.title * 1.1, font(L.title, 400, DISPLAY), C.green, u, st.t + 0.25);
+      riseLines(ctx, bl, c.x, c.y + L.num + 200, L.body * 1.45, bf, C.ink, u, st.t + 0.5, { stagger: 0.15 });
+    }
+    ctx.restore();
+  }
+  function drawDots(ctx, u) {
+    const c = L.cap, y = c.y - 64, r = P ? 11 : 9, gap = P ? 52 : 46;
+    steps.forEach((s, i) => {
+      const k = u >= s.t ? springU(u, s.t, SPRING.bouncy) : 0, x = c.x + i * gap + r;
+      ctx.fillStyle = 'rgba(26,71,42,0.18)'; ctx.beginPath(); ctx.arc(x, y, r, 0, M.TAU); ctx.fill();
+      if (k > 0) { ctx.fillStyle = C.green; ctx.beginPath(); ctx.arc(x, y, r * k, 0, M.TAU); ctx.fill(); }
+    });
+  }
+  function drawCode(ctx, u, c) {
+    if (u < c.a || u > c.b + 0.3) return;
+    const size = 110, f = font(size, 500, UI), y = L.extraY + size * 0.9, ex = E.inCubic(prog(u, c.b, c.b + 0.3));
+    const k = springU(u, c.a, SPRING.bouncy);
+    ctx.save(); ctx.globalAlpha = 1 - ex;
+    ctx.beginPath(); ctx.rect(0, y - size, W, size * 1.25); ctx.clip();
+    text(ctx, c.text, L.cap.x, y - (1 - k) * size * 0.8, f, C.ink);
+    ctx.restore();
+    if (c.label) text(ctx, c.label, L.cap.x, y - size - 18, font(P ? 30 : 24, 500, UI), `rgba(201,168,76,${E.outCubic(prog(u, c.a + 0.3, c.a + 0.8)) * (1 - ex)})`, 'left', 3);
+  }
+  function sceneTip(ctx, u, IMG) {
+    const a = tEnd;
+    fill(ctx, C.green);
+    const r = E.outCubic(prog(u, a, a + 0.9)) * Math.hypot(W, H) * 0.6;
+    ctx.save(); ctx.beginPath(); ctx.arc(W / 2, H / 2, r, 0, M.TAU); ctx.clip();
+    if (IMG.tip) cover(ctx, IMG.tip, 0, 0, W, H, { fx: 0.5, fy: 0.45, zoom: 1.12 - 0.08 * prog(u, a, tipTo) });
+    scrim(ctx, H * 0.3, H, 0.88);
+    ctx.restore();
+    const s = FORMAT.safe, size = FORMAT.pick({ '16x9': 84, '9x16': 100 }), f = font(size, 400, DISPLAY);
+    const bf = font(FORMAT.pick({ '16x9': 42, '9x16': 56 }), 400, UI), bh = FORMAT.pick({ '16x9': 60, '9x16': 76 });
+    const lines = wrap(ctx, cfg.tip.title, f, P ? s.w : 1300), bl = wrap(ctx, cfg.tip.body, bf, P ? s.w : 1300);
+    const y = H - (P ? 440 : 120) - bl.length * bh - (lines.length - 1) * size * 1.1 - 30;
+    text(ctx, cfg.tip.kicker || 'GOOD TO KNOW', s.x, y - size - 24, font(P ? 32 : 26, 500, UI), `rgba(201,168,76,${E.outCubic(prog(u, a + 0.8, a + 1.3))})`, 'left', 3);
+    riseLines(ctx, lines, s.x, y, size * 1.1, f, C.cream, u, a + 0.9);
+    riseLines(ctx, bl, s.x, y + (lines.length - 1) * size * 1.1 + bh + 30, bh, bf, 'rgba(246,244,238,0.9)', u, a + 1.6, { stagger: 0.15 });
+  }
+  function sceneEnd(ctx, u, IMG) {
+    const a = tipTo, k = E.inOutCubic(prog(u, a - 0.3, a + 0.2));
+    if (k < 1) (cfg.tip ? sceneTip : scenePhone)(ctx, u, IMG);
+    const top = H * (1 - k);
+    ctx.fillStyle = C.green; ctx.fillRect(0, top, W, H);
+    ctx.save(); ctx.translate(0, top);
+    const ls = FORMAT.pick({ '16x9': 190, '9x16': 230 }), wsize = 150, wf = font(wsize, 400, DISPLAY);
+    ctx.font = wf; const ww = ctx.measureText('BreeUp').width;
+    let lx, ly, wx, wy;
+    if (P) { lx = W / 2; ly = H * 0.36; wx = W / 2 - ww / 2; wy = ly + ls / 2 + wsize + 20; }
+    else { const tot = ls + 40 + ww; lx = (W - tot) / 2 + ls / 2; ly = H * 0.42; wx = lx + ls / 2 + 40; wy = ly + wsize * 0.33; }
+    logo(ctx, IMG, lx, ly, ls, springU(u, a + 0.2, SPRING.bouncy));
+    const wk = springU(u, a + 0.4, SPRING.gentle);
+    ctx.save(); ctx.beginPath(); ctx.rect(0, wy - wsize, W, wsize * 1.3); ctx.clip();
+    text(ctx, 'BreeUp', wx, wy + (1 - wk) * wsize, wf, C.cream); ctx.restore();
+    const tf = font(FORMAT.pick({ '16x9': 38, '9x16': 50 }), 400, UI), s = FORMAT.safe, lh = FORMAT.pick({ '16x9': 56, '9x16': 68 });
+    const tl = wrap(ctx, cfg.end?.tagline || 'Dues, gate access, approvals and notices in one place.', tf, P ? s.w : 1400);
+    const ty = P ? wy + 120 : H * 0.62;
+    riseLines(ctx, tl, W / 2, ty, lh, tf, 'rgba(246,244,238,0.85)', u, a + 0.8, { align: 'center', stagger: 0.12 });
+    riseLines(ctx, ['breeup.com'], W / 2, ty + tl.length * lh + 70, 70, font(P ? 60 : 52, 500, UI), C.gold, u, a + 1.2, { align: 'center' });
+    ctx.restore();
+  }
+
+  const images = { logo: 'assets/logo.svg', ...ph.screens };
+  for (const k of ['hook', 'why', 'tip']) if (photo(k)) images[k] = photo(k);
+  M.film({
+    fonts: [font(100, 400, DISPLAY), font(40, 400, UI), font(40, 500, UI)],
+    images, hits: cfg.hits || [],
+    draw(ctx, u, t, IMG) {
+      if (u < cfg.hook.to) sceneHook(ctx, u, IMG);
+      else if (cfg.why && u < cfg.why.to) sceneWhy(ctx, u, IMG);
+      else if (cfg.intro && u < cfg.intro.to) sceneIntro(ctx, u, IMG);
+      else if (u < tEnd) {
+        const from = cfg.intro ? cfg.intro.to : prevTo();
+        if (u < from + 0.5 && !cfg.intro) {   // no intro card: cream panel wipes up over the photo
+          const inn = E.inOutCubic(prog(u, from - 0.4, from + 0.1));
+          if (inn < 1) prevScene(u, IMG, ctx);
+          ctx.save(); ctx.beginPath(); ctx.rect(0, H * (1 - inn), W, H); ctx.clip(); scenePhone(ctx, u, IMG); ctx.restore();
+        } else scenePhone(ctx, u, IMG);
+      } else if (cfg.tip && u < tipTo) sceneTip(ctx, u, IMG);
+      else sceneEnd(ctx, u, IMG);
+    },
+  });
+}

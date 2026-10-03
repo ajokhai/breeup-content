@@ -4,6 +4,7 @@
 
 | Folder / file | What it is |
 |---|---|
+| `HANDOFF.md` | Notes between agents (Mac and cloud): who is doing what. Read the top first. |
 | `CLAUDE.md` | The rules every agent follows (also `AGENTS.md`). Your taste notes are at the bottom. |
 | `films/` | One folder per video, named `<ID>-<short-name>` (e.g. `T2-pay-service-charge`). Each has `docs/` (shot list, reviews), `assets/`, `audio/` and the build files. |
 | `renders/` | Finished videos, ready to post: `breeup-<ID>-<name>-9x16.mp4` and `-16x9.mp4`. |
