@@ -1,0 +1,4 @@
+# Paste links to videos you like, one per line. Add what you like about it after a dash.
+# YouTube, TikTok, Instagram, X and most other sites work. Example:
+# https://www.tiktok.com/@someone/video/123 - love the fast cuts and the big captions
+# You can also drop video files in this folder, and add a line like: myvideo.mp4 - the colours

@@ -574,27 +574,69 @@ Write markdown with these sections, concrete and measurable (seconds, px at 1080
 ## Typography (faces or closest free Google Fonts, sizes, weights, how text enters and leaves)
 ## Colour and grade (palette hex, grade, contrast)  ## Sound (music feel, bpm, SFX, VO style)
 ## Steal this (the 3-6 most transferable ideas for BreeUp)  ## Don't copy (what won't suit our audience)`;
+// moodboard/inbox/links.txt: one reference per line, "URL or file name - what Josh likes about it".
+// YouTube is watched directly; TikTok, Instagram, X and the rest are downloaded with yt-dlp first.
+function inboxItems() {
+  const inbox = path.join(MB, 'inbox'), linksFile = path.join(inbox, 'links.txt');
+  const notes = {}, items = [];
+  if (fs.existsSync(linksFile)) {
+    for (const raw of fs.readFileSync(linksFile, 'utf8').split('\n')) {
+      const line = raw.trim();
+      if (!line || line.startsWith('#')) continue;
+      const [ref, ...rest] = line.split(/\s+[-–—]\s+/);
+      const note = rest.join(' - ').trim();
+      if (/^https?:/.test(ref)) items.push({ src: ref.trim(), note, line: raw });
+      else notes[ref.trim()] = note;                       // a note for a file dropped in the inbox
+    }
+  }
+  for (const f of fs.readdirSync(inbox)) {
+    if (f.startsWith('.') || f === 'links.txt' || fs.statSync(path.join(inbox, f)).isDirectory()) continue;
+    items.push({ src: path.join(inbox, f), note: notes[f] || '', file: true });
+  }
+  return items;
+}
+function download(url) {
+  const dir = path.join(MB, 'inbox', '.dl');
+  fs.mkdirSync(dir, { recursive: true });
+  try {
+    const out = execFileSync('yt-dlp', ['-q', '--no-playlist', '-f', 'mp4/best', '--max-filesize', '1.9G',
+      '-o', path.join(dir, '%(extractor)s-%(id)s.%(ext)s'), '--print', 'after_move:filepath', url], { encoding: 'utf8' });
+    return out.trim().split('\n').pop();
+  } catch (e) {
+    if (e.code === 'ENOENT') die('yt-dlp is not installed (macOS: brew install yt-dlp · Linux: pip install yt-dlp). YouTube links work without it.');
+    console.error(`learn: couldn't download ${url} (private, removed, or needs a login). Save the video into moodboard/inbox/ instead.`);
+    return null;
+  }
+}
 async function learn(a) {
   fs.mkdirSync(path.join(MB, 'inbox'), { recursive: true });
   fs.mkdirSync(path.join(MB, 'refs', 'media'), { recursive: true });
-  let srcs = a._.slice(1);
-  const fromInbox = !srcs.length;
-  if (fromInbox) srcs = fs.readdirSync(path.join(MB, 'inbox')).filter(f => !f.startsWith('.')).map(f => path.join(MB, 'inbox', f));
-  if (!srcs.length) die('nothing to learn: pass a file or YouTube link, or drop files in moodboard/inbox/');
+  const fromInbox = !a._.slice(1).length;
+  const items = fromInbox ? inboxItems() : a._.slice(1).map(src => ({ src, note: a.note || '' }));
+  if (!items.length) die('nothing to learn: put videos or links.txt in moodboard/inbox/, or pass a file or link');
   const model = a.model || 'gemini-pro-latest';
-  const made = [];
-  for (const src of srcs) {
-    console.error(`learn: studying ${path.basename(src)}`);
-    const note = a.note ? `\n\nJosh's note about this reference: ${a.note}` : '';
-    const md = await ask(model, [await mediaPart(src), { text: BREAKDOWN + note }]);
-    const name = slug(path.basename(src));
+  const made = [], doneLines = [];
+  for (const it of items) {
+    const isYouTube = /^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(it.src);
+    const local = /^https?:/.test(it.src) && !isYouTube ? download(it.src) : it.src;
+    if (!local) continue;
+    console.error(`learn: studying ${it.src}`);
+    const note = it.note ? `\n\nJosh's note about this reference: ${it.note}` : '';
+    const md = await ask(model, [await mediaPart(local), { text: BREAKDOWN + note }]);
+    const name = slug(/^https?:/.test(it.src) ? it.src : path.basename(it.src));
     const out = path.join(MB, 'refs', `${name}.md`);
-    fs.writeFileSync(out, `# Reference: ${path.basename(src)}\n\nSource: ${src}\nLearned: ${new Date().toISOString().slice(0, 10)}${a.note ? `\nJosh's note: ${a.note}` : ''}\n\n${md}\n`);
-    if (fromInbox) fs.renameSync(src, path.join(MB, 'refs', 'media', path.basename(src)));
+    fs.writeFileSync(out, `# Reference: ${it.src}\n\nLearned: ${new Date().toISOString().slice(0, 10)}${it.note ? `\nJosh's note: ${it.note}` : ''}\n\n${md}\n`);
+    // keep the media for later (downloads and dropped files), out of the inbox
+    if (local !== it.src || it.file) fs.renameSync(local, path.join(MB, 'refs', 'media', `${name}${path.extname(local)}`));
+    if (it.line) doneLines.push(it.line);
     made.push(out);
     console.log(out);
   }
-  await restyle(made, model);
+  // learned links leave links.txt so the inbox only ever shows what's still to do
+  const linksFile = path.join(MB, 'inbox', 'links.txt');
+  if (doneLines.length) fs.writeFileSync(linksFile, fs.readFileSync(linksFile, 'utf8').split('\n').filter(l => !doneLines.includes(l)).join('\n'));
+  fs.rmSync(path.join(MB, 'inbox', '.dl'), { recursive: true, force: true });
+  if (made.length) await restyle(made, model);
 }
 async function restyle(newRefs, model) {
   const styleFile = path.join(MB, 'STYLE.md');

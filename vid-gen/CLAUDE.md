@@ -127,8 +127,9 @@ film, so every tutorial gets it.
 
 ## 8. Learning from references (self-improving)
 
-- Josh drops reference videos or images into `moodboard/inbox/` (or gives a YouTube link). Run
-  `node tools/gemini.mjs learn [--note "what he likes"]`. It writes `moodboard/refs/<name>.md` and rewrites
+- Josh drops reference videos or images into `moodboard/inbox/`, or pastes links (YouTube, TikTok, Instagram, X...)
+  into `moodboard/inbox/links.txt` as `URL - what he likes`. Run `node tools/gemini.mjs learn` (downloads non-YouTube
+  links with yt-dlp; learned links leave links.txt). It writes `moodboard/refs/<name>.md` and rewrites
   `moodboard/STYLE.md`. Read STYLE.md before designing any film; it outranks your own taste, CLAUDE.md outranks it.
 - When a `review` lists lessons that recur, add them to STYLE.md or `tools/PROMPTS.md`.
 
