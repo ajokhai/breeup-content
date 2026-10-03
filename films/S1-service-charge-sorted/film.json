@@ -1,0 +1,58 @@
+{
+ "title": "Service charge, sorted (Reel)",
+ "duration": 18.75,
+ "formats": [
+  "9x16"
+ ],
+ "poster": 2,
+ "vo": [
+  [
+   0.15,
+   "audio/vo-1.wav",
+   "Still asking the WhatsApp group for the estate account number?",
+   3.635
+  ],
+  [
+   4.1,
+   "audio/vo-2.wav",
+   "Open BreeUp, and tap Bills.",
+   2.222
+  ],
+  [
+   6.6,
+   "audio/vo-3.wav",
+   "Copy the account number, and your unit reference.",
+   2.929
+  ],
+  [
+   9.8,
+   "audio/vo-4.wav",
+   "Pay from any bank app.",
+   1.736
+  ],
+  [
+   11.9,
+   "audio/vo-5.wav",
+   "It lands against your home, with a receipt.",
+   2.846
+  ],
+  [
+   15,
+   "audio/vo-6.wav",
+   "Service charge, sorted.",
+   2.084
+  ]
+ ],
+ "voice": {
+  "style": "brightly and with confident energy, like a friendly social media creator, in a Nigerian English accent, quick but clear"
+ },
+ "vo_at": [
+  0.15,
+  4.1,
+  6.6,
+  9.8,
+  11.9,
+  15
+ ],
+ "music": "About twenty seconds of original, upbeat instrumental music for a short social video: bright West African guitar, crisp hand percussion, light shaker, warm bass, around 96 BPM, energetic but not loud, no vocals, loops cleanly."
+}

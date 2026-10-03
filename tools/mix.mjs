@@ -2,7 +2,8 @@
 // Build a film's soundtrack: audio/music.wav + the voice-over lines placed at the times in film.json "vo",
 // music ducked under the voice, the whole mix levelled to -14 LUFS (YouTube, Reels, TikTok). macOS and Linux.
 //
-//   node tools/mix.mjs films/T2-pay-service-charge [--music-db -16]
+//   node tools/mix.mjs films/T2-pay-service-charge [--music-db -16] [--sfx-db -9]
+// Sound effects: audio/sfx.wav (node tools/sfx.mjs) is mixed in when present.
 //
 // film.json: { "duration": 60, "vo": [[0.3, "audio/vo-1.wav"], [10.0, "audio/vo-2.wav"], ...] }
 // Output: <film>/audio/mix.wav, which tools/render.mjs muxes into the MP4s.
@@ -13,12 +14,13 @@ import { execFileSync } from 'node:child_process';
 
 const args = process.argv.slice(2);
 const dir = path.resolve(args.find((a) => !a.startsWith('--')) || '');
-const mi = args.indexOf('--music-db');
-const musicDb = mi >= 0 ? Number(args[mi + 1]) : -16;
+const num = (k, d) => { const i = args.indexOf(k); return i >= 0 ? Number(args[i + 1]) : d; };
+const musicDb = num('--music-db', -16), sfxDb = num('--sfx-db', -9);
 const cfg = JSON.parse(fs.readFileSync(path.join(dir, 'film.json'), 'utf8'));
 const dur = Number(cfg.duration);
 const vo = (cfg.vo || []).map(([t, f]) => [Number(t), path.join(dir, f)]);
 const music = path.join(dir, 'audio', 'music.wav');
+const sfx = path.join(dir, 'audio', 'sfx.wav');   // from tools/sfx.mjs, optional
 const out = path.join(dir, 'audio', 'mix.wav');
 const len = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
 
@@ -47,7 +49,12 @@ if (hasMusic) {
     filters.push('[md][vo1]amix=inputs=2:normalize=0[pre]');
   } else filters.push('[m]anull[pre]');
 } else filters.push('[vo]anull[pre]');
-filters.push(`[pre]atrim=0:${dur},loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[out]`);
+if (fs.existsSync(sfx)) {
+  inputs.push('-i', sfx);
+  filters.push(`[${off + vo.length}:a]aresample=48000,volume=${sfxDb}dB,apad=whole_dur=${dur}[fx]`);
+  filters.push('[pre][fx]amix=inputs=2:normalize=0[pre2]');
+} else filters.push('[pre]anull[pre2]');
+filters.push(`[pre2]atrim=0:${dur},loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[out]`);
 
 execFileSync('ffmpeg', ['-v', 'error', '-y', ...inputs, '-filter_complex', filters.join(';'), '-map', '[out]',
   '-map_metadata', '-1', '-fflags', '+bitexact', out], { stdio: 'inherit' });

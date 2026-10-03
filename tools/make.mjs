@@ -1,0 +1,118 @@
+#!/usr/bin/env node
+// One command from script to finished films. Every step is cached, so re-running only redoes what changed.
+//
+//   node tools/make.mjs films/T3-resident-account            # everything, full-quality render
+//   node tools/make.mjs films/T3-resident-account --check    # everything except the final render, plus a
+//                                                            # contact sheet of stills (cheap review)
+//   node tools/make.mjs films/T3-resident-account --draft    # quick render without motion blur
+//   node tools/make.mjs films/T3-resident-account --only vo,mix
+//
+// Steps: pictures (media/generated/<ID>/shots.json) → voice-over (docs/vo/lines.txt) → place lines →
+// music → sound effects → mix → stills sheet → render → strip metadata. Where it runs:
+// cloud agents do everything up to --check (and --draft); Josh's Mac does the final render (more cores).
+//
+// film.json keys the pipeline reads (all optional except duration):
+//   "voice": { "style": "...", "voice": "Kore", "model": "...", "gap": 0.35, "trim": true }
+//   "vo_at": [0.3, 10.0, ...]   start time per line; missing entries follow the previous line by "gap"
+//   "music": "prompt for Lyria"  (regenerated only when the prompt changes)
+//   "stills": [2, 10, 30]        times for the --check contact sheet (default: 8 evenly spaced)
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const args = process.argv.slice(2);
+const flag = (k) => args.includes(`--${k}`);
+const oi = args.indexOf('--only');
+const only = oi >= 0 ? args[oi + 1].split(',') : null;
+const dir = path.resolve(args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--only') || '');
+const cfgPath = path.join(dir, 'film.json');
+if (!fs.existsSync(cfgPath)) { console.error('usage: node tools/make.mjs films/<ID-name> [--check|--draft]'); process.exit(1); }
+const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+const id = path.basename(dir).split('-')[0];
+const want = (s) => !only || only.includes(s);
+const tool = (name, ...a) => execFileSync('node', [path.join(ROOT, 'tools', name), ...a], { cwd: ROOT, stdio: 'inherit' });
+const len = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
+const hash = (s) => crypto.createHash('sha1').update(s).digest('hex').slice(0, 12);
+const step = (s) => console.log(`\n== ${s}`);
+const save = () => fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 1) + '\n');
+
+// 1. pictures
+const shots = path.join(ROOT, 'media', 'generated', id, 'shots.json');
+if (want('images') && fs.existsSync(shots)) { step('pictures (only missing ones are generated)'); tool('gemini.mjs', 'batch', shots); }
+
+// 2. voice-over: one file per line, regenerated only when the line or the voice settings change
+const linesFile = path.join(dir, 'docs', 'vo', 'lines.txt');
+const v = cfg.voice || {};
+if (want('vo') && fs.existsSync(linesFile)) {
+  step('voice-over');
+  const lines = fs.readFileSync(linesFile, 'utf8').split('\n').map((s) => s.trim()).filter(Boolean);
+  const key = (l) => hash(JSON.stringify([l, v.style, v.voice, v.model]));
+  lines.forEach((line, i) => {
+    const out = path.join(dir, 'audio', `vo-${i + 1}.wav`), side = out + '.json';
+    const cached = fs.existsSync(out) && fs.existsSync(side) && JSON.parse(fs.readFileSync(side, 'utf8')).key === key(line);
+    if (cached) return;
+    tool('gemini.mjs', 'tts', '--text', line, '--out', out, ...(v.style ? ['--style', v.style] : []),
+      ...(v.voice ? ['--voice', v.voice] : []), ...(v.model ? ['--model', v.model] : []));
+    if (v.trim !== false) {   // cut leading and trailing silence so lines sit where they're placed
+      const t = out + '.trim.wav';
+      execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', out, '-af', 'silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse,apad=pad_dur=0.08', t]);
+      fs.renameSync(t, out);
+    }
+    const meta = JSON.parse(fs.readFileSync(side, 'utf8'));
+    fs.writeFileSync(side, JSON.stringify({ ...meta, key: key(line) }, null, 1));
+    const wps = line.split(/\s+/).length / len(out);
+    if (wps < 1.7) console.warn(`  vo-${i + 1}: ${wps.toFixed(1)} words/s, too slow; the model may be reading the style aloud. Check it.`);
+  });
+  // drop stale files from removed lines
+  for (const f of fs.readdirSync(path.join(dir, 'audio'))) {
+    const m = /^vo-(\d+)\.wav(\.json)?$/.exec(f);
+    if (m && Number(m[1]) > lines.length) fs.rmSync(path.join(dir, 'audio', f));
+  }
+  // 3. place the lines
+  const gap = v.gap ?? 0.35, at = cfg.vo_at || [];
+  let t = 0;
+  cfg.vo = lines.map((line, i) => {
+    const f = `audio/vo-${i + 1}.wav`, d = len(path.join(dir, f));
+    const start = at[i] ?? (i ? t + gap : 0.3);
+    t = start + d;
+    return [Number(start.toFixed(2)), f, line, Number(d.toFixed(3))];
+  });
+  if (t + 1.5 > cfg.duration) console.warn(`  the voice-over ends at ${t.toFixed(1)} s; duration is ${cfg.duration} s`);
+  save();
+}
+
+// 4. music, regenerated only when the prompt changes
+if (want('music') && cfg.music) {
+  const out = path.join(dir, 'audio', 'music.wav'), side = out + '.json';
+  const same = fs.existsSync(out) && fs.existsSync(side) && JSON.parse(fs.readFileSync(side, 'utf8')).prompt === cfg.music;
+  if (!same) {
+    step('music');
+    try { tool('gemini.mjs', 'music', '--prompt', cfg.music, '--out', out); }
+    catch { // Lyria's copyright filter: one retry with a broader framing
+      tool('gemini.mjs', 'music', '--prompt', `An original composition. ${cfg.music}`, '--out', out);
+      fs.writeFileSync(side, JSON.stringify({ ...JSON.parse(fs.readFileSync(side, 'utf8')), prompt: cfg.music }, null, 1));
+    }
+  }
+}
+
+// 5-6. sound effects and the mix
+if (want('sfx') && /const HITS = \[/.test(fs.readFileSync(path.join(dir, 'film.js'), 'utf8'))) { step('sound effects'); tool('sfx.mjs', dir); }
+if (want('mix')) { step('mix'); tool('mix.mjs', dir); }
+
+// 7. stills sheet (the cheap review) or the render
+const formats = cfg.formats || ['16x9', '9x16'];
+if (flag('check') || (only && only.includes('stills'))) {
+  step('stills');
+  const times = cfg.stills || [...Array(8)].map((_, i) => +((i + 0.5) * cfg.duration / 8).toFixed(2));
+  tool('render.mjs', dir, '--still', times.join(','));
+} else if (want('render')) {
+  step(flag('draft') ? 'draft render' : 'render (full quality)');
+  tool('render.mjs', dir, ...(flag('draft') ? ['--draft'] : []));
+  // 8. strip metadata from the finished files
+  const outs = formats.map((f) => path.join(ROOT, 'renders', `breeup-${path.basename(dir)}-${f}.mp4`)).filter(fs.existsSync);
+  if (outs.length) tool('gemini.mjs', 'clean', ...outs);
+}
+console.log('\nmake: done');

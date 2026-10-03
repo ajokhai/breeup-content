@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Then enter the temporary four-digit PIN your admin gave you.",
+ "created": "2026-10-03T23:07:29.488Z",
+ "key": "61db59c86245"
+}

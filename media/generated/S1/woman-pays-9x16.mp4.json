@@ -1,0 +1,12 @@
+{
+ "kind": "video",
+ "model": "veo-3.1-generate-preview",
+ "aspectRatio": "9:16",
+ "resolution": "4k",
+ "durationSeconds": 8,
+ "negativePrompt": "text, captions, subtitles, watermark, logo, cartoon, distorted hands, extra fingers",
+ "firstFrame": "media/generated/T2/hook-9x16.jpg",
+ "prompt": "She glances down at her phone, taps it twice with her thumb, then looks up and breaks into a relieved, happy smile, relaxing back into the sofa. Slow, gentle camera push-in. Soft daylight. Natural, candid movement.",
+ "house": true,
+ "created": "2026-10-03T23:08:02.116Z"
+}

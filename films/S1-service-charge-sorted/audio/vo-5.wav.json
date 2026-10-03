@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "brightly and with confident energy, like a friendly social media creator, in a Nigerian English accent, quick but clear",
+ "text": "It lands against your home, with a receipt.",
+ "created": "2026-10-03T23:02:16.195Z",
+ "key": "dae4be8d92d9"
+}

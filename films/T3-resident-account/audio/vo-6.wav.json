@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "And you're in. Your Home page shows what you owe, your latest notices, and the visitor pass card.",
+ "created": "2026-10-03T23:07:44.552Z",
+ "key": "0119d10d3087"
+}

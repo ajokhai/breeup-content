@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "brightly and with confident energy, like a friendly social media creator, in a Nigerian English accent, quick but clear",
+ "text": "Still asking the WhatsApp group for the estate account number?",
+ "created": "2026-10-03T23:02:16.458Z",
+ "key": "fa319f486175"
+}

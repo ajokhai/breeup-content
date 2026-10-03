@@ -1,0 +1,56 @@
+{
+ "title": "How to set up your resident account",
+ "duration": 60,
+ "formats": [
+  "16x9",
+  "9x16"
+ ],
+ "voice": {
+  "gap": 0.5
+ },
+ "music": "About one minute of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending.",
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "Your estate uses BreeUp for bills, notices and visitor passes. There's no app to download, and setting up takes about two minutes.",
+   10.233
+  ],
+  [
+   11.03,
+   "audio/vo-2.wav",
+   "First, open the sign-in link your estate admin sent you. You'll see your estate's name at the top.",
+   7.634
+  ],
+  [
+   19.17,
+   "audio/vo-3.wav",
+   "Type your phone number, any way you like.",
+   3.554
+  ],
+  [
+   23.22,
+   "audio/vo-4.wav",
+   "Then enter the temporary four-digit PIN your admin gave you.",
+   6.659
+  ],
+  [
+   30.38,
+   "audio/vo-5.wav",
+   "Now choose your own PIN: four digits only you know, typed twice. Skip easy ones, like your house number.",
+   10.16
+  ],
+  [
+   41.04,
+   "audio/vo-6.wav",
+   "And you're in. Your Home page shows what you owe, your latest notices, and the visitor pass card.",
+   7.828
+  ],
+  [
+   49.37,
+   "audio/vo-7.wav",
+   "Tip: add the page to your home screen, and it opens like any other app.",
+   5.829
+  ]
+ ]
+}
