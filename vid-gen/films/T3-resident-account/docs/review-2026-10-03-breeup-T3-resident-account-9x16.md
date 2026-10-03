@@ -1,26 +1,26 @@
 ## Scores
-*   Hook: 5
-*   Readability on a phone: 6
+*   Hook: 6
+*   Readability on a phone: 5
 *   Motion quality: 6
-*   Pacing: 6
-*   Image quality: 6
+*   Pacing: 5
+*   Image quality: 7
 *   African authenticity: 7
 *   Attractiveness of people: 7
 *   Brand consistency: 6
 *   Sound: 5
 
 ## Top 5 fixes
-*   **0:00**: "Set" text animation is awkward. **Fix**: Animate the full title phrase together cleanly.
-*   **0:11**: Step indicator dots are in the restricted top zone. **Fix**: Move dots down to clear the 250px top safe area.
-*   **0:06**: White text blends into the bright background. **Fix**: Add a subtle dark gradient overlay behind the text.
-*   **0:41**: UI screenshot is too small on mobile. **Fix**: Scale the phone UI up by 15-20% for better readability.
-*   **0:50**: Left-aligned text pushes near the screen edge. **Fix**: Center the text to guarantee safe area compliance.
+*   **0:00**: Text violates bottom 350px safe area. **Fix:** Move text block up to center screen.
+*   **0:05**: Text in bottom UI dead zone. **Fix:** Shift text higher above 350px margin.
+*   **0:19**: Number input step drags. **Fix:** Trim duration by 1.5 seconds.
+*   **0:49**: Subtitle contrast lost over clothing. **Fix:** Add subtle dark gradient overlay behind text.
+*   **0:00-0:58**: Audio missing. **Fix:** Generate and add VO and background music using Gemini tool.
 
 ## Keep
-*   Gold ring highlight on exact UI controls.
-*   Authentic African casting and realistic estate backgrounds.
-*   Large 9:16 heading text sizes.
+*   Spot-on casting and authentic Nigerian estate environments.
+*   Gold ring highlights for UI focus.
+*   Correct phone handling (screens facing away from camera).
 
 ## Lessons
-*   Never place functional elements (like step dots) in the top 250px mobile safe area.
-*   Always apply contrast overlays to bright images to support white text.
+1.  **Safe Areas:** Strictly enforce the 350px bottom margin rule for TikTok/Reels UI.
+2.  **Contrast:** Always use background scrims or shadows when placing white text over busy live-action backgrounds.
