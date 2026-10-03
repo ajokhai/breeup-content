@@ -11,7 +11,7 @@
 | `media/generated/` | Pictures and clips made with Gemini, one folder per film. `_trials/` is experiments, safe to delete. |
 | `media/stock/` | Downloaded free stock photos and footage (list in `media/STOCK.md`). |
 | `moodboard/` | Drop reference videos you like into `moodboard/inbox/`. `STYLE.md` is the style guide learned from them. |
-| `tools/` | `gemini.mjs` (images, video, voice, music, checks), `mix.mjs` (builds a film's soundtrack), `render.mjs` (turns a film into MP4s), `hf` (HyperFrames motion graphics), `PROMPTS.md` (prompt tips). |
+| `tools/` | `jev.mjs` (cheap checks: picks motion blocks, lints scripts), `gemini.mjs` (images, video, voice, music, checks), `mix.mjs` (builds a film's soundtrack), `render.mjs` (turns a film into MP4s), `hf` (HyperFrames motion graphics), `PROMPTS.md` (prompt tips). |
 | `archive/` | Old versions. Nothing here is used. |
 | `node_modules/`, `package*.json`, `.env` | Software and the API key. Leave these alone. |
 
