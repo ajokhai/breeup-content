@@ -91,6 +91,15 @@ Most BreeUp users watch on a phone (WhatsApp status, Reels, Shorts, the blog on 
   the mix. Use `--still 5,20` for cheap layout checks before a full render.
 - Tools must run on both macOS and Linux: no Mac-only commands (sips, afplay) without a fallback.
 
+## 4c. New tutorials are data, not code
+
+Build tutorials on `tools/kit/tutorial.js`: `film.js` is one `tutorial({...})` call (see T3 for a full
+example and the kit's header for every option), `beats.json` is `{ "period": 1 }` so all times are seconds.
+Write `docs/vo/lines.txt` and the photo prompts in `media/generated/<ID>/shots.json`, run
+`node tools/make.mjs films/<film> --only vo` to get each line's start in `film.json` "vo", set the scene
+times from those, then `make --check` and look only at the contact sheet. Fix layout in the kit, not in a
+film, so every tutorial gets it.
+
 ## 5. TikTok, Reels and Shorts
 
 - Social cuts (series S) are 9:16 only, 15-30 s, hook in the first 1.5 s, captions burned in

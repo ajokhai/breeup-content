@@ -41,7 +41,34 @@ const save = () => fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 1) + '\n'
 
 // 1. pictures
 const shots = path.join(ROOT, 'media', 'generated', id, 'shots.json');
-if (want('images') && fs.existsSync(shots)) { step('pictures (only missing ones are generated)'); tool('gemini.mjs', 'batch', shots); }
+if (want('images') && fs.existsSync(shots)) {
+  step('pictures (only missing ones are generated)');
+  const gen = path.dirname(shots);
+  const out = execFileSync('node', [path.join(ROOT, 'tools', 'gemini.mjs'), 'batch', shots], { cwd: ROOT }).toString();
+  process.stdout.write(out.split('\n').filter((l) => /^(KEEP|REJECT|batch)/.test(l)).join('\n') + '\n');
+  // keep the best-scored variant of each picture as <name>-<aspect>.jpg; delete the others (rule 10)
+  const score = {};
+  for (const m of out.matchAll(/^(KEEP|REJECT)\s+(\d+)\/10 (\S+)/gm)) score[m[3]] = (m[1] === 'KEEP' ? 100 : 0) + Number(m[2]);
+  const groups = {};
+  for (const f of fs.readdirSync(gen)) { const m = /^(.+-(?:16x9|9x16|1x1))-\d+\.(jpe?g|png)$/.exec(f); if (m) (groups[m[1]] ||= []).push(f); }
+  const unscored = Object.values(groups).flat().filter((f) => score[f] == null);
+  if (unscored.length) {
+    const c = execFileSync('node', [path.join(ROOT, 'tools', 'gemini.mjs'), 'check', ...unscored.map((f) => path.join(gen, f))], { cwd: ROOT }).toString();
+    for (const m of c.matchAll(/^(KEEP|REJECT)\s+(\d+)\/10 (\S+)/gm)) score[m[3]] = (m[1] === 'KEEP' ? 100 : 0) + Number(m[2]);
+    process.stdout.write(c.split('\n').filter((l) => /^(KEEP|REJECT)/.test(l)).map((l) => l.slice(0, 110)).join('\n') + '\n');
+  }
+  for (const [base, files] of Object.entries(groups)) {
+    const best = files.sort((a, b) => (score[b] ?? 0) - (score[a] ?? 0))[0];
+    if ((score[best] ?? 0) < 100) console.warn(`  ${base}: every variant was rejected; keeping the best anyway, check it`);
+    fs.renameSync(path.join(gen, best), path.join(gen, `${base}.jpg`));
+    if (fs.existsSync(path.join(gen, best + '.json'))) fs.renameSync(path.join(gen, best + '.json'), path.join(gen, `${base}.jpg.json`));
+    for (const f of files.slice(1)) for (const x of [f, f + '.json']) fs.rmSync(path.join(gen, x), { force: true });
+  }
+  // the film uses its own copies in assets/photos
+  const dest = path.join(dir, 'assets', 'photos');
+  fs.mkdirSync(dest, { recursive: true });
+  for (const f of fs.readdirSync(gen)) if (/-(16x9|9x16|1x1)\.jpg$/.test(f) && !fs.existsSync(path.join(dest, f))) fs.copyFileSync(path.join(gen, f), path.join(dest, f));
+}
 
 // 2. voice-over: one file per line, regenerated only when the line or the voice settings change
 const linesFile = path.join(dir, 'docs', 'vo', 'lines.txt');

@@ -1,7 +1,63 @@
 {
  "title": "How to pay your service charge online",
  "duration": 60,
- "formats": ["16x9", "9x16"],
- "poster": 41.0,
- "vo": [[0.3, "audio/vo-1.wav"], [10.0, "audio/vo-2.wav"], [18.4, "audio/vo-3.wav"], [24.4, "audio/vo-4.wav"], [32.0, "audio/vo-5.wav"], [38.7, "audio/vo-6.wav"], [46.0, "audio/vo-7.wav"]]
+ "formats": [
+  "16x9",
+  "9x16"
+ ],
+ "poster": 41,
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "Paying your estate service charge takes about a minute, and you get a receipt.",
+   5.811
+  ],
+  [
+   10,
+   "audio/vo-2.wav",
+   "First, open your estate's sign-in link, and sign in with your phone number and four-digit PIN.",
+   7.891
+  ],
+  [
+   18.4,
+   "audio/vo-3.wav",
+   "Next, open Bills. You'll see what you owe, and when it's due.",
+   5.411
+  ],
+  [
+   24.4,
+   "audio/vo-4.wav",
+   "To pay, transfer from any Nigerian bank app to the estate account shown on the page.",
+   7.331
+  ],
+  [
+   32,
+   "audio/vo-5.wav",
+   "Add your unit reference to the narration, so the payment lands against your home.",
+   6.211
+  ],
+  [
+   38.7,
+   "audio/vo-6.wav",
+   "Want fewer reminders? Pay a few months ahead, and you won't be billed for them again.",
+   6.651
+  ],
+  [
+   46,
+   "audio/vo-7.wav",
+   "One last thing. If you are ever asked to pay into a new account, call a committee member first.",
+   7.491
+  ]
+ ],
+ "vo_at": [
+  0.3,
+  10,
+  18.4,
+  24.4,
+  32,
+  38.7,
+  46
+ ],
+ "music": "About one minute of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending."
 }

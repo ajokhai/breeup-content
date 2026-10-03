@@ -11,7 +11,7 @@
 | `media/generated/` | Pictures and clips made with Gemini, one folder per film. `_trials/` is experiments, safe to delete. |
 | `media/stock/` | Downloaded free stock photos and footage (list in `media/STOCK.md`). |
 | `moodboard/` | Drop reference videos you like into `moodboard/inbox/`. `STYLE.md` is the style guide learned from them. |
-| `tools/` | `jev.mjs` (cheap checks: picks motion blocks, lints scripts), `gemini.mjs` (images, video, voice, music, checks), `mix.mjs` (builds a film's soundtrack), `render.mjs` (turns a film into MP4s), `hf` (HyperFrames motion graphics), `PROMPTS.md` (prompt tips). |
+| `tools/` | `jev.mjs` (cheap checks: picks motion blocks, lints scripts), `gemini.mjs` (images, video, voice, music, checks), `mix.mjs` (builds a film's soundtrack), `render.mjs` (turns a film into MP4s), `make.mjs` (runs the whole pipeline), `sfx.mjs` (sound effects), `kit/` (the shared tutorial template), `hf` (HyperFrames motion graphics), `PROMPTS.md` (prompt tips). |
 | `archive/` | Old versions. Nothing here is used. |
 | `node_modules/`, `package*.json`, `.env` | Software and the API key. Leave these alone. |
 
@@ -52,6 +52,9 @@ Formats: every film ships as 16:9 (YouTube, the blog) and 9:16 (Shorts, Reels, W
 
 ```bash
 npm install                                            # once per machine (Mac also: npx playwright install chromium)
+node tools/make.mjs films/T3-resident-account --check   # everything except the final render + a contact sheet
+node tools/make.mjs films/T3-resident-account           # everything, full-quality render (best on the Mac)
+# or step by step:
 node tools/gemini.mjs batch media/generated/T2/shots.json   # pictures (needs GEMINI_API_KEY in .env)
 node tools/gemini.mjs tts --text "..." --out films/T2-.../audio/vo-1.wav   # one file per voice-over line
 node tools/gemini.mjs music --prompt "..." --out films/T2-.../audio/music.wav

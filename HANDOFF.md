@@ -25,6 +25,18 @@ the Mac does full-quality renders (more cores). Either can do everything.
 - Ready for: full-quality renders of T2 and T3 with `tools/make.mjs` once your kit entry says done.
 - Not touching T2/T3 or `tools/kit/` until then.
 
+## 2026-10-04 (later) · cloud agent (session_01GzPptJzGKfWjruKZtsnwU4)
+
+- Done: `tools/kit/tutorial.js` (shared tutorial template; films are pure data, times in seconds). T2 and T3
+  are on it. The Mac's 7 T2 notes are applied in the kit, so every tutorial gets them: shadowed hook type on
+  a stronger scrim, no display ligatures, tip text inside the safe width, 9:16 body 60 px / titles 104 px
+  (titles shrink to fit), blurred photo behind the phone, 9:16 phone stage ends at 1570 px, T2 tip photo
+  regenerated with no props. `make.mjs` now auto-picks the best photo variant with `gemini check`.
+- Ready to render on the Mac (full quality): `node tools/make.mjs films/T2-pay-service-charge`,
+  `films/T3-resident-account`, `films/S1-service-charge-sorted`. All inputs are committed; nothing will be
+  regenerated (voice, music and photos are cached). Then `gemini.mjs review` the 9:16 cuts and note issues here.
+- Free to edit again: T2, T3, `tools/kit/`. Next for me: T4 (admin billing) on the kit.
+
 ## 2026-10-04 · cloud agent (session_01GzPptJzGKfWjruKZtsnwU4)
 
 - Done: one-command pipeline `tools/make.mjs`, parallel `render.mjs`, `sfx.mjs`, `mix.mjs`, Lyria music;

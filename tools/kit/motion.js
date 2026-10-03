@@ -177,9 +177,12 @@ export function fitSize(ctx, str, weight, family, maxWidth, max = 400, track = 0
   const w100 = layout(ctx, str, font(100, weight, family), track * 100).width;
   return Math.min(max, Math.floor((100 * maxWidth) / w100));
 }
+// The display face has ligatures ("sf" in Transfer reads like a typo): a zero-width non-joiner between
+// letters stops them without changing the spacing.
+const noLig = (str, f) => (/Display/.test(f) ? str.replace(/(?<=\p{L})(?=\p{L})/gu, '\u200C') : str);
 export function text(ctx, str, x, y, f, color, align = 'left', track = 0) {
   ctx.font = f; ctx.fillStyle = color; ctx.textAlign = align; ctx.letterSpacing = `${track}px`;
-  ctx.fillText(str, x, y);
+  ctx.fillText(noLig(str, f), x, y);
   ctx.letterSpacing = '0px';
 }
 // One glyph, centred on x, baseline y, with scale / rotation / skew about its baseline centre.
