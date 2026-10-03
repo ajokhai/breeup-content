@@ -2,12 +2,14 @@
 
 ## What's in this folder
 
+Josh's finished videos are in `../Final videos/`. Everything below is the agents' workshop; run commands from here (`vid-gen/`).
+
 | Folder / file | What it is |
 |---|---|
 | `HANDOFF.md` | Notes between agents (Mac and cloud): who is doing what. Read the top first. |
 | `CLAUDE.md` | The rules every agent follows (also `AGENTS.md`). Your taste notes are at the bottom. |
 | `films/` | One folder per video, named `<ID>-<short-name>` (e.g. `T2-pay-service-charge`). Each has `docs/` (shot list, reviews), `assets/`, `audio/` and the build files. |
-| `renders/` | Finished videos, ready to post: `breeup-<ID>-<name>-9x16.mp4` and `-16x9.mp4`. |
+| `renders/` | Working renders and stills (local only). Finished videos are copied to `../Final videos/`. |
 | `media/generated/` | Pictures and clips made with Gemini, one folder per film. `_trials/` is experiments, safe to delete. |
 | `media/stock/` | Downloaded free stock photos and footage (list in `media/STOCK.md`). |
 | `moodboard/` | Drop reference videos you like into `moodboard/inbox/`. `STYLE.md` is the style guide learned from them. |

@@ -1,6 +1,6 @@
-# Rules for any agent working in `videos/`
+# Rules for any agent working in `vid-gen/`
 
-Read this whole file before you touch a film, generate a picture or write a shot list. Then read
+Run every command from inside `vid-gen/`. Read this whole file before you touch a film, generate a picture or write a shot list. Then read
 `README.md` (the slate and the shared look) and `tools/PROMPTS.md` (what has worked for image generation).
 
 **Keep this file current.** When Josh asks for something, corrects something or says what he likes or
@@ -147,13 +147,15 @@ each machine renders its own; commit the inputs, never a half-written video.
 
 ## 10. Keep the folder organized
 
-Josh needs to understand this folder at a glance. The map is at the top of `README.md`; keep it true.
-- Only these at the top level: `CLAUDE.md`, `AGENTS.md`, `README.md`, `HANDOFF.md`, `films/`, `renders/`, `media/`, `moodboard/`,
-  `tools/`, `archive/`, plus package files, `node_modules/` and `.env`. Nothing else.
-- A new film goes in `films/<ID>-<short-name>/` with `docs/shotlist.md`. Its generated pictures go in
-  `media/generated/<ID>/`, its finished videos in `renders/`. No loose files anywhere.
-- Delete scratch output (test frames, temp renders, rejected variants) before you finish. Move replaced
-  versions to `archive/` instead of leaving `v2`, `final-final` copies around.
+Josh opens the `videos` folder and should see only two things:
+- `Final videos/`: finished, cleaned MP4s with plain names (`T2 How to pay your service charge online (phone).mp4`).
+  `make.mjs` copies them there after a full render. Nothing else goes in it: no drafts, stills or sidecars.
+- `vid-gen/`: everything agents use. Nothing else at the top level (hidden `.git`, `.gitignore`, `.claude/` are fine).
+
+Inside `vid-gen/`, keep to the map at the top of `README.md`:
+- A new film goes in `films/<ID>-<short-name>/` with `docs/shotlist.md`; its generated pictures in
+  `media/generated/<ID>/`; working renders and stills in `renders/` (local, git-ignored).
+- Delete scratch output before you finish. Move replaced versions to `archive/` instead of leaving `v2` copies.
 - If you add a folder or tool, add it to the README map in the same session.
 
 ## 11. Quality bar

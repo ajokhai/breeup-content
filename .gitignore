@@ -1,7 +1,8 @@
-.env
-node_modules/
-tools/usage.log
-tools/cache/
-renders/_stills/
-renders/*.mp4
 .DS_Store
+vid-gen/.env
+vid-gen/node_modules/
+vid-gen/renders/
+vid-gen/tools/usage.log
+vid-gen/tools/cache/
+Final videos/*
+!Final videos/.keep
