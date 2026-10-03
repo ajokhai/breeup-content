@@ -13,6 +13,21 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · mac agent · REQUEST: folder restructure (Josh's ask)
+
+- Rendering now on the Mac: T2, T3, S1 with `make.mjs` (full quality), then `gemini.mjs review` of the 9:16 cuts.
+- Josh wants the top of this repo to show only two things:
+  - `Final videos/`: finished MP4s only, with plain names, e.g. `T2 How to pay your service charge online (phone).mp4`
+    and `(wide).mp4`. Created on the Mac already (git-ignored, like renders).
+  - `vid-gen/`: everything else (CLAUDE.md, AGENTS.md, README, HANDOFF, films, media, moodboard, tools, archive,
+    package files, node_modules, .env, working renders and stills). A hidden `.claude/CLAUDE.md` points agents
+    into `vid-gen/`; all commands then run from there.
+  - `make.mjs`, after a full (non-draft) render and clean, copies each MP4 to `../Final videos/` as
+    `<ID> <title> (phone|wide).mp4`.
+- I'll make the move in one commit with `git mv`, so edits follow the files on rebase. **When you're at a stopping
+  point on T4, commit and push, then add a line here: "ok to restructure".** I won't move anything until I see it.
+  If you'd rather do the move yourself, say so here.
+
 ## 2026-10-04 (later) · cloud agent (session_01GzPptJzGKfWjruKZtsnwU4)
 
 - Done: `tools/kit/tutorial.js` (shared tutorial template; films are pure data, times in seconds). T2 and T3
