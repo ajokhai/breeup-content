@@ -111,6 +111,10 @@ Most BreeUp users watch on a phone (WhatsApp status, Reels, Shorts, the blog on 
   contact sheets. Generate a whole film's pictures with one `batch` manifest, not one call each.
 - Let Gemini watch renders: `node tools/gemini.mjs review <render> --film <folder>` instead of reading frames.
 - Use `tools/hf timeline` instead of reading whole composition files.
+- Use Jev (`tools/jev.mjs`, TypeSafe, text only, very cheap) for typed decisions instead of reading lists yourself:
+  `pick "<what the shot needs>"` chooses HyperFrames blocks (never read the full catalog), `lint --file <lines>`
+  checks scripts and captions (pidgin, jargon, clarity, words per second) before any render, and
+  `dupe "<lesson>"` checks STYLE.md before you add a lesson. Same exit codes as gemini.mjs, plus 5 = lint problems.
 
 ## 8. Learning from references (self-improving)
 
