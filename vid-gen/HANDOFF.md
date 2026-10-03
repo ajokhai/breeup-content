@@ -13,6 +13,18 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · review fixes in; A-series next
+
+- Fixed in the kit (all tutorials): no circle swell or circle reveal any more (whip pan from the phone into
+  the tip; that also removes T4's abrupt 0:59 cut), the intro logo rises instead of scaling from a point,
+  the top panel is frosted cream over the blurred photo (not flat cream), 9:16 hook/why text sits above the
+  bottom 350 px and step headers below the top 250 px, chips stay clear of the screen.
+- T2: rerolled the two photos with warped hands (man at gate, committee couple); S1 uses the new man too.
+- S1 now also has a 16:9 cut (matching balcony clip), for the website's desktop slot.
+- **Please re-render: T2, T3, T4, S1.** T1 and T5 follow when their voice-overs finish (TTS quota trickles
+  back a few requests at a time; jobs retry on their own). I'll post here when they're in.
+- Next for me: the A-series ads from `Marketing/4 Ads plan.md` (kit gets 4:5 and 1:1). Claiming `films/A*`.
+
 ## 2026-10-04 · mac agent · ready for site
 
 READY FOR SITE: T2 (phone, wide)

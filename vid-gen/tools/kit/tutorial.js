@@ -88,10 +88,10 @@ function pill(ctx, str, x, y, size, bg, fg, k = 1, maxW = 1e9) {
 // Layout per device and format. phone: real 780x1688 phone screenshots. laptop: real 2160x1350 desktop ones.
 const LAYOUTS = { phone: FORMAT.pick({
   '16x9': { stage: [0, 0, 1080, 1080], phoneH: 940, cap: { x: 1170, y: 260, w: 650 }, num: 200, title: 84, body: 42, extraY: 860 },
-  '9x16': { stage: [0, 860, 1080, 710], phoneH: 1160, cap: { x: 72, y: 300, w: 936 }, num: 104, title: 104, body: 60, extraY: 780 },
+  '9x16': { stage: [0, 860, 1080, 710], phoneH: 1160, cap: { x: 72, y: 330, w: 936 }, num: 104, title: 104, body: 60, extraY: 690 },
 }), laptop: FORMAT.pick({
   '16x9': { stage: [0, 0, 1250, 1080], screenW: 1130, cap: { x: 1320, y: 260, w: 520 }, num: 180, title: 76, body: 40, extraY: 860 },
-  '9x16': { stage: [0, 860, 1080, 710], screenW: 1060, cap: { x: 72, y: 300, w: 936 }, num: 104, title: 104, body: 60, extraY: 780 },
+  '9x16': { stage: [0, 860, 1080, 710], screenW: 1060, cap: { x: 72, y: 330, w: 936 }, num: 104, title: 104, body: 60, extraY: 690 },
 }) };
 let L, SRC, PH, sx0, sy0, sw0, sh0, LAPTOP = false;
 function setDevice(device = 'phone') {
@@ -131,7 +131,7 @@ export function tutorial(cfg) {
     scrim(ctx, H * 0.25, H, 0.92);
     const s = FORMAT.safe, size = FORMAT.pick({ '16x9': 124, '9x16': 118 }), f = font(size, 400, DISPLAY);
     const lines = cfg.hook.lines[FORMAT.name] || cfg.hook.lines['16x9'];
-    const y0 = P ? H - 440 - (lines.length - 1) * size * 1.02 : H - 150 - (lines.length - 1) * size * 1.02;
+    const y0 = P ? H - 540 - (lines.length - 1) * size * 1.02 : H - 150 - (lines.length - 1) * size * 1.02;
     let wi = 0;
     lines.forEach((ln, li) => {
       let x = s.x;
@@ -164,7 +164,7 @@ export function tutorial(cfg) {
     const s = FORMAT.safe, size = FORMAT.pick({ '16x9': 76, '9x16': 96 }), f = font(size, 400, DISPLAY);
     const lines = wrap(ctx, cfg.why.text, f, P ? s.w : 1300);
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 24;
-    riseLines(ctx, lines, s.x, H - (P ? 440 : 130) - (lines.length - 1) * size * 1.1, size * 1.1, f, C.cream, u, a + 0.6);
+    riseLines(ctx, lines, s.x, H - (P ? 540 : 130) - (lines.length - 1) * size * 1.1, size * 1.1, f, C.cream, u, a + 0.6);
     ctx.restore();
   }
   const prevScene = (u, IMG, ctx) => (cfg.why ? sceneWhy : sceneHook)(ctx, u, IMG);
@@ -176,7 +176,8 @@ export function tutorial(cfg) {
     ctx.fillStyle = C.cream; ctx.fillRect(0, top, W, H);
     ctx.save(); ctx.translate(0, top);
     const ls = FORMAT.pick({ '16x9': 150, '9x16': 190 }), cx = P ? W / 2 : W * 0.32, cy = P ? H * 0.38 : H / 2;
-    logo(ctx, IMG, cx, cy, ls, springU(u, a, SPRING.bouncy));
+    const lk = springU(u, a, SPRING.gentle);
+    ctx.save(); ctx.globalAlpha = Math.min(1, lk); logo(ctx, IMG, cx, cy + (1 - lk) * 60, ls, 1); ctx.restore();
     const size = FORMAT.pick({ '16x9': 92, '9x16': 100 }), f = font(size, 400, DISPLAY);
     if (P) riseLines(ctx, cfg.intro.lines, W / 2, cy + ls * 0.9 + size, size * 1.1, f, C.green, u, a + 0.4, { align: 'center' });
     else riseLines(ctx, cfg.intro.lines, cx + ls * 0.75, cy - 10, size * 1.1, f, C.green, u, a + 0.4);
@@ -200,8 +201,8 @@ export function tutorial(cfg) {
     ctx.restore();
   }
   function scenePhone(ctx, u, IMG) {
-    fill(ctx, C.cream);
     const bg = blurred(IMG.stage || IMG.hook);
+    if (bg) { ctx.drawImage(bg, 0, 0); ctx.fillStyle = 'rgba(246,244,238,0.88)'; ctx.fillRect(0, 0, W, H); } else fill(ctx, C.cream);
     if (bg) { ctx.save(); ctx.beginPath(); ctx.rect(...L.stage); if (P) ctx.rect(0, sy0 + sh0, W, H - sy0 - sh0); ctx.clip(); ctx.drawImage(bg, 0, 0); ctx.restore(); }
     else { ctx.fillStyle = C.green; ctx.fillRect(...L.stage); }
     if (P && !bg) { ctx.fillStyle = C.deep; ctx.fillRect(0, sy0 + sh0, W, H - sy0 - sh0); }
@@ -229,12 +230,6 @@ export function tutorial(cfg) {
     });
     ctx.restore(); ctx.restore();
     (ph.rings || []).forEach((r) => ring(ctx, u, r));
-    if (u >= tEnd - 1) {   // green swell from the last tapped control into the next scene
-      const last = [...(ph.rings || [])].reverse().find((r) => r.tap != null);
-      const g = E.inCubic(prog(u, tEnd - 1, tEnd));
-      const [X, Y] = last ? toFrame(tEnd - 1, ph.regions[last.r][0] + ph.regions[last.r][2] / 2, ph.regions[last.r][1] + ph.regions[last.r][3] / 2) : [W / 2, H / 2];
-      ctx.fillStyle = C.green; ctx.beginPath(); ctx.arc(X, Y, 30 + g * Math.hypot(W, H) * 1.2, 0, M.TAU); ctx.fill();
-    }
     ctx.restore();
     const i = steps.findLastIndex((s) => u >= s.t - 0.2);
     drawStep(ctx, u, Math.max(0, i));
@@ -247,7 +242,6 @@ export function tutorial(cfg) {
     });
     (cfg.codes || []).forEach((c) => drawCode(ctx, u, c));
     (cfg.cards || []).forEach((c) => drawCard(ctx, u, c, IMG));
-    if (u >= tEnd - 0.6) { ctx.fillStyle = C.green; ctx.globalAlpha = E.inCubic(prog(u, tEnd - 0.6, tEnd)); ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
   }
   function drawStep(ctx, u, i) {
     const st = steps[i], c = L.cap, next = steps[i + 1];
@@ -323,9 +317,8 @@ export function tutorial(cfg) {
   }
   function sceneTip(ctx, u, IMG) {
     const a = tEnd;
-    fill(ctx, C.green);
-    const r = E.outCubic(prog(u, a, a + 0.9)) * Math.hypot(W, H) * 0.6;
-    ctx.save(); ctx.beginPath(); ctx.arc(W / 2, H / 2, r, 0, M.TAU); ctx.clip();
+    fill(ctx, C.deep);
+    ctx.save();
     if (IMG.tip) cover(ctx, IMG.tip, 0, 0, W, H, { fx: 0.5, fy: 0.45, zoom: 1.12 - 0.08 * prog(u, a, tipTo) });
     scrim(ctx, H * 0.2, H, 0.94);
     ctx.restore();
@@ -371,13 +364,17 @@ export function tutorial(cfg) {
       if (u < cfg.hook.to) sceneHook(ctx, u, IMG);
       else if (cfg.why && u < cfg.why.to) sceneWhy(ctx, u, IMG);
       else if (cfg.intro && u < cfg.intro.to) sceneIntro(ctx, u, IMG);
-      else if (u < tEnd) {
+      else if (u < (cfg.tip ? tEnd - 0.35 : tEnd)) {
         const from = cfg.intro ? cfg.intro.to : prevTo();
         if (u < from + 0.5 && !cfg.intro) {   // no intro card: cream panel wipes up over the photo
           const inn = E.inOutCubic(prog(u, from - 0.4, from + 0.1));
           if (inn < 1) prevScene(u, IMG, ctx);
           ctx.save(); ctx.beginPath(); ctx.rect(0, H * (1 - inn), W, H); ctx.clip(); scenePhone(ctx, u, IMG); ctx.restore();
         } else scenePhone(ctx, u, IMG);
+      } else if (cfg.tip && u < tEnd + 0.35) {
+        const p = E.inOutCubic(prog(u, tEnd - 0.35, tEnd + 0.35));
+        ctx.save(); ctx.translate(-p * W, 0); scenePhone(ctx, u, IMG); ctx.restore();
+        ctx.save(); ctx.translate((1 - p) * W, 0); sceneTip(ctx, u, IMG); ctx.restore();
       } else if (cfg.tip && u < tipTo) sceneTip(ctx, u, IMG);
       else sceneEnd(ctx, u, IMG);
     },

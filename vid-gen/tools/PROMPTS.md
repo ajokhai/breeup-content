@@ -38,3 +38,8 @@ Examples that produced keepers (2026-10-03 trials, `media/generated/_trials/`):
   empty space is, or the subject fills the frame and there's nowhere for captions.
 - The model sometimes adds a warm, HDR-ish grade. If it looks too golden, add "neutral daylight white
   balance, overcast soft light".
+
+- **Hands (2026-10-04, T2 review):** reviews caught warped hands on people holding phones and on a couple.
+  Say exactly what each hand does ("phone held loosely in one hand at chest height, other hand in his pocket",
+  "hands relaxed at their sides"), keep hands empty when they don't matter, and avoid two people's hands near
+  each other. `check` misses hands often, so look closely at hands on the contact sheet.

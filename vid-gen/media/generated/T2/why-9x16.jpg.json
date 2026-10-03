@@ -4,15 +4,15 @@
  "aspect": "9:16",
  "size": "2K",
  "refs": [],
- "prompt": "A well-groomed, handsome Nigerian man in his early forties in a crisp white kaftan stands at the gate of his duplex in a gated Abuja estate, glancing at his phone with a relaxed, satisfied expression. Behind him: interlocking paving, a black water tank on a stand, a neat hedge and a painted fence. Warm early-evening light. Phone screen facing away from camera.",
+ "prompt": "A well-groomed, handsome Nigerian man in his early forties in a crisp white kaftan stands at the gate of his duplex in a gated Abuja estate, holding his smartphone loosely in one hand at chest height, thumb resting on the screen, relaxed and satisfied expression. Other hand in his pocket. Behind him: interlocking paving, a black water tank on a stand, a neat hedge and a painted fence. Warm early-evening light. Phone screen facing away from camera.",
  "house": true,
- "created": "2026-10-03T22:48:18.478Z",
+ "created": "2026-10-03T23:55:58.789Z",
  "check": {
   "score": 7,
   "african": true,
   "attractive": true,
   "artifacts": "none",
   "text": "none",
-  "note": "Authentic Nigerian estate setting with sharp lighting, clean composition, and strong cast appearance."
+  "note": "Realistic depiction of a Nigerian gated estate with a well-groomed subject and authentic environmental details."
  }
 }
