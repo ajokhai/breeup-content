@@ -1,4 +1,4 @@
-Invoices are how BreeUp knows what each household owes. Here's how to bill residents, record payments and send reminders.
+Invoices are how BreeUp knows what each household owes. Here's how to bill, record payments and send reminders.
 Open Payments in the admin sidebar. The ledger shows every invoice, its status and its due date.
 Click Generate Invoice, then choose All Households, or a single unit.
 Enter the invoice type, the amount in naira and a due date. Add a note if residents need context.

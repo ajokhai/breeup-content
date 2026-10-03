@@ -76,7 +76,10 @@ const v = cfg.voice || {};
 if (want('vo') && fs.existsSync(linesFile)) {
   step('voice-over');
   const lines = fs.readFileSync(linesFile, 'utf8').split('\n').map((s) => s.trim()).filter(Boolean);
-  const key = (l) => hash(JSON.stringify([l, v.style, v.voice, v.model]));
+  // the key uses the spoken form, so a pronunciation fix (tools/pronounce.json) re-voices only the lines it changes
+  const pron = fs.existsSync(path.join(ROOT, 'tools', 'pronounce.json')) ? JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'pronounce.json'), 'utf8')) : {};
+  const spoken = (l) => Object.entries(pron).reduce((t, [w, say]) => t.replace(new RegExp(`\\b${w}\\b`, 'g'), say), l);
+  const key = (l) => hash(JSON.stringify([spoken(l), v.style, v.voice, v.model]));
   lines.forEach((line, i) => {
     const out = path.join(dir, 'audio', `vo-${i + 1}.wav`), side = out + '.json';
     const cached = fs.existsSync(out) && fs.existsSync(side) && JSON.parse(fs.readFileSync(side, 'utf8')).key === key(line);
@@ -100,6 +103,17 @@ if (want('vo') && fs.existsSync(linesFile)) {
   }
   // 3. place the lines
   const gap = v.gap ?? 0.35, at = cfg.vo_at || [];
+  // a line that would run into the next fixed start is sped up a little (at most 15%, pitch kept)
+  lines.forEach((_, i) => {
+    if (at[i] == null || at[i + 1] == null) return;
+    const f = path.join(dir, 'audio', `vo-${i + 1}.wav`), d = len(f), room = at[i + 1] - at[i] - 0.15;
+    if (d <= room) return;
+    const k = d / room;
+    if (k > 1.15) { console.warn(`  vo-${i + 1}: ${d.toFixed(1)} s won't fit ${room.toFixed(1)} s even at 1.15x; shorten the line or move vo_at`); return; }
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', f, '-af', `atempo=${k.toFixed(4)}`, f + '.fit.wav']);
+    fs.renameSync(f + '.fit.wav', f);
+    console.log(`  vo-${i + 1}: sped up ${((k - 1) * 100).toFixed(0)}% to fit before the next line`);
+  });
   let t = 0;
   cfg.vo = lines.map((line, i) => {
     const f = `audio/vo-${i + 1}.wav`, d = len(path.join(dir, f));

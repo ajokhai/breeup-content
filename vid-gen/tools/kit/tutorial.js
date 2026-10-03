@@ -88,10 +88,10 @@ function pill(ctx, str, x, y, size, bg, fg, k = 1, maxW = 1e9) {
 // Layout per device and format. phone: real 780x1688 phone screenshots. laptop: real 2160x1350 desktop ones.
 const LAYOUTS = { phone: FORMAT.pick({
   '16x9': { stage: [0, 0, 1080, 1080], phoneH: 940, cap: { x: 1170, y: 260, w: 650 }, num: 200, title: 84, body: 42, extraY: 860 },
-  '9x16': { stage: [0, 820, 1080, 750], phoneH: 1000, cap: { x: 72, y: 250, w: 936 }, num: 104, title: 104, body: 60, extraY: 740 },
+  '9x16': { stage: [0, 860, 1080, 710], phoneH: 1160, cap: { x: 72, y: 300, w: 936 }, num: 104, title: 104, body: 60, extraY: 780 },
 }), laptop: FORMAT.pick({
   '16x9': { stage: [0, 0, 1250, 1080], screenW: 1130, cap: { x: 1320, y: 260, w: 520 }, num: 180, title: 76, body: 40, extraY: 860 },
-  '9x16': { stage: [0, 820, 1080, 750], screenW: 1010, cap: { x: 72, y: 250, w: 936 }, num: 104, title: 104, body: 60, extraY: 740 },
+  '9x16': { stage: [0, 860, 1080, 710], screenW: 1060, cap: { x: 72, y: 300, w: 936 }, num: 104, title: 104, body: 60, extraY: 780 },
 }) };
 let L, SRC, PH, sx0, sy0, sw0, sh0, LAPTOP = false;
 function setDevice(device = 'phone') {
@@ -136,7 +136,7 @@ export function tutorial(cfg) {
     lines.forEach((ln, li) => {
       let x = s.x;
       ln.split(' ').forEach((w) => {
-        const k = springU(u, 0.2 + wi * 0.25 - (wi === 0 ? 0.2 : 0), SPRING.snappy);
+        const k = springU(u, li * 0.35, SPRING.gentle);
         const Lw = layout(ctx, w, f, -0.01 * size);
         if (k > 0) {
           const by = y0 + li * size * 1.02;
@@ -148,7 +148,7 @@ export function tutorial(cfg) {
       });
     });
     const kk = E.outCubic(prog(u, 0, 0.6));
-    if (cfg.kicker) text(ctx, cfg.kicker, s.x, y0 - size * 1.05, font(30, 500, UI), `rgba(246,244,238,${0.85 * kk})`, 'left', 3);
+    if (cfg.kicker && !P) text(ctx, cfg.kicker, s.x, y0 - size * 1.05, font(30, 500, UI), `rgba(246,244,238,${0.85 * kk})`, 'left', 3);
   }
   function sceneWhy(ctx, u, IMG) {
     const a = cfg.hook.to;
@@ -158,7 +158,7 @@ export function tutorial(cfg) {
     if (reveal > 0 && IMG.why) {
       ctx.save(); ctx.beginPath(); ctx.rect(0, H * (1 - reveal), W, H); ctx.clip();
       cover(ctx, IMG.why, 0, 0, W, H, { fx: 0.5, fy: 0.4, zoom: 1.05 + 0.05 * prog(u, a, cfg.why.to) });
-      scrim(ctx, H * 0.3, H, 0.9);
+      scrim(ctx, H * 0.15, H, 0.95);
       ctx.restore();
     }
     const s = FORMAT.safe, size = FORMAT.pick({ '16x9': 76, '9x16': 96 }), f = font(size, 400, DISPLAY);
@@ -257,11 +257,11 @@ export function tutorial(cfg) {
     ctx.font = font(L.title, 400, DISPLAY);
     const room = P ? c.w - L.title * 0.95 : c.w, tw = ctx.measureText(st.title).width;
     const ts = tw > room ? Math.floor(L.title * room / tw) : L.title;
-    bodyBottom = P ? c.y + L.title + 130 + (bl.length - 1) * L.body * 1.35 : c.y + L.num + 200 + (bl.length - 1) * L.body * 1.45;
+    bodyBottom = P ? c.y + L.title + 90 + (bl.length - 1) * L.body * 1.35 : c.y + L.num + 200 + (bl.length - 1) * L.body * 1.45;
     ctx.save(); ctx.globalAlpha = 1 - ex;
-    text(ctx, `STEP ${n} OF ${steps.length}`, c.x, c.y, font(P ? 30 : 24, 500, UI), C.mute, 'left', 3);
+    if (!P) text(ctx, `STEP ${n} OF ${steps.length}`, c.x, c.y, font(24, 500, UI), C.mute, 'left', 3);
     if (P) {
-      const ty = c.y + L.title + 30;
+      const ty = c.y + L.title - 10;
       ctx.save(); ctx.translate(c.x, ty); ctx.scale(nk, nk); text(ctx, n, 0, 0, font(L.num * 1.25, 400, DISPLAY), C.gold); ctx.restore();
       riseLines(ctx, [st.title], c.x + L.title * 0.95, ty, L.title * 1.1, font(ts, 400, DISPLAY), C.green, u, st.t + 0.25);
       riseLines(ctx, bl, c.x, ty + 100, L.body * 1.35, bf, C.ink, u, st.t + 0.5, { stagger: 0.15 });
@@ -273,7 +273,7 @@ export function tutorial(cfg) {
     ctx.restore();
   }
   function drawDots(ctx, u) {
-    const c = L.cap, y = c.y - 64, r = P ? 11 : 9, gap = P ? 52 : 46;
+    const c = L.cap, y = P ? c.y - 30 : c.y - 64, r = P ? 13 : 9, gap = P ? 56 : 46;
     steps.forEach((s, i) => {
       const k = u >= s.t ? springU(u, s.t, SPRING.bouncy) : 0, x = c.x + i * gap + r;
       ctx.fillStyle = 'rgba(26,71,42,0.18)'; ctx.beginPath(); ctx.arc(x, y, r, 0, M.TAU); ctx.fill();
@@ -293,7 +293,7 @@ export function tutorial(cfg) {
     ctx.beginPath(); ctx.rect(0, y - size, W, size * 1.25); ctx.clip();
     text(ctx, c.text, L.cap.x, y - (1 - k) * size * 0.8, f, C.ink);
     ctx.restore();
-    if (c.label) text(ctx, c.label, L.cap.x, y - size - 18, font(P ? 30 : 24, 500, UI), `rgba(201,168,76,${E.outCubic(prog(u, c.a + 0.3, c.a + 0.8)) * (1 - ex)})`, 'left', 3);
+    if (c.label) text(ctx, c.label, L.cap.x, y - size - 22, font(P ? 44 : 24, 500, UI), `rgba(201,168,76,${E.outCubic(prog(u, c.a + 0.3, c.a + 0.8)) * (1 - ex)})`, 'left', 3);
   }
   function drawCard(ctx, u, c, IMG) {
     const img = IMG[c.src];
@@ -334,7 +334,7 @@ export function tutorial(cfg) {
     const bf = font(FORMAT.pick({ '16x9': 42, '9x16': 56 }), 400, UI), bh = FORMAT.pick({ '16x9': 60, '9x16': 76 });
     const lines = wrap(ctx, cfg.tip.title, f, P ? s.w : 1200), bl = wrap(ctx, cfg.tip.body, bf, P ? s.w : 1200);
     const y = H - (P ? 440 : 120) - bl.length * bh - (lines.length - 1) * size * 1.1 - 30;
-    text(ctx, cfg.tip.kicker || 'GOOD TO KNOW', s.x, y - size - 24, font(P ? 32 : 26, 500, UI), `rgba(201,168,76,${E.outCubic(prog(u, a + 0.8, a + 1.3))})`, 'left', 3);
+    text(ctx, cfg.tip.kicker || 'GOOD TO KNOW', s.x, y - size - 24, font(P ? 44 : 26, 500, UI), `rgba(201,168,76,${E.outCubic(prog(u, a + 0.8, a + 1.3))})`, 'left', 3);
     riseLines(ctx, lines, s.x, y, size * 1.1, f, C.cream, u, a + 0.9);
     riseLines(ctx, bl, s.x, y + (lines.length - 1) * size * 1.1 + bh + 30, bh, bf, 'rgba(246,244,238,0.92)', u, a + 1.6, { stagger: 0.15 });
     ctx.restore();

@@ -14,7 +14,7 @@
    0.3,
    "audio/vo-1.wav",
    "Your estate uses BreeUp for bills, notices and visitor passes. There's no app to download, and setting up takes about two minutes.",
-   10.233
+   9.697
   ],
   [
    11.03,
@@ -52,5 +52,14 @@
    "Tip: add the page to your home screen, and it opens like any other app.",
    5.829
   ]
+ ],
+ "vo_at": [
+  0.3,
+  11.03,
+  19.17,
+  23.22,
+  30.38,
+  41.04,
+  49.37
  ]
 }

@@ -10,7 +10,7 @@
 // Prints each line's start and end so overlaps are easy to spot (a line must end before the next starts).
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 
 const args = process.argv.slice(2);
 const dir = path.resolve(args.find((a) => !a.startsWith('--')) || '');
@@ -22,6 +22,12 @@ const vo = (cfg.vo || []).map(([t, f]) => [Number(t), path.join(dir, f)]);
 const music = path.join(dir, 'audio', 'music.wav');
 const sfx = path.join(dir, 'audio', 'sfx.wav');   // from tools/sfx.mjs, optional
 const out = path.join(dir, 'audio', 'mix.wav');
+// integrated loudness (LUFS) of a file or of a filter's output
+const lufs = (f, af = '') => {
+  const out = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', f, '-af', `${af}${af ? ',' : ''}ebur128=framelog=quiet`, '-f', 'null', '-']).stderr.toString();
+  return Number((/I:\s+(-?[\d.]+) LUFS/.exec(out.split('Summary:').pop()) || [])[1]);
+};
+const VO_LUFS = -18;   // every line is brought to the same level, so no line sounds quieter than the rest
 const len = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
 
 let prevEnd = 0;
@@ -37,7 +43,10 @@ const hasMusic = fs.existsSync(music);
 if (hasMusic) inputs.push('-i', music);
 vo.forEach(([, f]) => inputs.push('-i', f));
 const off = hasMusic ? 1 : 0;
-vo.forEach(([t], i) => filters.push(`[${i + off}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.round(t * 1000)}:all=1[v${i}]`));
+vo.forEach(([t, f], i) => {
+  const g = VO_LUFS - lufs(f);
+  filters.push(`[${i + off}:a]aresample=48000,aformat=channel_layouts=stereo,volume=${g.toFixed(2)}dB,adelay=${Math.round(t * 1000)}:all=1[v${i}]`);
+});
 const voMix = vo.length ? `${vo.map((_, i) => `[v${i}]`).join('')}amix=inputs=${vo.length}:normalize=0,apad=whole_dur=${dur}[vo]` : null;
 if (voMix) filters.push(voMix);
 if (hasMusic) {
@@ -54,8 +63,13 @@ if (fs.existsSync(sfx)) {
   filters.push(`[${off + vo.length}:a]aresample=48000,volume=${sfxDb}dB,apad=whole_dur=${dur}[fx]`);
   filters.push('[pre][fx]amix=inputs=2:normalize=0[pre2]');
 } else filters.push('[pre]anull[pre2]');
-filters.push(`[pre2]atrim=0:${dur},loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[out]`);
-
-execFileSync('ffmpeg', ['-v', 'error', '-y', ...inputs, '-filter_complex', filters.join(';'), '-map', '[out]',
-  '-map_metadata', '-1', '-fflags', '+bitexact', out], { stdio: 'inherit' });
+// Two passes: render the mix, measure it, then one fixed gain to -14 LUFS and a limiter. (A one-pass
+// loudnorm adapts its gain over time, which made the voice dip in the middle of T2.)
+filters.push(`[pre2]atrim=0:${dur},aresample=48000[out]`);
+const raw = out.replace(/\.wav$/, '.raw.wav');
+execFileSync('ffmpeg', ['-v', 'error', '-y', ...inputs, '-filter_complex', filters.join(';'), '-map', '[out]', '-c:a', 'pcm_f32le', raw], { stdio: 'inherit' });
+const gain = -14 - lufs(raw);
+execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', raw, '-af', `volume=${gain.toFixed(2)}dB,alimiter=limit=0.84:attack=5:release=60:level=disabled`,
+  '-c:a', 'pcm_s16le', '-map_metadata', '-1', '-fflags', '+bitexact', out], { stdio: 'inherit' });
+fs.rmSync(raw);
 console.log(`${path.relative(process.cwd(), out)} (${len(out).toFixed(1)} s, -14 LUFS)`);

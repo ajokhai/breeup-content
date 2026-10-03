@@ -13,8 +13,8 @@
   [
    0.3,
    "audio/vo-1.wav",
-   "Invoices are how BreeUp knows what each household owes. Here's how to bill residents, record payments and send reminders.",
-   9.941
+   "Invoices are how BreeUp knows what each household owes. Here's how to bill, record payments and send reminders.",
+   10.27
   ],
   [
    10.74,
@@ -58,5 +58,15 @@
    "Tip: a short, personal message to one household works far better than a group broadcast.",
    7.321
   ]
+ ],
+ "vo_at": [
+  0.3,
+  10.74,
+  20.42,
+  29.03,
+  37.51,
+  44.19,
+  51.34,
+  59.71
  ]
 }

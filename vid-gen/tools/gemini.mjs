@@ -482,8 +482,16 @@ async function video(a) {
 }
 
 // ------------------------------------------------------------ tts
+export function speakable(t) {
+  const f = path.join(ROOT, 'tools', 'pronounce.json');
+  if (!t || !fs.existsSync(f)) return t;
+  for (const [w, say] of Object.entries(JSON.parse(fs.readFileSync(f, 'utf8')))) t = t.replace(new RegExp(`\\b${w}\\b`, 'g'), say);
+  return t;
+}
 async function tts(a) {
-  const textIn = a.text || (a.file && fs.readFileSync(a.file, 'utf8'));
+  let textIn = a.text || (a.file && fs.readFileSync(a.file, 'utf8'));
+  // tools/pronounce.json: how to spell words so the voice says them right ("BreeUp" -> "BREE-UP", one word)
+  textIn = speakable(textIn);
   if (!textIn || !a.out) die('tts needs --text or --file, and --out');
   const model = a.model || 'gemini-2.5-pro-preview-tts';   // 3.8-flash-tts reads the style aloud (2026-10-03)
   const style = a.style || 'warmly and clearly, in a Nigerian English accent, unhurried';
