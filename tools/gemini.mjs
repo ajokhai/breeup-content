@@ -6,6 +6,8 @@
 //                               [--ref a.jpg --ref b.jpg] [--model gemini-3-pro-image] [--raw]
 //   node tools/gemini.mjs video --prompt "..." --out media/generated/x.mp4 [--aspect 9:16] [--image first.png]
 //                               [--seconds 8] [--resolution 1080p] [--model veo-3.1-generate-preview]
+//   node tools/gemini.mjs music --prompt "..." --out films/<film>/audio/music.wav [--model lyria-3-pro-preview]
+//                              (instrumental bed; say length, BPM, instruments, "no vocals"; output is a clean WAV)
 //   node tools/gemini.mjs tts   --text "..." | --file script.txt --out audio/vo.wav [--voice Kore]
 //                               [--style "Read warmly, Nigerian English accent, unhurried"]
 //   node tools/gemini.mjs batch media/generated/<film>/shots.json [--force] [--no-check]   (whole film, cached)
@@ -250,6 +252,13 @@ function cleanFile(f) {
     fs.renameSync(tmp, f);
     return true;
   }
+  if (['.mp3', '.wav', '.m4a'].includes(ext)) {
+    const tmp = f + '.clean' + ext;
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', f, '-map', '0:a', '-c', 'copy', '-map_metadata', '-1',
+      '-fflags', '+bitexact', ...(ext === '.mp3' ? ['-id3v2_version', '0', '-write_xing', '0'] : []), tmp]);
+    fs.renameSync(tmp, f);
+    return true;
+  }
   const b = fs.readFileSync(f);
   const out = /\.jpe?g$/.test(ext) ? cleanJpeg(b) : ext === '.png' ? cleanPng(b) : null;
   if (!out) return false;
@@ -476,10 +485,12 @@ async function video(a) {
 async function tts(a) {
   const textIn = a.text || (a.file && fs.readFileSync(a.file, 'utf8'));
   if (!textIn || !a.out) die('tts needs --text or --file, and --out');
-  const model = a.model || 'gemini-3.8-flash-tts';
-  const style = a.style || 'Read this clearly and warmly, like a friendly Nigerian neighbour explaining something useful. Nigerian English accent, unhurried, natural pauses.';
+  const model = a.model || 'gemini-2.5-pro-preview-tts';   // 3.8-flash-tts reads the style aloud (2026-10-03)
+  const style = a.style || 'warmly and clearly, in a Nigerian English accent, unhurried';
   const body = {
-    contents: [{ parts: [{ text: `${style}\n\n${textIn}` }] }],
+    // "Say <style>: <text>" is the documented way to steer delivery; newer TTS models may read the style aloud,
+    // so check the clip length (about 2.5 words a second) after generating.
+    contents: [{ parts: [{ text: `Say ${style}: ${textIn.trim()}` }] }],
     generationConfig: {
       responseModalities: ['AUDIO'],
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: a.voice || 'Kore' } } },
@@ -629,7 +640,27 @@ attractiveness of people, brand consistency, sound.
 // ------------------------------------------------------------ main
 const args = parseArgs(process.argv.slice(2));
 const cmd = args._[0];
-const cmds = { image, video, tts, check, sheet, batch, learn, review, clean, usage };
+
+// ------------------------------------------------------------ music (Lyria)
+async function music(a) {
+  if (!a.prompt || !a.out) die('music needs --prompt and --out');
+  const model = a.model || 'lyria-3-pro-preview';
+  const res = await call('POST', `models/${model}:generateContent`, {
+    contents: [{ parts: [{ text: a.prompt }] }], generationConfig: { responseModalities: ['AUDIO'] },
+  });
+  const part = res.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+  if (!part) noOutput(res, model);
+  fs.mkdirSync(path.dirname(path.resolve(a.out)), { recursive: true });
+  // Lyria returns MP3 with a C2PA manifest; decoding to WAV drops every tag
+  const tmp = a.out + '.src.mp3';
+  fs.writeFileSync(tmp, Buffer.from(part.inlineData.data, 'base64'));
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', tmp, '-map_metadata', '-1', '-fflags', '+bitexact', '-ar', '48000', a.out]);
+  fs.rmSync(tmp);
+  sidecar(a.out, { kind: 'music', model, prompt: a.prompt });
+  console.log(a.out);
+}
+
+const cmds = { image, video, tts, music, check, sheet, batch, learn, review, clean, usage };
 if (!cmds[cmd]) {
   console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 22).map(l => l.replace(/^\/\/ ?/, '')).join('\n'));
   process.exit(cmd ? 1 : 0);

@@ -1,8 +1,8 @@
 {
  "kind": "tts",
- "model": "gemini-3.8-flash-tts",
+ "model": "gemini-2.5-pro-preview-tts",
  "voice": "Kore",
- "style": "Read this clearly and warmly, like a friendly Nigerian neighbour explaining something useful. Nigerian English accent, unhurried, natural pauses.",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
  "text": "Paying your estate service charge takes about a minute, and you get a receipt.",
- "created": "2026-10-03T22:49:36.818Z"
+ "created": "2026-10-03T22:52:18.097Z"
 }

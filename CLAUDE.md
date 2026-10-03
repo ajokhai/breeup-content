@@ -37,7 +37,8 @@ For every shot that needs a person or a place, in this order:
    node tools/gemini.mjs image --prompt "..." --out media/generated/<film>/<name>.png --aspect 16:9 --size 2K --n 2
    node tools/gemini.mjs image --prompt "..." --out media/generated/<film>/<name>-9x16.png --aspect 9:16 --size 2K
    node tools/gemini.mjs video --prompt "..." --image media/generated/<film>/<name>-9x16.jpg --aspect 9:16 --out media/generated/<film>/<name>-9x16.mp4
-   node tools/gemini.mjs tts   --file <film>/docs/vo.txt --out <film>/audio/vo.wav
+   node tools/gemini.mjs tts   --text "one line" --out films/<film>/audio/vo-1.wav
+   node tools/gemini.mjs music --prompt "..." --out films/<film>/audio/music.wav
    ```
 
    - The key lives in `videos/.env` (never commit it or print it). The tool adds the house photo style
@@ -78,6 +79,18 @@ Most BreeUp users watch on a phone (WhatsApp status, Reels, Shorts, the blog on 
   caption-highlight, share-sheet-carousel, message-thread-reveal, whip-pan, light-leak, logo-outro).
   Read only `/hyperframes-core` for authoring; skip the HyperFrames intent interview (our shot lists replace it).
 
+## 4b. Sound and rendering (works on the Mac and in the cloud)
+
+- Voice-over: one TTS file per line, listed with its start time in `film.json` "vo". Check each clip is about
+  2.5 words a second: `gemini-3.8-flash-tts` reads the style instructions aloud, so the tool defaults to
+  `gemini-2.5-pro-preview-tts`.
+- Music: `gemini.mjs music` (Lyria 3). Describe mood, instruments and tempo in general terms; naming a genre
+  too precisely trips its copyright filter ("resembles existing copyrighted works"), so rephrase and retry.
+- `node tools/mix.mjs films/<film>` builds `audio/mix.wav` (music ducked under the voice, -14 LUFS) and warns
+  about overlapping lines. `node tools/render.mjs films/<film>` renders every format to `renders/` and muxes
+  the mix. Use `--still 5,20` for cheap layout checks before a full render.
+- Tools must run on both macOS and Linux: no Mac-only commands (sips, afplay) without a fallback.
+
 ## 5. TikTok, Reels and Shorts
 
 - Social cuts (series S) are 9:16 only, 15-30 s, hook in the first 1.5 s, captions burned in
@@ -110,6 +123,12 @@ Most BreeUp users watch on a phone (WhatsApp status, Reels, Shorts, the blog on 
 
 `gemini.mjs` exit codes: **2 = out of credits or quota: stop and tell Josh** (don't silently switch models),
 3 = bad key, 4 = safety block (rephrase), 1 = other. `node tools/gemini.mjs usage` shows calls per model.
+
+## 9b. Sharing work between machines
+
+This folder is the GitHub repo `ajokhai/breeup-content`. Josh works on his Mac; agents may work in the cloud.
+`git pull` before you start, commit and push when you finish a piece of work, so the other side can pull it.
+Never commit `.env` (the key) or `node_modules/`. `renders/_stills/` and `tools/usage.log` are local-only.
 
 ## 10. Keep the folder organized
 
@@ -144,3 +163,5 @@ Josh needs to understand this folder at a glance. The map is at the top of `READ
 - 2026-10-03: Strip AI metadata from images and video before they go out.
 - 2026-10-03: Tools must be token-efficient and work for any agent, not just Claude.
 - 2026-10-03: Wants tutorials made for the blog posts and the website.
+- 2026-10-03: Doesn't want this work touching the BreeUp app codebase (`subbyems`); it lives in its own repo.
+- 2026-10-03: Wants work to sync between his Mac and the cloud through git (pull on the Mac).

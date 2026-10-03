@@ -1,8 +1,8 @@
 {
  "kind": "tts",
- "model": "gemini-3.8-flash-tts",
+ "model": "gemini-2.5-pro-preview-tts",
  "voice": "Kore",
- "style": "Read this clearly and warmly, like a friendly Nigerian neighbour explaining something useful. Nigerian English accent, unhurried, natural pauses.",
- "text": "One last thing. Estates rarely change their bank account. If you're asked to pay into a new one, call a committee member first.",
- "created": "2026-10-03T22:49:37.314Z"
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "One last thing. If you are ever asked to pay into a new account, call a committee member first.",
+ "created": "2026-10-03T22:52:47.168Z"
 }

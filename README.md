@@ -10,7 +10,7 @@
 | `media/generated/` | Pictures and clips made with Gemini, one folder per film. `_trials/` is experiments, safe to delete. |
 | `media/stock/` | Downloaded free stock photos and footage (list in `media/STOCK.md`). |
 | `moodboard/` | Drop reference videos you like into `moodboard/inbox/`. `STYLE.md` is the style guide learned from them. |
-| `tools/` | `gemini.mjs` (images, video, voice, checks), `hf` (the motion-graphics renderer), `PROMPTS.md` (prompt tips). |
+| `tools/` | `gemini.mjs` (images, video, voice, music, checks), `mix.mjs` (builds a film's soundtrack), `render.mjs` (turns a film into MP4s), `hf` (HyperFrames motion graphics), `PROMPTS.md` (prompt tips). |
 | `archive/` | Old versions. Nothing here is used. |
 | `node_modules/`, `package*.json`, `.env` | Software and the API key. Leave these alone. |
 
@@ -26,7 +26,7 @@ Formats: every film ships as 16:9 (YouTube, the blog) and 9:16 (Shorts, Reels, W
 | # | Film | Kind | Audience | Length | Voice | Source post | Status |
 |---|------|------|----------|--------|-------|-------------|--------|
 | T1 | How to send a visitor pass on WhatsApp | Tutorial | Residents | 40 s | Captions | how-to-send-a-visitor-pass-on-whatsapp | Shot list ready |
-| T2 | How to pay your service charge online | Tutorial | Residents | 50 s | VO | how-to-pay-estate-service-charge-online | Next |
+| T2 | How to pay your service charge online | Tutorial | Residents | 60 s | VO | how-to-pay-estate-service-charge-online | Rendered (v1), needs review |
 | T3 | Set up your resident account (phone and PIN) | Tutorial | Residents | 50 s | VO | how-to-set-up-your-resident-account | Next |
 | T4 | Bill residents and send payment reminders | Tutorial | Admins | 50 s | VO | how-to-bill-residents-and-send-reminders | Queued |
 | T5 | Recurring bills and paying ahead | Tutorial | Admins | 45 s | Captions | how-to-set-up-automatic-monthly-levies | Queued |
@@ -47,8 +47,22 @@ Formats: every film ships as 16:9 (YouTube, the blog) and 9:16 (Shorts, Reels, W
   captions that use the app's own button labels.
 - Stock: Nigerian and African residents, guards, gates, homes and streets only. See `media/STOCK.md`.
 
+## How a film gets made (any machine: your Mac or a cloud agent)
+
+```bash
+npm install                                            # once per machine (Mac also: npx playwright install chromium)
+node tools/gemini.mjs batch media/generated/T2/shots.json   # pictures (needs GEMINI_API_KEY in .env)
+node tools/gemini.mjs tts --text "..." --out films/T2-.../audio/vo-1.wav   # one file per voice-over line
+node tools/gemini.mjs music --prompt "..." --out films/T2-.../audio/music.wav
+node tools/mix.mjs films/T2-pay-service-charge             # music + voice-over -> audio/mix.wav
+node tools/render.mjs films/T2-pay-service-charge --still 10,30   # quick layout check (renders/_stills/)
+node tools/render.mjs films/T2-pay-service-charge          # both formats -> renders/
+```
+
+Work is shared through GitHub (`ajokhai/breeup-content`): agents commit and push, and you `git pull` on the Mac.
+
 ## Voice-over
 
-Voice-over films need either your own recording (a clean, dry take per script) or a generated
-voice through the ElevenLabs add-on. Scripts are written before recording and timed at about
+Voice-over films use Gemini TTS (`gemini.mjs tts`, one file per line, placed by `film.json` "vo"),
+or your own recording (a clean, dry take per line) dropped in with the same file names. Scripts are written before recording and timed at about
 2.5 words a second.

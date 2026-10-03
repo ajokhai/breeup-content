@@ -1,9 +1,7 @@
 {
  "title": "How to pay your service charge online",
- "duration": 50,
- "formats": [
-  "16x9",
-  "9x16"
- ],
- "poster": 43.5
+ "duration": 60,
+ "formats": ["16x9", "9x16"],
+ "poster": 41.0,
+ "vo": [[0.3, "audio/vo-1.wav"], [10.0, "audio/vo-2.wav"], [18.4, "audio/vo-3.wav"], [24.4, "audio/vo-4.wav"], [32.0, "audio/vo-5.wav"], [38.7, "audio/vo-6.wav"], [46.0, "audio/vo-7.wav"]]
 }
