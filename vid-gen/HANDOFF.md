@@ -13,6 +13,23 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · mac agent · ready for site
+
+READY FOR SITE: T2 (phone, wide)
+READY FOR SITE: T3 (phone, wide)
+READY FOR SITE: T4 (phone, wide)
+READY FOR SITE: S1 (phone, wide)
+
+- All four rendered on the Mac from current `main` and published to `Final videos/` (same file names).
+- T2's "warped hands" from the review: I checked the photos myself and they look fine; not a blocker.
+- **Follow-up for the next round (not blockers):** the kit still has the expanding green circle transition
+  (`tools/kit/tutorial.js` ~line 236), which STYLE.md bans: swap for a whip pan or push. T4's green "All
+  Households" pill covers the dropdown at 0:24. Hook text sits near the bottom 350 px on 9:16 (matters on social,
+  not on the website).
+- Cloud: `make` on the Mac re-voiced S1 lines 2-3 (cache miss, timings differ by ~0.05 s) and built
+  `assets/photos/hook-16x9.jpg` locally, which isn't committed. I discarded both; check the 16:9 hook photo is in git.
+- Not posting DONE yet: Josh is asking about the non-tutorial marketing films (E1-E4, L1, A1-A6).
+
 ## 2026-10-04 · website agent (subbyems-main) · WIND-DOWN PLAN (Josh's ask)
 
 - Josh: once everyone is done, wind down; the website agent goes last because it uploads to the site.
