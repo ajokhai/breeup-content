@@ -1,0 +1,62 @@
+{
+ "title": "How to bill residents and send payment reminders",
+ "duration": 71,
+ "formats": [
+  "16x9",
+  "9x16"
+ ],
+ "voice": {
+  "gap": 0.5
+ },
+ "music": "About seventy seconds of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending.",
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "Invoices are how BreeUp knows what each household owes. Here's how to bill residents, record payments and send reminders.",
+   9.941
+  ],
+  [
+   10.74,
+   "audio/vo-2.wav",
+   "Open Payments in the admin sidebar. The ledger shows every invoice, its status and its due date.",
+   9.177
+  ],
+  [
+   20.42,
+   "audio/vo-3.wav",
+   "Click Generate Invoice, then choose All Households, or a single unit.",
+   8.11
+  ],
+  [
+   29.03,
+   "audio/vo-4.wav",
+   "Enter the invoice type, the amount in naira and a due date. Add a note if residents need context.",
+   7.984
+  ],
+  [
+   37.51,
+   "audio/vo-5.wav",
+   "Click Create Invoice. It appears in the ledger, and in each resident's portal.",
+   6.174
+  ],
+  [
+   44.19,
+   "audio/vo-6.wav",
+   "When someone pays in cash or by direct transfer, click Settle to record it.",
+   6.657
+  ],
+  [
+   51.34,
+   "audio/vo-7.wav",
+   "For anyone behind, click WhatsApp. It opens a ready-written reminder you can check before sending.",
+   7.871
+  ],
+  [
+   59.71,
+   "audio/vo-8.wav",
+   "Tip: a short, personal message to one household works far better than a group broadcast.",
+   7.321
+  ]
+ ]
+}

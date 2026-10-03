@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "When someone pays in cash or by direct transfer, click Settle to record it.",
+ "created": "2026-10-03T23:24:25.755Z",
+ "key": "6032561e4f93"
+}

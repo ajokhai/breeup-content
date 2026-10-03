@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A handsome Nigerian estate manager in his late thirties, in a crisp shirt and trousers, walks along a clean estate street lined with duplexes and painted fences, glancing at his smartphone. Palms, water tanks and a parked generator housing in the background. Warm morning light. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:24:49.051Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian gated estate setting. Good lighting, natural composition, and professional appearance suitable for marketing."
+ }
+}

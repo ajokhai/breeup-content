@@ -1,0 +1,8 @@
+Invoices are how BreeUp knows what each household owes. Here's how to bill residents, record payments and send reminders.
+Open Payments in the admin sidebar. The ledger shows every invoice, its status and its due date.
+Click Generate Invoice, then choose All Households, or a single unit.
+Enter the invoice type, the amount in naira and a due date. Add a note if residents need context.
+Click Create Invoice. It appears in the ledger, and in each resident's portal.
+When someone pays in cash or by direct transfer, click Settle to record it.
+For anyone behind, click WhatsApp. It opens a ready-written reminder you can check before sending.
+Tip: a short, personal message to one household works far better than a group broadcast.

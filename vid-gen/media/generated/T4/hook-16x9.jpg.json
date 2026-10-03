@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A confident, well-dressed Nigerian woman in her forties, the treasurer of a residents' association, works on a laptop at a tidy desk in the estate's management office, smiling slightly as she reviews figures. Through the window: interlocking paving, a gatehouse barrier and palms. Bright daylight. Laptop screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:24:47.855Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Realistic setting of a modern Nigerian estate office with natural lighting, clear composition, and professional appearance."
+ }
+}

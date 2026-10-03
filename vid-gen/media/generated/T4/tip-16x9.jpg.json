@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A good-looking Nigerian man in his early fifties, wearing a neat kaftan, sits on the porch of his duplex in a gated Lagos estate, reading a message on his phone with a warm, reassured smile. Potted plants and interlocking paving around him. Soft late-afternoon light, the lower third of the frame in shade. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:25:09.220Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with natural lighting and a dignified subject."
+ }
+}

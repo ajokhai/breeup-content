@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Open Payments in the admin sidebar. The ledger shows every invoice, its status and its due date.",
+ "created": "2026-10-03T23:24:27.083Z",
+ "key": "7810cf760915"
+}

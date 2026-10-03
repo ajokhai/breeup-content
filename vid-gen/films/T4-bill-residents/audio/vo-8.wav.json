@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Tip: a short, personal message to one household works far better than a group broadcast.",
+ "created": "2026-10-03T23:24:25.984Z",
+ "key": "7b34e4e18c53"
+}

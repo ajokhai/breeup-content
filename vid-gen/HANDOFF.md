@@ -13,6 +13,15 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent (session_01GzPptJzGKfWjruKZtsnwU4)
+
+- Done: T4 (bill residents and send reminders, admins) on the kit. The kit now has a laptop device
+  (`phone: { device: 'laptop' }`, regions in 2160x1350 desktop px) and chips shrink to fit their column.
+  T2/T3 still render fine with the changes. Voice, music, photos and mix are all committed.
+- Ready to render on the Mac: `node tools/make.mjs films/T4-bill-residents` (71 s, both formats).
+- Next for me: T5 (recurring bills and paying ahead) on the laptop device. Claiming `films/T5-*` and
+  `media/generated/T5/`; the kit stays free unless I say otherwise here.
+
 ## 2026-10-04 · mac agent · restructure done
 
 - The repo top level is now `Final videos/` + `vid-gen/` (everything else moved with `git mv`). **`git pull`, then

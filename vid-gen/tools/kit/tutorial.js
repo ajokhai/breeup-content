@@ -9,7 +9,8 @@
 //   hook:  { to: 4.8, lines: { '16x9': [...], '9x16': [...] }, gold: 'minutes' }
 //   why:   { to: 10.3, text: '...' }
 //   intro: { to: 12, lines: ["Here's how,", 'in four steps.'] }
-//   phone: { screens: { login: 'assets/screens/x.jpg', ... }, seq: [['login', 0], ['home', 27]],
+//   phone: { device: 'phone' | 'laptop' (desktop screenshots 2160x1350; regions then in those px),
+//            screens: { login: 'assets/screens/x.jpg', ... }, seq: [['login', 0], ['home', 27]],
 //            regions: { pin: [x, y, w, h] (screenshot px, 780x1688) }, cam: [[t, [zoom, fx, fy]], ...],
 //            rings: [{ r: 'pin', a: 21, b: 24, tap: 23 }], to: 49 }
 //   steps: [{ t: 11, title: 'Sign in', body: '...' }]       (the counter says STEP n OF steps.length)
@@ -70,8 +71,11 @@ function logo(ctx, IMG, cx, cy, size, k = 1) {
   if (!IMG.logo || k <= 0) return;
   ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); ctx.drawImage(IMG.logo, -size / 2, -size / 2, size, size); ctx.restore();
 }
-function pill(ctx, str, x, y, size, bg, fg, k = 1) {
+function pill(ctx, str, x, y, size, bg, fg, k = 1, maxW = 1e9) {
   if (k <= 0) return;
+  ctx.font = font(size, 500, UI);
+  const need = ctx.measureText(str).width + 56;
+  if (need > maxW) size = Math.floor(size * (maxW - 56) / (need - 56));
   const f = font(size, 500, UI); ctx.font = f;
   const w = ctx.measureText(str).width + 56, h = size * 1.9;
   ctx.save(); ctx.translate(x + w / 2, y); ctx.scale(k, k);
@@ -81,19 +85,30 @@ function pill(ctx, str, x, y, size, bg, fg, k = 1) {
 }
 
 // layout per format; 9:16 type follows the rules (body >= 56 px, headings >= 96 px)
-const L = FORMAT.pick({
+// Layout per device and format. phone: real 780x1688 phone screenshots. laptop: real 2160x1350 desktop ones.
+const LAYOUTS = { phone: FORMAT.pick({
   '16x9': { stage: [0, 0, 1080, 1080], phoneH: 940, cap: { x: 1170, y: 260, w: 650 }, num: 200, title: 84, body: 42, extraY: 860 },
   '9x16': { stage: [0, 820, 1080, 750], phoneH: 1000, cap: { x: 72, y: 250, w: 936 }, num: 104, title: 104, body: 60, extraY: 740 },
-});
-const SRC = { w: 780, h: 1688 };
-const [sx0, sy0, sw0, sh0] = L.stage;
-const PH = { w: L.phoneH * SRC.w / SRC.h, h: L.phoneH };
-PH.x = sx0 + (sw0 - PH.w) / 2; PH.y = P ? sy0 + 40 : sy0 + (sh0 - L.phoneH) / 2;
+}), laptop: FORMAT.pick({
+  '16x9': { stage: [0, 0, 1250, 1080], screenW: 1130, cap: { x: 1320, y: 260, w: 520 }, num: 180, title: 76, body: 40, extraY: 860 },
+  '9x16': { stage: [0, 820, 1080, 750], screenW: 1010, cap: { x: 72, y: 250, w: 936 }, num: 104, title: 104, body: 60, extraY: 740 },
+}) };
+let L, SRC, PH, sx0, sy0, sw0, sh0, LAPTOP = false;
+function setDevice(device = 'phone') {
+  LAPTOP = device === 'laptop';
+  L = LAYOUTS[device];
+  SRC = LAPTOP ? { w: 2160, h: 1350 } : { w: 780, h: 1688 };
+  [sx0, sy0, sw0, sh0] = L.stage;
+  PH = LAPTOP ? { w: L.screenW, h: L.screenW * SRC.h / SRC.w } : { w: L.phoneH * SRC.w / SRC.h, h: L.phoneH };
+  PH.x = sx0 + (sw0 - PH.w) / 2;
+  PH.y = LAPTOP ? sy0 + (sh0 - PH.h) / 2 - (P ? 0 : 30) : P ? sy0 + 40 : sy0 + (sh0 - L.phoneH) / 2;
+}
 // 9:16: the stage ends at 1570 px so nothing important sits under the Reels/TikTok UI; the camera centres
 // zoomed controls inside it, and the phone's lower edge is cropped at the stage.
 
 export function tutorial(cfg) {
   const ph = cfg.phone, steps = cfg.steps;
+  setDevice(ph.device);
   const t0 = steps[0].t - 0.4;                       // the phone rises just before step 1
   const tEnd = ph.to;                                // the phone scene ends (green swell) here
   const tipTo = cfg.tip?.to ?? tEnd;
@@ -170,17 +185,17 @@ export function tutorial(cfg) {
 
   function ring(ctx, u, { r, a, b, tap }) {
     if (u < a - 0.05 || u > b + 0.3) return;
-    const [x, y, w, h] = ph.regions[r], pad = 10;
+    const [x, y, w, h] = ph.regions[r], pad = LAPTOP ? 14 : 10;
     const [x0, y0] = toFrame(u, x - pad, y - pad), [x1, y1] = toFrame(u, x + w + pad, y + h + pad);
     const sc = (x1 - x0) / (w + 2 * pad), per = 2 * ((x1 - x0) + (y1 - y0));
     ctx.save(); ctx.globalAlpha = 1 - E.inCubic(prog(u, b, b + 0.25));
-    ctx.lineWidth = Math.max(5, 7 * sc); ctx.strokeStyle = C.gold; ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(5, (LAPTOP ? 14 : 7) * sc); ctx.strokeStyle = C.gold; ctx.lineCap = 'round';
     ctx.setLineDash([per * E.outCubic(prog(u, a, a + 0.5)), per]);
     rrect(ctx, x0, y0, x1 - x0, y1 - y0, 16 * sc); ctx.stroke(); ctx.setLineDash([]);
     if (tap != null && u >= tap) {
       const tk = prog(u, tap, tap + 0.6);
       ctx.globalAlpha *= (1 - tk) * 0.9; ctx.fillStyle = C.gold;
-      ctx.beginPath(); ctx.arc((x0 + x1) / 2, (y0 + y1) / 2, (20 + 70 * E.outCubic(tk)) * sc, 0, M.TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc((x0 + x1) / 2, (y0 + y1) / 2, Math.max(14, (20 + 70 * E.outCubic(tk)) * sc * (LAPTOP ? 2 : 1)), 0, M.TAU); ctx.fill();
     }
     ctx.restore();
   }
@@ -198,9 +213,15 @@ export function tutorial(cfg) {
     ctx.translate(0, (1 - k) * (sh0 + 200));
     ctx.save(); ctx.translate(ax, ay); ctx.scale(z * (1 + q), z * (1 - q)); ctx.translate(-fpx, -fpy);
     ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 24;
-    rrect(ctx, PH.x - 16, PH.y - 16, PH.w + 32, PH.h + 32, 64); ctx.fillStyle = '#0d0f0d'; ctx.fill();
+    if (LAPTOP) {
+      rrect(ctx, PH.x - 14, PH.y - 14, PH.w + 28, PH.h + 28, 22); ctx.fillStyle = '#0d0f0d'; ctx.fill();
+      ctx.shadowColor = 'transparent';
+      rrect(ctx, PH.x - 70, PH.y + PH.h + 14, PH.w + 140, 22, 11); ctx.fillStyle = '#2a2d2a'; ctx.fill();
+    } else {
+      rrect(ctx, PH.x - 16, PH.y - 16, PH.w + 32, PH.h + 32, 64); ctx.fillStyle = '#0d0f0d'; ctx.fill();
+    }
     ctx.shadowColor = 'transparent';
-    ctx.save(); rrect(ctx, PH.x, PH.y, PH.w, PH.h, 50); ctx.clip();
+    ctx.save(); rrect(ctx, PH.x, PH.y, PH.w, PH.h, LAPTOP ? 6 : 50); ctx.clip();
     ph.seq.forEach(([key, at], i) => {   // each screen slides up over the last
       const img = IMG[key], s = i === 0 ? 1 : E.inOutCubic(prog(u, at, at + 0.5));
       const nx = ph.seq[i + 1] ? E.inOutCubic(prog(u, ph.seq[i + 1][1], ph.seq[i + 1][1] + 0.5)) : 0;
@@ -221,7 +242,7 @@ export function tutorial(cfg) {
     (cfg.chips || []).forEach((c) => {
       if (u < c.a || u > c.b + 0.3) return;
       ctx.save(); ctx.globalAlpha = 1 - E.inCubic(prog(u, c.b, c.b + 0.3));
-      pill(ctx, c.text, L.cap.x, extraY() + 30, P ? 50 : 36, C.green, C.cream, springU(u, c.a, SPRING.bouncy));
+      pill(ctx, c.text, L.cap.x, extraY() + 30, P ? 50 : 36, C.green, C.cream, springU(u, c.a, SPRING.bouncy), L.cap.w);
       ctx.restore();
     });
     (cfg.codes || []).forEach((c) => drawCode(ctx, u, c));

@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Click Generate Invoice, then choose All Households, or a single unit.",
+ "created": "2026-10-03T23:24:26.569Z",
+ "key": "780e138b8252"
+}
