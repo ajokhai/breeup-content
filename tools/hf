@@ -1,0 +1,6 @@
+#!/bin/sh
+# HyperFrames, pinned in package.json, run with Node 22+ and telemetry off. Use this instead of npx hyperframes.
+#   tools/hf render <film>/  ·  tools/hf catalog <words>  ·  tools/hf snapshot <film>/
+export PATH="/opt/homebrew/bin:$PATH" HYPERFRAMES_NO_TELEMETRY=1 DO_NOT_TRACK=1
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+exec "$DIR/node_modules/.bin/hyperframes" "$@"

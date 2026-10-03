@@ -1,0 +1,12 @@
+{
+ "kind": "video",
+ "model": "veo-3.1-generate-preview",
+ "aspectRatio": "16:9",
+ "resolution": "4k",
+ "durationSeconds": 8,
+ "negativePrompt": "text, captions, subtitles, watermark, logo, cartoon, distorted hands, extra fingers",
+ "firstFrame": "stock/gen/_trials/guard-v2-2.jpg",
+ "prompt": "The guard looks up from his phone, smiles and gives a small friendly wave, then the red-and-white barrier lifts and the SUV rolls forward slowly. Camera holds steady with a gentle slow push in. Nothing passes in front of the guard.",
+ "house": true,
+ "created": "2026-10-03T22:32:52.164Z"
+}

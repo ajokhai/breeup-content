@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Five members of a residents' association executive committee, Nigerian men and women aged 35 to 65, meet around a table in an estate clubhouse, one woman pointing at a laptop, papers and a bottle of water on the table. Ceiling fan, evening.",
+ "house": true,
+ "created": "2026-10-03T22:20:30.978Z",
+ "check": {
+  "score": 6,
+  "african": true,
+  "attractive": true,
+  "artifacts": "Mild motion smearing on ceiling fan and slightly rendered hand textures.",
+  "text": "Indistinct text visible on documents and water bottle.",
+  "note": "Authentic Nigerian residential compound ambiance with a believable committee setting, suitable for standard marketing."
+ }
+}

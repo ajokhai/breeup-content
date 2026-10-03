@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A Nigerian woman in her late twenties with braided hair, in a fitted green blouse, stands at the open front door of her terrace house in a Lekki estate, smiling as she checks a message on her phone. Morning light.",
+ "house": true,
+ "created": "2026-10-03T22:22:03.238Z",
+ "check": {
+  "score": 6,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none detected",
+  "text": "small logo on shirt in background",
+  "note": "Authentic Nigerian estate setting with a natural look, though background figures detract slightly from a polished commercial aesthetic."
+ }
+}

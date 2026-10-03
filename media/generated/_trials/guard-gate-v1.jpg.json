@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "4K",
+ "refs": [],
+ "prompt": "A uniformed Nigerian estate security guard in his forties stands at the pedestrian side of a black steel sliding gate of a residential estate, checking a short code on his smartphone while a silver Toyota Corolla waits at the barrier. Early morning, soft light.",
+ "house": true,
+ "created": "2026-10-03T22:20:37.819Z",
+ "check": {
+  "score": 6,
+  "african": true,
+  "attractive": false,
+  "artifacts": "None detected; appears to be a genuine photograph.",
+  "text": "Indistinct badge lettering and blurred car license plate.",
+  "note": "Authentic Nigerian gated estate scene, though casual and documentary rather than premium lifestyle advertising."
+ }
+}

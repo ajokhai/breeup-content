@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A Nigerian woman in her thirties sits on a cushioned chair in her living room in a Lekki estate home, typing on her smartphone and smiling slightly. Afternoon light from a window.",
+ "house": true,
+ "created": "2026-10-03T22:19:47.729Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "Minor blurring around the hands holding the phone.",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with overhead water tank visible. Good lighting, composition, and natural portrayal."
+ }
+}

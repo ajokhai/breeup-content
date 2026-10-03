@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Vertical phone-format photo. A Nigerian man in his late twenties in a fitted shirt stands on the front porch of a duplex in a gated estate, reading his phone. Subject in the middle third of the frame, sky and roofline above him, paving below, leaving clear space at top and bottom.",
+ "house": true,
+ "created": "2026-10-03T22:20:32.703Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with a well-groomed subject and clean composition."
+ }
+}

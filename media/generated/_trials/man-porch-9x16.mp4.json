@@ -1,0 +1,12 @@
+{
+ "kind": "video",
+ "model": "veo-3.1-generate-preview",
+ "aspectRatio": "9:16",
+ "resolution": "1080p",
+ "durationSeconds": 8,
+ "negativePrompt": "text, captions, subtitles, watermark, logo, cartoon, distorted hands, extra fingers",
+ "firstFrame": "stock/gen/_trials/man-porch-9x16.jpg",
+ "prompt": "The man looks down at his phone, then smiles slightly and starts typing. A light breeze moves the palm leaves. The camera pushes in slowly.",
+ "house": true,
+ "created": "2026-10-03T22:22:29.664Z"
+}
