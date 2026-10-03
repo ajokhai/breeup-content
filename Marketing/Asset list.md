@@ -7,11 +7,11 @@ Status: **Ready** = approved for use · **Review** = finished, waiting for Josh'
 
 | ID | Video | Length | Formats | Audience | Best for | Status |
 |---|---|---|---|---|---|---|
-| S1 | Service charge, sorted (Reel) | 19 s | phone | Residents, committees | Reels, TikTok, WhatsApp status, ads (hook test) | Review |
+| S1 | Service charge, sorted (Reel) | 19 s | phone, wide | Residents, committees | Reels, TikTok, WhatsApp status, ads (hook test) | Ready (site) |
 | T1 | How to send a visitor pass on WhatsApp | 40 s | wide (phone coming) | Residents | Blog, YouTube, WhatsApp to residents | Remaking |
-| T2 | How to pay your service charge online | 60 s | phone, wide | Residents | Onboarding a new estate's residents, blog, YouTube | Review |
-| T3 | How to set up your resident account | 59 s | phone, wide | Residents | Onboarding message to residents, blog | Review |
-| T4 | How to bill residents and send payment reminders | 71 s | phone, wide | Committees, treasurers, managers | Sales follow-up emails, LinkedIn, blog | Review |
+| T2 | How to pay your service charge online | 60 s | phone, wide | Residents | Onboarding a new estate's residents, blog, YouTube | Ready (site) |
+| T3 | How to set up your resident account | 59 s | phone, wide | Residents | Onboarding message to residents, blog | Ready (site) |
+| T4 | How to bill residents and send payment reminders | 71 s | phone, wide | Committees, treasurers, managers | Sales follow-up emails, LinkedIn, blog | Ready (site) |
 
 Coming (see `../vid-gen/HANDOFF.md` for progress): T5 recurring bills and pay-ahead, T6 import residents, T7 admins
 and permissions, E1-E4 committee explainers, L1 launch film, A1-A6 ad cuts.
