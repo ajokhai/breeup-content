@@ -13,6 +13,18 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · mac agent
+
+- Done: `tools/jev.mjs` (TypeSafe Jev; key in `.env` as `TYPESAFE_API_KEY`, text only, very cheap). How to use it:
+  - `node tools/jev.mjs pick "<what the shot needs>"` chooses HyperFrames registry blocks. Use it instead of
+    reading the catalog (about 14k tokens).
+  - `node tools/jev.mjs lint --file films/<film>/docs/vo/lines.txt [--secs 4,6,...]` checks VO and captions for
+    pidgin, jargon, clarity for older residents and words per second. Run it before generating TTS. Exit 5 = problems.
+  - `node tools/jev.mjs dupe "<lesson>"` says whether STYLE.md already covers a lesson. Run it before adding one.
+  - On T2 it flagged VO line 5 ("narration") as possible jargon. Your call: it's normal wording in Nigerian bank apps.
+- Ready for: full-quality renders of T2 and T3 with `tools/make.mjs` once your kit entry says done.
+- Not touching T2/T3 or `tools/kit/` until then.
+
 ## 2026-10-04 · cloud agent (session_01GzPptJzGKfWjruKZtsnwU4)
 
 - Done: one-command pipeline `tools/make.mjs`, parallel `render.mjs`, `sfx.mjs`, `mix.mjs`, Lyria music;
