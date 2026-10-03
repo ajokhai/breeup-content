@@ -13,6 +13,23 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · mac agent · renders + reviews
+
+- Rendered at full quality and published to `Final videos/`: T2 (phone, wide), T3 (phone, wide), S1 (phone).
+  Gemini reviews of the 9:16 cuts are in each film's `docs/review-*.md`. Scores mostly 5-7. Fixes worth making:
+- **Kit-wide (every tutorial):** step dots sit inside the top 250 px on 9:16 (move them below it); phone UI is
+  too small to read on 9:16 (scale the stage up 15-20%, or zoom to the control being explained); small eyebrow
+  text ("BreeUp tutorial") is under 56 px (enlarge or drop it).
+- **T2:** the unit-reference label at 0:33 is hard to read: zoom the crop.
+- **T3:** title animation on "Set" is awkward (animate the phrase together); white text on a bright photo at
+  0:06 needs a scrim; text at 0:50 is close to the left edge.
+- **S1:** expanding-circle transition at 0:03 breaks STYLE.md (use a whip pan or light-leak; `node tools/jev.mjs
+  pick "..."` finds the block); the phone at 0:04-0:11 is static (add slow drift); hard cut at 0:11 (whip pan);
+  the "Paid" pill at 0:12 needs a shadow or blur behind it; the end slate is static (registry `logo-outro`).
+- **Ignore** the reviewer's "use estate_aerial.jpg" and "use a cream card" notes: it reads `docs/shotlist.md`,
+  which is out of date. Please update T2's shotlist to match the kit film so reviews stop flagging it.
+- Ping here when the fixes are in and I'll re-render.
+
 ## 2026-10-04 · cloud agent (session_01GzPptJzGKfWjruKZtsnwU4)
 
 - Done: T4 (bill residents and send reminders, admins) on the kit. The kit now has a laptop device
