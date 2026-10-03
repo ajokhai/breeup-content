@@ -2,10 +2,11 @@
 // Hook on a Veo clip, the real Bills screens big and central, word-by-word captions from film.json "vo".
 import * as M from './lib/motion.js';
 
-const { W, H, E, prog, lerp, clamp, springU, springKeys, SPRING, font, text, fill, cover, rrect } = M;
+const { W, H, FORMAT, E, prog, lerp, clamp, springU, springKeys, SPRING, font, text, fill, cover, rrect } = M;
 
 const C = { green: '#1a472a', deep: '#123220', cream: '#f6f4ee', gold: '#c9a84c', ink: '#1c1f1b', white: '#ffffff' };
 const DISPLAY = 'Display', UI = 'UI';
+const P = FORMAT.portrait;   // 9:16 is the main cut; 16:9 is laid out for desktop and YouTube
 
 const HITS = [
   [0, 'hook', 'sub', { len: 0.6 }],
@@ -92,14 +93,14 @@ function sceneHook(ctx, u, IMG) {
 
 // ------------------------------------------------------------ phone (u 6.5..19)
 const SRC = { w: 780, h: 1688 };
-const PH = { h: 1400 }; PH.w = PH.h * SRC.w / SRC.h; PH.x = (W - PH.w) / 2; PH.y = 230;
+const PH = { h: P ? 1400 : 940 }; PH.w = PH.h * SRC.w / SRC.h; PH.x = (W - PH.w) / 2; PH.y = P ? 230 : 70;
 const R = { billsTab: [236, 1578, 118, 96], acctCopy: [358, 548, 142, 60], refCopy: [322, 1122, 140, 60], acct: [34, 500, 712, 420] };
 const CAM = [[6.5, [1, 0.5, 0.5]], [8, [1.5, 0.36, 0.88]], [9.8, [1, 0.5, 0.5]], [10.6, [1.55, 0.45, 0.33]], [13, [1.55, 0.42, 0.68]], [15.6, [1.05, 0.5, 0.45]]];
 const camAt = (u) => springKeys(u, CAM, SPRING.snappy);
 function toFrame(u, x, y) {
   const [z, fx, fy] = camAt(u);
   const fpx = PH.x + fx * PH.w, fpy = PH.y + fy * PH.h, zk = clamp((z - 1) / 0.5);
-  const ax = lerp(fpx, W / 2, zk), ay = lerp(fpy, H * 0.45, zk);
+  const ax = lerp(fpx, W / 2, zk), ay = lerp(fpy, H * (P ? 0.45 : 0.5), zk);
   return [ax + (PH.x + x * PH.w / SRC.w - fpx) * z, ay + (PH.y + y * PH.h / SRC.h - fpy) * z];
 }
 const RINGS = [{ r: 'billsTab', a: 8.4, b: 9.7, tap: 9 }, { r: 'acctCopy', a: 11, b: 13, tap: 12 }, { r: 'refCopy', a: 13.3, b: 15.4, tap: 14.2 }, { r: 'acct', a: 16, b: 18.8 }];
@@ -125,7 +126,7 @@ function scenePhone(ctx, u, IMG) {
   const k = 1;
   const [z, fx, fy] = camAt(u);
   const fpx = PH.x + fx * PH.w, fpy = PH.y + fy * PH.h, zk = clamp((z - 1) / 0.5);
-  const ax = lerp(fpx, W / 2, zk), ay = lerp(fpy, H * 0.45, zk);
+  const ax = lerp(fpx, W / 2, zk), ay = lerp(fpy, H * (P ? 0.45 : 0.5), zk);
   ctx.save();
   ctx.translate(0, (1 - k) * H);
   ctx.save();
@@ -142,7 +143,7 @@ function scenePhone(ctx, u, IMG) {
   ctx.restore();
   RINGS.forEach((r) => ring(ctx, u, r));
   ctx.restore();
-  pill(ctx, 'Any Nigerian bank app', W / 2, 300, 50, C.cream, C.green, springU(u, 15.8, SPRING.bouncy) * (1 - E.inCubic(prog(u, 18.6, 19))));
+  pill(ctx, 'Any Nigerian bank app', W / 2, P ? 300 : 110, 50, C.cream, C.green, springU(u, 15.8, SPRING.bouncy) * (1 - E.inCubic(prog(u, 18.6, 19))));
 
 }
 
@@ -153,8 +154,8 @@ function sceneWhy(ctx, u, IMG) {
   scrim(ctx, H * 0.4, H, 0.7);
   // the receipt pill gets a soft dark pool behind it so it reads on the bright sky
   const pk = springU(u, 21.5, SPRING.bouncy);
-  if (pk > 0) { ctx.save(); ctx.globalAlpha = Math.min(1, pk) * 0.5; ctx.shadowColor = '#000'; ctx.shadowBlur = 90; rrect(ctx, W / 2 - 330, 270, 660, 120, 60); ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fill(); ctx.restore(); }
-  pill(ctx, '✓  Paid · receipt sent', W / 2, 330, 50, C.white, C.green, springU(u, 21.5, SPRING.bouncy));
+  if (pk > 0) { ctx.save(); ctx.globalAlpha = Math.min(1, pk) * 0.5; ctx.shadowColor = '#000'; ctx.shadowBlur = 90; rrect(ctx, W / 2 - 330, (P ? 330 : 140) - 60, 660, 120, 60); ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fill(); ctx.restore(); }
+  pill(ctx, '✓  Paid · receipt sent', W / 2, P ? 330 : 140, 50, C.white, C.green, springU(u, 21.5, SPRING.bouncy));
 }
 
 // ------------------------------------------------------------ end (u 24..30)
@@ -166,28 +167,28 @@ function sceneEnd(ctx, u, IMG) {
   const lk = springU(u, 24.3, SPRING.bouncy);
   const br = 1 + 0.035 * Math.sin((u - 24) * 1.6), dr = -14 * prog(u, 24, 30);
   ctx.translate(0, dr);
-  if (IMG.logo && lk > 0) { ctx.save(); ctx.translate(W / 2, 560); ctx.scale(lk * br, lk * br); ctx.drawImage(IMG.logo, -110, -110, 220, 220); ctx.restore(); }
+  if (IMG.logo && lk > 0) { ctx.save(); ctx.translate(W / 2, P ? 560 : 250); ctx.scale(lk * br, lk * br); ctx.drawImage(IMG.logo, -110, -110, 220, 220); ctx.restore(); }
   const f = font(124, 400, DISPLAY);
   ['Service charge,', 'sorted.'].forEach((ln, i) => {
-    const kk = springU(u, 24.6 + i * 0.4, SPRING.gentle), y = 860 + i * 140;
+    const kk = springU(u, 24.6 + i * 0.4, SPRING.gentle), y = (P ? 860 : 520) + i * 140;
     ctx.save(); ctx.beginPath(); ctx.rect(0, y - 130, W, 170); ctx.clip();
     text(ctx, ln, W / 2, y + (1 - kk) * 140, f, i ? C.gold : C.cream, 'center');
     ctx.restore();
   });
   const rk = E.inOutCubic(prog(u, 25.6, 26.6));
-  if (rk > 0) { ctx.fillStyle = C.gold; ctx.fillRect(W / 2 - 230, 1030, 460 * rk, 6); }
+  if (rk > 0) { ctx.fillStyle = C.gold; ctx.fillRect(W / 2 - 230, P ? 1030 : 690, 460 * rk, 6); }
   const bk = E.outCubic(prog(u, 26, 26.8));
-  text(ctx, 'breeup.com', W / 2, 1180, font(64, 500, UI), `rgba(246,244,238,${bk})`, 'center');
+  text(ctx, 'breeup.com', W / 2, P ? 1180 : 840, font(64, 500, UI), `rgba(246,244,238,${bk})`, 'center');
   ctx.restore();
 }
 
 M.film({
   fonts: [font(100, 400, DISPLAY), font(40, 400, UI), font(40, 500, UI)],
   images: {
-    why: 'assets/photos/why-9x16.jpg', logo: 'assets/logo.svg',
+    why: `assets/photos/why-${P ? '9x16' : '16x9'}.jpg`, logo: 'assets/logo.svg',
     home: 'assets/screens/res-home.jpg', bills: 'assets/screens/res-bills.jpg',
   },
-  videos: { clip: 'assets/clips/man-balcony-9x16.webm' },
+  videos: { clip: `assets/clips/man-balcony-${P ? '9x16' : '16x9'}.webm` },
   hits: HITS,
   draw(ctx, u, t, IMG) {
     const whip = (at, a, b) => {
@@ -202,7 +203,7 @@ M.film({
     else if (u < 24) sceneWhy(ctx, u, IMG);
     else sceneEnd(ctx, u, IMG);
     // captions sit lower over the phone and glide between heights during the whip pans
-    const cy = 1330 + 170 * (E.inOutCubic(prog(u, 6.15, 6.85)) - E.inOutCubic(prog(u, 18.65, 19.35)));
+    const cy = (P ? 1330 : 930) + (P ? 170 : 60) * (E.inOutCubic(prog(u, 6.15, 6.85)) - E.inOutCubic(prog(u, 18.65, 19.35)));
     if (u < 24) drawCaptions(ctx, t, cy);
   },
 });

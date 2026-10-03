@@ -1,0 +1,20 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [
+  "media/generated/S1/hook-9x16.jpg"
+ ],
+ "prompt": "A handsome, well-groomed Nigerian man in his early thirties, short twists and a neat beard, wearing a crisp linen shirt, leans on the railing of the upstairs balcony of his duplex in a gated Abuja estate, frowning slightly at his smartphone as he scrolls a busy group chat. Below and behind him: interlocking paving, palms, neighbouring duplexes and a water tank. Soft golden early-evening light. Wide landscape framing: the man on the right third, the estate stretching out to the left. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-03T23:52:53.135Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with a well-groomed subject and natural lighting."
+ }
+}

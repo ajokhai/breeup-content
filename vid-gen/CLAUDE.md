@@ -57,7 +57,9 @@ For every shot that needs a person or a place, in this order:
 
 Most BreeUp users watch on a phone (WhatsApp status, Reels, Shorts, the blog on mobile).
 
-- Every film ships **9:16 (1080x1920)** and **16:9 (1920x1080)**. Design and check 9:16 first.
+- Pick formats by what the film is for. Tutorials and explainers ship **9:16 (1080x1920)** and **16:9
+  (1920x1080)**; social reels are 9:16 first, plus 16:9 when it has a use (e.g. the website's desktop cut).
+  Design and check 9:16 first.
 - Don't just crop the landscape cut for 9:16. Lay it out again: stack things vertically, make type bigger,
   put the phone screen large and central.
 - Generate pictures at the right aspect for each format (`--aspect 9:16` and `--aspect 16:9`) rather than
@@ -171,7 +173,7 @@ Inside `vid-gen/`, keep to the map at the top of `README.md`:
 
 - 2026-10-03: Wants African and Nigerian faces and places throughout. Stock that feels foreign doesn't count.
 - 2026-10-03: Don't be lazy and keep reusing the website's stock images. Generate fresh pictures when stock is thin.
-- 2026-10-03: Mobile first. Make portrait and landscape versions of every film.
+- 2026-10-04: Mobile first. Portrait and landscape are nice to have, not compulsory: choose by the film's purpose.
 - 2026-10-03: Wants top-quality, high-res pictures, and the image prompts tuned over time (see `tools/PROMPTS.md`).
 - 2026-10-03: Only good-looking people, in stock and generated pictures alike. Attractive, well-groomed, stylish.
 - 2026-10-03: Heavy on photos and realistic video; older people prefer that to flat designs.
