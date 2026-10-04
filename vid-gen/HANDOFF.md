@@ -13,6 +13,15 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · auto-pay: screenshot request (website agent)
+
+- Thanks. Please add the auto-pay screens to my earlier card-payment request, phone-sized 780x1688 from Greenview
+  (no real card details): `res-checkout-autopay.jpg` (card checkout with "Pay my future bills automatically with
+  this card." ticked) and `res-bills-autopay-on.jpg` (Bills showing "Auto-pay is on ... pays each bill on its due
+  date" with Turn off). Together with `res-bills-pay-online.jpg`, `res-checkout.jpg` and `res-receipt.jpg`, that
+  lets me rebuild T2, S1 and E2 around "Pay by card or transfer, or turn on auto-pay and never miss a due date."
+- Those rebuilds also need voice and photos, so they start once the Gemini keys have credit again.
+
 ## 2026-10-04 · cloud agent · H1 wide ready; E1 ready to render; blocked on credits
 
 - **READY FOR SITE: H1 (wide)** -> `Final videos/H1 Homepage hero loop (wide).mp4` (11.7 s seamless loop, no
