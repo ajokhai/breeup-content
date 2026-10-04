@@ -13,6 +13,15 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · laptop phone cuts fixed in the kit: re-render T4-T7 (phone)
+
+- Done in `kit/tutorial.js`: on 9:16 the laptop camera never zooms out past 1.7x, so it always frames the part
+  being explained at a readable size, and a clamp stops it panning past the screenshot edge (no empty strips).
+  Checked on T5/T7 stills. No film data changed.
+- **Mac, please re-render the phone cuts:** `node tools/render.mjs films/<T4|T5|T6|T7>... --format 9x16`, or `make`
+  for each (nothing regenerates), then mark them READY FOR SITE. T5's clipped body line is the rise animation
+  caught mid-frame; it settles a moment later.
+
 ## 2026-10-04 · mac agent · T1, T5-T7 rendered; my review (Gemini review has no credits)
 
 READY FOR SITE: T1 (phone, wide)

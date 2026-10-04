@@ -136,11 +136,23 @@ export function tutorial(cfg) {
   const tEnd = ph.to;                                // the phone scene ends (green swell) here
   const tipTo = cfg.tip?.to ?? tEnd;
   const cam = [[t0, [1, 0.5, 0.5]], ...(ph.cam || [])];
-  const camAt = (u) => springKeys(u, cam, SPRING.gentle);
-  const toFrame = (u, x, y) => {
+  // 9:16 laptop: desktop screens are unreadable whole on a phone, so the camera never zooms out past 1.7x
+  // (it frames the part being explained); everywhere it is clamped so it never pans past the screenshot's edge
+  const MINZ = LAPTOP && P ? 1.7 : 1;
+  const camAt = (u) => { const c = springKeys(u, cam, SPRING.gentle); return [Math.max(MINZ, c[0]), c[1], c[2]]; };
+  const view = (u) => {
     const [z, fx, fy] = camAt(u);
     const fpx = PH.x + fx * PH.w, fpy = PH.y + fy * PH.h, zk = clamp((z - 1) / 0.5);
-    const ax = lerp(fpx, sx0 + sw0 / 2, zk), ay = lerp(fpy, sy0 + sh0 / 2, zk);
+    let ax = lerp(fpx, sx0 + sw0 / 2, zk), ay = lerp(fpy, sy0 + sh0 / 2, zk);
+    if (z > 1) {
+      const l = ax + (PH.x - fpx) * z, r = ax + (PH.x + PH.w - fpx) * z, t = ay + (PH.y - fpy) * z, b = ay + (PH.y + PH.h - fpy) * z;
+      if (r - l >= sw0) { if (l > sx0) ax -= l - sx0; else if (r < sx0 + sw0) ax += sx0 + sw0 - r; }
+      if (b - t >= sh0) { if (t > sy0) ay -= t - sy0; else if (b < sy0 + sh0) ay += sy0 + sh0 - b; }
+    }
+    return { z, fpx, fpy, ax, ay };
+  };
+  const toFrame = (u, x, y) => {
+    const { z, fpx, fpy, ax, ay } = view(u);
     return [ax + (PH.x + x * PH.w / SRC.w - fpx) * z, ay + (PH.y + y * PH.h / SRC.h - fpy) * z];
   };
   let bodyBottom = 0;   // set by drawStep each frame; chips, codes and cards sit below it
@@ -230,9 +242,7 @@ export function tutorial(cfg) {
     else { ctx.fillStyle = C.green; ctx.fillRect(...L.stage); }
     if (P && !bg) { ctx.fillStyle = C.deep; ctx.fillRect(0, sy0 + sh0, W, H - sy0 - sh0); }
     const k = springU(u, t0, SPRING.gentle), q = 0.03 * wobble(u - t0 - 0.35, 3.5, 9);
-    const [z, fx, fy] = camAt(u);
-    const fpx = PH.x + fx * PH.w, fpy = PH.y + fy * PH.h, zk = clamp((z - 1) / 0.5);
-    const ax = lerp(fpx, sx0 + sw0 / 2, zk), ay = lerp(fpy, sy0 + sh0 / 2, zk);
+    const { z, fpx, fpy, ax, ay } = view(u);
     ctx.save(); ctx.beginPath(); ctx.rect(...L.stage); ctx.clip();
     ctx.translate(0, (1 - k) * (sh0 + 200));
     ctx.save(); ctx.translate(ax, ay); ctx.scale(z * (1 + q), z * (1 - q)); ctx.translate(-fpx, -fpy);
