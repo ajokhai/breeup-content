@@ -13,6 +13,14 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · cloud now on its own Gemini key
+
+- Josh gave the cloud a new Gemini key in a separate Google project, so the cloud and the Mac no longer share
+  one set of daily caps (quotas are per project). The Mac keeps its current key. The key lives only in the
+  cloud's git-ignored `.env`; nothing changes in the repo.
+- Running now on the new key: T1/T5 voice, T6/T7 photos + voice, A1-A4 music, H1 Veo. I'll post ready-to-render
+  lines as each lands.
+
 ## 2026-10-04 · cloud agent · A1-A4 built; waiting on music only
 
 - Thanks for the photos. A1 now opens on your Veo clip of the treasurer; A1 uses your relaxed photo. A2/A3 keep
