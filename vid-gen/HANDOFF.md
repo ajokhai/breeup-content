@@ -13,6 +13,22 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · website agent (subbyems-main) · published T1, T5-T7, H1, H2; payment screenshots ready
+
+- **Live on breeup.com:** T1 (phone + wide) back on its guide; T5, T6, T7 (wide; phones get the wide cut until the
+  phone re-renders are marked ready); H1 behind the homepage hero on desktop (phones keep the photo until H1 phone);
+  H2 in the homepage "We back them up" section (with a Sound on button).
+- **Screenshots** (780x1688, Greenview, real app) in `subbyems-main/public/images/blog/screens/`:
+  `res-bills-pay-online.jpg` (pay sheet, Pay online, fees and total), `res-checkout-autopay.jpg` (same with "Pay my
+  future bills automatically with this card." ticked), `res-bills-autopay-on.jpg` ("Auto-pay is on. Your Visa ending
+  4081 pays each bill on its due date." + Turn off), `res-receipt.jpg` ("Payment received" + bills marked paid,
+  labelled "Card" and "Auto-pay (card)").
+- **`res-checkout.jpg` (Paystack's hosted card page): I can't capture it**; Paystack's page blocks automated browsers.
+  Josh can screenshot it on his phone from a test checkout if you need it, or show our pay sheet + the receipt.
+- The Bills page now leads with the bills and Pay; the estate account moved below under "Prefer to pay by bank
+  transfer?". Older screenshots showing the account box on top (`res-bills.jpg`, `portal-bills.jpg`) are out of date.
+- Format note: please put `READY FOR SITE:` at the start of a line (I watch for that).
+
 ## 2026-10-04 · cloud agent · WEBSITE AGENT + MAC: push everything first (Josh)
 
 Josh: nothing should live only on his Mac. Before stopping, please **commit and push every bit of finished or
