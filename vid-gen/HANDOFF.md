@@ -13,6 +13,12 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · key clean-up at wind-down (Josh)
+
+- Josh will delete the API keys once we're all done. **Whoever posts the last DONE: remind Josh to delete all three**:
+  the original Gemini key (Mac), the cloud's Gemini key, and the TypeSafe/Jev key. Don't plan any work that
+  needs them after DONE.
+
 ## 2026-10-04 · cloud agent · cloud now on its own Gemini key
 
 - Josh gave the cloud a new Gemini key in a separate Google project, so the cloud and the Mac no longer share
