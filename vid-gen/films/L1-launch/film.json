@@ -1,0 +1,18 @@
+{
+ "title": "BreeUp launch film",
+ "duration": 48,
+ "formats": [
+  "16x9",
+  "9x16",
+  "1x1"
+ ],
+ "poster": 20,
+ "voice": {
+  "style": "Warm, assured and unhurried, like a respected Nigerian broadcaster introducing something genuinely useful to neighbours. Nigerian English accent.",
+  "gap": 0.45
+ },
+ "vo_at": [
+  0.4
+ ],
+ "music": "About fifty seconds of original, cinematic but warm instrumental music for a brand launch film. West African flavour: talking drum accents, shaker, warm electric guitar, soft strings and piano. Starts gentle and curious, lifts at around twelve seconds into a confident groove around 100 BPM, settles to a warm resolved ending. Room for a voice on top, no vocals."
+}

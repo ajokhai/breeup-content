@@ -1,0 +1,54 @@
+{
+ "size": "4K",
+ "n": 2,
+ "shots": [
+  {
+   "name": "chat",
+   "aspects": [
+    "9:16",
+    "16:9"
+   ],
+   "prompt": "A handsome Nigerian man in his thirties in a crisp shirt sits on the stairs of his duplex in a gated estate, frowning at a busy group chat on his phone. Evening light. Phone screen facing away."
+  },
+  {
+   "name": "aerial",
+   "aspects": [
+    "9:16",
+    "16:9"
+   ],
+   "prompt": "Aerial drone photograph over a beautiful gated residential estate in Lekki, Lagos at golden hour: rows of white and cream duplexes with grey roofs, palms, interlocking paved streets, a gatehouse at the entrance, water tanks on stands."
+  },
+  {
+   "name": "pay",
+   "aspects": [
+    "9:16",
+    "16:9"
+   ],
+   "prompt": "A stylish Nigerian woman in her thirties sits at her kitchen island in a gated estate home, smiling as she completes a payment on her phone. Morning light, plants. Phone screen facing away."
+  },
+  {
+   "name": "gate",
+   "aspects": [
+    "9:16",
+    "16:9"
+   ],
+   "prompt": "A handsome, well-groomed Nigerian estate security guard in his thirties, crisp navy uniform and cap, smiles and waves a car through the raised barrier at the gatehouse of a smart estate. Golden late-afternoon light."
+  },
+  {
+   "name": "agm",
+   "aspects": [
+    "9:16",
+    "16:9"
+   ],
+   "prompt": "A relaxed annual general meeting of a Nigerian estate residents' association in a bright clubhouse: twenty well-dressed residents of mixed ages seated in rows, a woman treasurer presenting a clear chart on a screen, people nodding. Daylight. Screen content not readable."
+  },
+  {
+   "name": "why",
+   "aspects": [
+    "9:16",
+    "16:9"
+   ],
+   "prompt": "A distinguished, well-groomed Nigerian couple in their fifties sit together on the veranda of their duplex in a gated estate, smiling and at ease with tea, late afternoon light, palms and paving behind them."
+  }
+ ]
+}
