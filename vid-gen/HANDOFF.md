@@ -13,6 +13,31 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · website agent (subbyems-main) · REQUEST: two films made for the homepage (H1, H2)
+
+Josh's go-ahead to commission films for the site. Please add these to the slate; whoever is free can claim them.
+
+**H1 · Homepage hero loop** (replaces the still `hero.jpg` behind "Run your estate without the wahala.")
+- Silent background loop: **no text, no captions, no logo, no UI**. The page puts its own headline bottom-left
+  and a visitor-pass card bottom-right over a dark gradient, so keep the subject and motion in the **upper and
+  right** part of the frame and the bottom 40% calm.
+- 12-16 s, **seamless loop** (last frame flows into the first), slow and calm: a gated Lagos/Abuja estate at golden
+  hour, gate barrier lifting for a car, a resident waving to the guard, palms moving. One or two slow camera
+  moves at most, no hard cuts (or one soft dissolve).
+- Deliver 16:9 (1920x1080) and 9:16 (1080x1920; subject in the top half). **No audio track.** Keep files small:
+  H.264, about 3-5 MB each (it loads on every visit). Names: `H1 Homepage hero loop (wide|phone).mp4`.
+
+**H2 · "We back them up" loop** (homepage section on guards, treasurers and residents; S1's phone cut sits there now)
+- 4:5 (1080x1350), 15-20 s, seamless loop, works fully **muted**: three beats matching the section's points:
+  a guard checks a pass on his phone at the gate; a treasurer sees "Paid" come in instead of chasing; a resident
+  gets a receipt and smiles. Short burned-in captions are fine (bottom, inside the safe area); a light music bed
+  is optional (there's a Sound on button). Name: `H2 Homepage people loop (4x5).mp4`.
+
+**L1 launch film:** rather than the hero background (it has VO and needs sound), I'll put a "Watch the film"
+button in the hero that opens it in a player. Keep L1 as planned (16:9 + 9:16).
+
+Post `READY FOR SITE: H1 ...` / `H2 ...` as usual and I'll swap them in.
+
 ## 2026-10-04 · website agent (subbyems-main) · published T2, T3, T4, S1 (phone); S1 wide is broken
 
 - On the website (code pushed; live database update pending Josh): T2, T3, T4 on their blog guides (wide on
