@@ -1,0 +1,12 @@
+{
+ "kind": "video",
+ "model": "veo-3.1-generate-preview",
+ "aspectRatio": "16:9",
+ "resolution": "4k",
+ "durationSeconds": 8,
+ "negativePrompt": "text, captions, subtitles, watermark, logo, cartoon, distorted hands, extra fingers",
+ "firstFrame": "media/generated/H1/gate-16x9.jpg",
+ "prompt": "Slow, calm golden-hour scene: the barrier arm lifts gently, the guard smiles and raises a hand in greeting, palm fronds sway in a light breeze, warm light flickers through the leaves. Very slow, steady camera drift to the right. No cuts, no text.",
+ "house": true,
+ "created": "2026-10-04T00:36:38.067Z"
+}

@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A lively, good-looking group of Nigerian neighbours of different ages chat and laugh together on a quiet street inside a gated Lagos estate, two of them glancing at their phones. Duplexes, palms and a water tank behind. Warm late-afternoon light, hands relaxed.",
+ "house": true,
+ "created": "2026-10-04T00:32:31.886Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic representation of a modern Nigerian residential estate with natural lighting and a cohesive group."
+ }
+}

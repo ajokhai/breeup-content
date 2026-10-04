@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Every payment is recorded against its home, so the AGM report is a summary of records you already have.",
+ "created": "2026-10-04T00:36:20.775Z",
+ "key": "20b9f9fc07b2"
+}

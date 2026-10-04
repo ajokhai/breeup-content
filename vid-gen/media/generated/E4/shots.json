@@ -1,4 +1,14 @@
-{ "size": "2K", "n": 2, "shots": [
- { "name": "tense", "prompt": "An estate residents' AGM in a clubhouse hall in Lagos: rows of well-dressed Nigerian residents, one man standing and asking a pointed question with his hand raised, others looking at the committee table with doubtful faces. Daylight from tall windows. No papers with readable text." },
- { "name": "calm", "prompt": "The same estate clubhouse hall in Lagos at an AGM, now relaxed: well-dressed Nigerian residents of different ages nodding and smiling as the chairman and treasurer at the front table speak calmly. Daylight from tall windows, hands relaxed, no readable text anywhere." }
-]}
+{
+  "size": "2K",
+  "n": 2,
+  "shots": [
+    {
+      "name": "tense",
+      "prompt": "A single photograph, not a collage. Medium shot at an estate residents' AGM in a bright clubhouse in Lagos: a handsome, well-dressed Nigerian man in his fifties stands and asks a pointed question, two stylish neighbours beside him look on with doubtful expressions. Daylight from tall windows. Hands natural, no papers with readable text."
+    },
+    {
+      "name": "calm",
+      "prompt": "A single photograph, not a collage. Medium shot at an estate residents' AGM in a bright clubhouse in Lagos: an elegant Nigerian chairwoman in her fifties and a well-dressed treasurer at the front table speak calmly, while three attractive, well-dressed residents in the front row nod and smile. Daylight from tall windows. Hands relaxed, no readable text anywhere."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "The gatehouse is where an estate's reputation is made. Long queues, calls to confirm every guest, and logbooks nobody can search.",
+ "created": "2026-10-04T00:34:42.491Z",
+ "key": "5b62601bbf04"
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "With BREE-UP, every household is billed on schedule, and you can see who has paid at a glance.",
+ "created": "2026-10-04T00:33:03.489Z",
+ "key": "31a0778d4603"
+}

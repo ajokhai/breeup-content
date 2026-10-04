@@ -1,1 +1,44 @@
-{ "title": "A calmer gatehouse", "duration": 60, "formats": ["16x9", "9x16"], "voice": { "gap": 0.6 }, "music": "About one minute of original, warm, confident instrumental background music for a short explainer film: West African guitar, soft hand percussion, warm bass and gentle keys, around 96 BPM, steady under a voice, no vocals, a resolved ending." }
+{
+ "title": "A calmer gatehouse",
+ "duration": 41.47,
+ "formats": [
+  "16x9",
+  "9x16"
+ ],
+ "voice": {
+  "gap": 0.6
+ },
+ "music": "About one minute of original, warm, confident instrumental background music for a short explainer film: West African guitar, soft hand percussion, warm bass and gentle keys, around 96 BPM, steady under a voice, no vocals, a resolved ending.",
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "The gatehouse is where an estate's reputation is made. Long queues, calls to confirm every guest, and logbooks nobody can search.",
+   10.457
+  ],
+  [
+   11.36,
+   "audio/vo-2.wav",
+   "With BreeUp, residents create a visitor pass in two taps, and send it on WhatsApp.",
+   7.695
+  ],
+  [
+   19.65,
+   "audio/vo-3.wav",
+   "The guard checks the code on their phone. Every entry is timestamped and searchable.",
+   7.377
+  ],
+  [
+   27.63,
+   "audio/vo-4.wav",
+   "There's no new hardware. It runs on the phones your residents and guards already carry.",
+   6.671
+  ],
+  [
+   34.9,
+   "audio/vo-5.wav",
+   "And the guard still has the final say.",
+   2.57
+  ]
+ ]
+}

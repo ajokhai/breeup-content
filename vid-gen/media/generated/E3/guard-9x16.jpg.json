@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A smart, good-looking Nigerian estate guard in a neat dark uniform checks a code on his phone at the gatehouse window and nods with a calm smile. Barrier arm and palms behind. Warm afternoon light. Phone held in one hand, screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-04T00:34:03.403Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic, well-lit shot of a security guard at an estate gatehouse using a mobile phone. Perfectly fits the Nigerian residential context."
+ }
+}

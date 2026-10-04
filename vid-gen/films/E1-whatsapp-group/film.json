@@ -1,1 +1,44 @@
-{ "title": "When the WhatsApp group stops working", "duration": 60, "formats": ["16x9", "9x16"], "voice": { "gap": 0.6 }, "music": "About one minute of original, warm, confident instrumental background music for a short explainer film: West African guitar, soft hand percussion, warm bass and gentle keys, around 96 BPM, steady under a voice, no vocals, a resolved ending." }
+{
+ "title": "When the WhatsApp group stops working",
+ "duration": 48.21,
+ "formats": [
+  "16x9",
+  "9x16"
+ ],
+ "voice": {
+  "gap": 0.6
+ },
+ "music": "About one minute of original, warm, confident instrumental background music for a short explainer film: West African guitar, soft hand percussion, warm bass and gentle keys, around 96 BPM, steady under a voice, no vocals, a resolved ending.",
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "Almost every Nigerian estate runs on a WhatsApp group. It's free, everyone has it, and it's great for conversation.",
+   9.474
+  ],
+  [
+   10.37,
+   "audio/vo-2.wav",
+   "But a group chat wasn't built to run an estate. Payments get lost in the scroll, notices get buried, and nobody can find last month's decision.",
+   9.631
+  ],
+  [
+   20.61,
+   "audio/vo-3.wav",
+   "With BreeUp, every household is billed on schedule, and you can see who has paid at a glance.",
+   6.978
+  ],
+  [
+   28.18,
+   "audio/vo-4.wav",
+   "Official notices reach the right homes, on WhatsApp and in the resident portal, and they stay on record.",
+   8.2
+  ],
+  [
+   36.98,
+   "audio/vo-5.wav",
+   "So keep the group for conversation, and move the things that need a record into BreeUp.",
+   7.23
+  ]
+ ]
+}

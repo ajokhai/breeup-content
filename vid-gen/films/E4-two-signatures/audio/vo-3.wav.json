@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Large payouts can need a second approver, often the chairman and the treasurer, so no one person moves estate funds alone.",
+ "created": "2026-10-04T00:36:12.171Z",
+ "key": "99b1397de041"
+}

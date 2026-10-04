@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "An elegant Nigerian man in his sixties in a crisp kaftan sits on the shaded veranda of his duplex in a gated Abuja estate, reading a message on his phone with an interested, approving expression. Potted plants and palms behind. Soft morning light. Phone held loosely in one hand, screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-04T00:32:31.033Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting and traditional attire. Realistic lighting and clean composition suitable for promotional use."
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A cheerful, well-dressed Nigerian woman in her thirties walks through the open pedestrian gate of a gated estate, waving thanks to the guard off-frame. Palms, paving and painted walls. Bright daylight, hands natural.",
+ "house": true,
+ "created": "2026-10-04T00:34:23.535Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with well-dressed cast, clean composition, and natural daylight."
+ }
+}

@@ -3,7 +3,7 @@
 # Needs media/generated/H1/gate-{16x9,9x16}.jpg (node tools/gemini.mjs batch media/generated/H1/shots.json).
 set -e
 G=media/generated/H1
-for S in 16x9 9x16; do
+for S in ${SHAPES:-16x9 9x16}; do
   A=$(echo $S | tr x :)
   [ -f $G/gate-$S.mp4 ] || node tools/gemini.mjs video --image $G/gate-$S.jpg --aspect $A --out $G/gate-$S.mp4 --prompt "Slow, calm golden-hour scene: the barrier arm lifts gently, the guard smiles and raises a hand in greeting, palm fronds sway in a light breeze, warm light flickers through the leaves. Very slow, steady camera drift to the right. No cuts, no text."
   WH=$([ $S = 16x9 ] && echo 1920:1080 || echo 1080:1920)

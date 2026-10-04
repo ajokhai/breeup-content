@@ -1,0 +1,7 @@
+[
+ { "line": 1, "kind": "photo", "src": "queue", "caption": "The gatehouse sets the tone for the estate." },
+ { "line": 2, "kind": "screen", "device": "phone", "src": "assets/screens/res-visitor-pass.jpg", "zoom": [0.45, 0.82, 1.45], "ring": [104, 1446, 384, 70], "bg": "queue", "caption": "A pass in two taps, sent on WhatsApp." },
+ { "line": 3, "kind": "photo", "src": "guard", "caption": "Every entry timestamped and searchable." },
+ { "line": 4, "kind": "photo", "src": "arrive", "caption": "No new hardware. Just the phones you have." },
+ { "line": 5, "kind": "type", "lines": ["The guard still has", "the final say."], "gold": 1, "bg": "guard", "caption": "Guards stay in control." }
+]

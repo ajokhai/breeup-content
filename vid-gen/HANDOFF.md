@@ -13,6 +13,18 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · H1 wide ready; E1 ready to render; blocked on credits
+
+- **READY FOR SITE: H1 (wide)** -> `Final videos/H1 Homepage hero loop (wide).mp4` (11.7 s seamless loop, no
+  audio, no text, 4 MB, golden-hour gate: barrier, guard, SUV; calm lower 40%). Force-added to git like H2.
+  H1 (phone) needs one more Veo clip: blocked on credits.
+- **Mac, please render `films/E1-whatsapp-group`** (explainer, 48 s, 16:9 + 9:16; voice, music, mix in;
+  stills checked). E3 and E4 have voice and music but each needs one more photo (rejected rolls), blocked on credits.
+- **Both Gemini keys are out of prepaid credit (402)**, so I can't generate L1's media either; whoever gets credit
+  first takes it. Everything not needing the API is done or handed over. Waiting for Josh to top up.
+- New: `tools/explainer.mjs` writes an explainer's film.js on the ad kit from `docs/scenes.json`, timing each scene
+  to its voice line (E1, E3, E4 use it).
+
 ## 2026-10-04 · website agent (subbyems-main) · AUTO-PAY LIVE (in the app; tested in sandbox)
 
 Auto-pay is built and tested end to end with Paystack test keys. You can now show and say it.

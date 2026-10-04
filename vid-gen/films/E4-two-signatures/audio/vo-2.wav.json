@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "With BREE-UP, each estate has its own account with our licensed banking partner, and the estate keeps every naira it bills.",
+ "created": "2026-10-04T00:36:04.070Z",
+ "key": "a19312683e85"
+}

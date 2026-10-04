@@ -1,0 +1,7 @@
+[
+ { "line": 1, "kind": "photo", "src": "group", "caption": "Every estate has a WhatsApp group." },
+ { "line": 2, "kind": "clip", "src": "chasing", "caption": "Payments and notices get lost in the scroll." },
+ { "line": 3, "kind": "screen", "device": "laptop", "src": "assets/screens/admin-payments.jpg", "crop": [880, 540, 1220, 740], "zoom": [0.3, 0.45, 1.3], "ring": [1130, 600, 150, 400], "caption": "See who has paid at a glance." },
+ { "line": 4, "kind": "photo", "src": "notice", "caption": "Notices that reach the right homes, on record." },
+ { "line": 5, "kind": "type", "lines": ["Keep the group for chat.", "Keep the record in BreeUp."], "gold": 1, "caption": "Use both." }
+]

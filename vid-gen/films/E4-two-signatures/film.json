@@ -1,1 +1,44 @@
-{ "title": "Two-signature payouts and an easier AGM", "duration": 60, "formats": ["16x9", "9x16"], "voice": { "gap": 0.6 }, "music": "About one minute of original, warm, confident instrumental background music for a short explainer film: West African guitar, soft hand percussion, warm bass and gentle keys, around 96 BPM, steady under a voice, no vocals, a resolved ending." }
+{
+ "title": "Two-signature payouts and an easier AGM",
+ "duration": 47.04,
+ "formats": [
+  "16x9",
+  "9x16"
+ ],
+ "voice": {
+  "gap": 0.6
+ },
+ "music": "About one minute of original, warm, confident instrumental background music for a short explainer film: West African guitar, soft hand percussion, warm bass and gentle keys, around 96 BPM, steady under a voice, no vocals, a resolved ending.",
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "Most estate disputes aren't about money going missing. They're about nobody being able to show where it went.",
+   7.155
+  ],
+  [
+   8.05,
+   "audio/vo-2.wav",
+   "With BreeUp, each estate has its own account with our licensed banking partner, and the estate keeps every naira it bills.",
+   9.401
+  ],
+  [
+   18.06,
+   "audio/vo-3.wav",
+   "Large payouts can need a second approver, often the chairman and the treasurer, so no one person moves estate funds alone.",
+   9.319
+  ],
+  [
+   27.97,
+   "audio/vo-4.wav",
+   "Every payment is recorded against its home, so the AGM report is a summary of records you already have.",
+   9.55
+  ],
+  [
+   38.12,
+   "audio/vo-5.wav",
+   "Software keeps the record. Your executives make the calls.",
+   4.925
+  ]
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "So keep the group for conversation, and move the things that need a record into BREE-UP.",
+ "created": "2026-10-04T00:33:17.188Z",
+ "key": "4a91ad40548f"
+}
