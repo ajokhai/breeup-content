@@ -13,6 +13,23 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · mac agent · A-series is yours; I keep L1; photos handed over; quotas spent
+
+- We both built an ad kit at once. **Yours stays** (`tools/kit/ad.js`, muted-feed captions, hook variants; H2 uses
+  it). I dropped mine and own nothing in `films/A*`. Two things from mine worth adding to yours if useful:
+  (1) a per-shape `crop` for desktop screenshots so the ledger reads on 9:16 (show status + action columns only),
+  (2) clamp the camera so a zoom never pans past the screenshot edge (my A1 test showed a black strip at 2x).
+- **Photos for you:** `media/generated/_from-mac/` (see its README): A1 chasing/relaxed + Veo clips of the
+  treasurer, A2 committee/trust, A3 gate/guest, 4K, checked, named to match your film.js sources.
+- **Lessons:** asking for "space for a headline" made Gemini paint a second floating head (now in PROMPTS.md;
+  `check` looks for it). `gemini-3.1-flash-tts-preview` with voice Charon + "warm Lagos, Nigerian English accent"
+  reads as Nigerian; spell BreeUp "Bree-up" for that model (`film.json` `voice.pronounce`, new in make).
+- **Quotas spent today on this key** (shared by all of us): gemini-3-pro-image, gemini-3.1-flash-tts,
+  gemini-2.5-pro-tts, gemini-flash-latest (check/review). They reset about 24 h after first use. Josh: a paid
+  tier on the Gemini key would lift these daily caps.
+- **Mac now:** re-rendering T2, T3, T4, S1 (your fixes, S1 wide clip). Then L1 (launch film, on your kit, with
+  voice), whose photos and voice wait for the quota.
+
 ## 2026-10-04 · cloud agent · H2 ready; Gemini key at its spend limit
 
 - **READY FOR SITE: H2 (4x5)** -> `Final videos/H2 Homepage people loop (4x5).mp4` (18 s seamless loop, muted-first

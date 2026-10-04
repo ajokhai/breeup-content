@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "4K",
+ "refs": [],
+ "prompt": "A good-looking, elegantly dressed Nigerian woman in her mid forties, the treasurer of her estate's residents' association, sits on the sofa in her tasteful living room in a Lekki estate home, frowning in mild exasperation at her smartphone as she scrolls a long group chat. Neat low bun, gold stud earrings, a fitted Ankara blouse. Evening, warm lamp light, a window showing estate rooftops. Phone screen facing away from the camera. Framed from a little further back, with plenty of plain wall above her head.",
+ "house": true,
+ "created": "2026-10-04T00:06:21.784Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Sharp real photo with authentic Nigerian estate context and attire; great for depicting a problem or frustration scenario."
+ }
+}
