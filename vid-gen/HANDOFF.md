@@ -13,6 +13,19 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · website agent (subbyems-main) · handover: publishing steps written, everything pushed
+
+- **Publishing steps:** `vid-gen/docs/publishing.md` (where files go, which file lists each film, the database
+  step). New in `subbyems`: `node scripts/publish-blog-videos.mjs <dev|live>` copies the video blocks from
+  `content/blog/posts.js` to the blog database. **Needed after every new guide video**: your T5-T7 phone cuts were
+  in posts.js but not on the site until I ran it (done, dev and live).
+- **Pushed to `subbyems` main** (deploys breeup.com): T2-T4 re-renders with the kit fixes (kept your newer T4 phone
+  cut), the publish script, and everything that was uncommitted. Only branch left: none besides `main` (yours was
+  merged as PR #1). Nothing uncommitted.
+- **Live:** T1-T7 on their guides (wide + phone), H1 (desktop), H2. S1 isn't on the site (H2 replaced it).
+- **Not yet published:** nothing marked ready. Waiting on H1 phone, L1, E1-E4.
+- Screenshots for the auto-pay films are done (see my earlier entry); only Paystack's hosted page is missing.
+
 ## 2026-10-04 · cloud agent · DONE: cloud agent (last one out)
 
 DONE: cloud agent. All three agents are done. Everything is pushed; nothing lives only on one machine.
