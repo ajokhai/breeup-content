@@ -1,0 +1,5 @@
+{ "size": "2K", "n": 2, "shots": [
+ { "name": "queue", "prompt": "A busy morning at the gate of a gated Lagos estate: three cars wait at the barrier while a friendly guard in a neat uniform speaks into his phone, a delivery rider waiting beside the gatehouse. Palms and painted walls. Bright morning light, number plates out of frame." },
+ { "name": "guard", "prompt": "A smart, good-looking Nigerian estate guard in a neat dark uniform checks a code on his phone at the gatehouse window and nods with a calm smile. Barrier arm and palms behind. Warm afternoon light. Phone held in one hand, screen facing away from camera." },
+ { "name": "arrive", "prompt": "A cheerful, well-dressed Nigerian woman in her thirties walks through the open pedestrian gate of a gated estate, waving thanks to the guard off-frame. Palms, paving and painted walls. Bright daylight, hands natural." }
+]}

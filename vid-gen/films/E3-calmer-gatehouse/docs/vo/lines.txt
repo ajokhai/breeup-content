@@ -1,0 +1,5 @@
+The gatehouse is where an estate's reputation is made. Long queues, calls to confirm every guest, and logbooks nobody can search.
+With BreeUp, residents create a visitor pass in two taps, and send it on WhatsApp.
+The guard checks the code on their phone. Every entry is timestamped and searchable.
+There's no new hardware. It runs on the phones your residents and guards already carry.
+And the guard still has the final say.

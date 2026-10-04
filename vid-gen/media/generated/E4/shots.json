@@ -1,0 +1,4 @@
+{ "size": "2K", "n": 2, "shots": [
+ { "name": "tense", "prompt": "An estate residents' AGM in a clubhouse hall in Lagos: rows of well-dressed Nigerian residents, one man standing and asking a pointed question with his hand raised, others looking at the committee table with doubtful faces. Daylight from tall windows. No papers with readable text." },
+ { "name": "calm", "prompt": "The same estate clubhouse hall in Lagos at an AGM, now relaxed: well-dressed Nigerian residents of different ages nodding and smiling as the chairman and treasurer at the front table speak calmly. Daylight from tall windows, hands relaxed, no readable text anywhere." }
+]}

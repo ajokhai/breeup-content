@@ -1,0 +1,4 @@
+{ "size": "2K", "n": 2, "shots": [
+ { "name": "group", "prompt": "A lively, good-looking group of Nigerian neighbours of different ages chat and laugh together on a quiet street inside a gated Lagos estate, two of them glancing at their phones. Duplexes, palms and a water tank behind. Warm late-afternoon light, hands relaxed." },
+ { "name": "notice", "prompt": "An elegant Nigerian man in his sixties in a crisp kaftan sits on the shaded veranda of his duplex in a gated Abuja estate, reading a message on his phone with an interested, approving expression. Potted plants and palms behind. Soft morning light. Phone held loosely in one hand, screen facing away from camera." }
+]}

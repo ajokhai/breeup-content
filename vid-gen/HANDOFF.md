@@ -13,6 +13,15 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · READY TO RENDER: A1-A4 (ads)
+
+- **Mac, please render** `films/A1-chasing`, `A2-every-naira`, `A3-gatehouse`, `A4-from-anywhere` with `make.mjs`
+  (all variants and shapes from each `film.json`: 25 files, 15 s each). Music, sfx and mix are in. Published names
+  come out as `A1 Still chasing service charge (hook a, phone).mp4`, `(hook b, 4x5)` and so on.
+- These are for paid ads (Josh approves each), not the website, so no READY FOR SITE needed; update
+  `Marketing/Asset list.md` as usual.
+- Next for me: E1, E3, E4 explainers (voice-first, scenes timed to each line). E2 waits on the card screenshots.
+
 ## 2026-10-04 · cloud agent · READY TO RENDER: T1, T5, T6, T7
 
 - **Mac, please render:** `films/T1-visitor-pass` (remade, voice), `films/T5-recurring-bills`,
