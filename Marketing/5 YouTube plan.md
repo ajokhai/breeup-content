@@ -11,7 +11,7 @@ and the **phone** cut (or the S-series reel) as a Short that links back to it.
 - About: the one-liner from `1 Brand and messaging.md`, plus breeup.com and hello@breeup.com.
 - Links in header: breeup.com, breeup.com/pricing.
 - Country: Nigeria. Default upload language: English.
-- Playlists: **For residents** (T1, T2, T3), **For estate committees and admins** (T4-T7), **Why BreeUp**
+- Playlists: **For residents** (T1, T2, T3), **For estate committees and admins** (T4, T5, T6, T7), **Why BreeUp**
   (E1-E4, L1), **Shorts**.
 - Channel trailer: L1 (launch film) once it exists; until then T4.
 
@@ -117,17 +117,98 @@ BreeUp is estate management for Nigerian communities: the estate keeps every nai
 
 **Thumbnail text:** "Stop chasing service charge"
 
-## T1 · How to send a visitor pass on WhatsApp (when the remake lands)
+## T1 · How to send a visitor pass on WhatsApp
 
 **Title:** How to Send a Visitor Pass on WhatsApp (Estate Gate Pass)
 
-**Description first lines:**
+**Description:**
 ```
-Send your visitor a gate pass on WhatsApp in under a minute. The guard checks the code at the gate, and every entry is on record. For residents whose estate uses BreeUp.
+Send your guest, delivery rider or artisan a gate pass on WhatsApp in under a minute. The guard checks the code at the gate, and every entry is on record. For residents whose estate uses BreeUp.
+
 Step-by-step guide: https://breeup.com/blog/how-to-send-a-visitor-pass-on-whatsapp?utm_source=youtube&utm_medium=organic&utm_campaign=t1-pass
+
+00:00 Gate passes on WhatsApp
+00:09 Step 1: Sign in with your phone number and PIN
+00:17 Step 2: Find the Visitor gate pass card
+00:21 Step 3: Name and type of visit
+00:28 Step 4: Send it on WhatsApp
+00:34 At the gate: the guard checks the code
+
+BreeUp is estate management for Nigerian communities: service charge billing and payments, WhatsApp visitor passes, notices and AGM-ready records.
 ```
-Chapters: add from the new film's VO timings when it's rendered.
-**Tags:** visitor pass WhatsApp, estate gate pass, visitor management Nigeria, estate security, BreeUp
+**Tags:** visitor pass WhatsApp, estate gate pass, visitor management Nigeria, estate security, gate access code, BreeUp, Lagos estate
+
+**Thumbnail text:** "Gate pass in 1 minute"
+
+## T5 · How to set up recurring bills and let residents pay ahead
+
+**Title:** How to Set Up Recurring Service Charge Bills (Pay Ahead)
+
+**Description:**
+```
+For estate treasurers and committees: set your monthly service charge up once as a recurring bill, so every household is billed on schedule, and let residents pay several months ahead with an optional discount.
+
+Step-by-step guide: https://breeup.com/blog/how-to-set-up-automatic-monthly-levies?utm_source=youtube&utm_medium=organic&utm_campaign=t5-recurring
+
+00:00 Bill service charge automatically
+00:10 Step 1: Open Recurring bills
+00:16 Step 2: Name the bill
+00:21 Step 3: Amount, how often, first bill date
+00:30 Step 4: Let residents pay ahead
+00:40 Step 5: Save the bill
+00:50 Tip: a small discount for paying a year ahead
+
+BreeUp is estate management for Nigerian communities: service charge billing and payments, WhatsApp visitor passes, notices and AGM-ready records.
+```
+**Tags:** recurring service charge, automatic estate levy, monthly service charge billing, pay ahead discount, estate treasurer, estate management software Nigeria, BreeUp
+
+**Thumbnail text:** "Bill service charge on autopilot"
+
+## T6 · How to import residents from a spreadsheet
+
+**Title:** How to Import Estate Residents from a Spreadsheet (CSV)
+
+**Description:**
+```
+Already keep your residents in a spreadsheet? Import every household into BreeUp in one go, with no retyping, and give each one a temporary PIN to sign in. For estate admins and managers.
+
+Step-by-step guide: https://breeup.com/blog/how-to-import-residents-from-a-spreadsheet?utm_source=youtube&utm_medium=organic&utm_campaign=t6-import
+
+00:00 No retyping
+00:09 Step 1: Open Households and import your CSV
+00:18 Step 2: Check the preview
+00:25 Step 3: Import
+00:29 Step 4: Share the temporary PINs
+00:38 Tip: start from the template
+
+BreeUp is estate management for Nigerian communities: service charge billing and payments, WhatsApp visitor passes, notices and AGM-ready records.
+```
+**Tags:** import residents CSV, estate residents list, estate management software Nigeria, household directory, onboard residents, BreeUp
+
+**Thumbnail text:** "Every household in one go"
+
+## T7 · How to add admins and set permissions
+
+**Title:** How to Add Estate Admins and Set Permissions
+
+**Description:**
+```
+Give everyone who helps run the estate their own login, and decide exactly what each person can see: estate managers, financial officers and security officers. For committees and facility managers.
+
+Step-by-step guide: https://breeup.com/blog/how-to-add-admins-and-set-permissions?utm_source=youtube&utm_medium=organic&utm_campaign=t7-admins
+
+00:00 One login per helper
+00:09 Step 1: Open Admins and roles
+00:16 Step 2: Name and email
+00:23 Step 3: Pick a role
+00:29 Step 4: Fine-tune access and exports
+00:39 Tip: fewer people with export rights
+
+BreeUp is estate management for Nigerian communities: service charge billing and payments, WhatsApp visitor passes, notices and AGM-ready records.
+```
+**Tags:** estate admin roles, estate management permissions, facility manager software, estate committee access, BreeUp, estate management software Nigeria
+
+**Thumbnail text:** "Right access for every helper"
 
 ## S1 · Service charge, sorted (Short)
 
