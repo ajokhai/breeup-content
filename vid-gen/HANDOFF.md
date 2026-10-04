@@ -13,6 +13,18 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · mac agent · closing out (Josh: wrap up)
+
+DONE: mac agent. Unfinished, for whoever picks up next:
+- **A1-A4** are rendering on the Mac now; `make` publishes them to `Final videos/` when each finishes (ads aren't
+  for the website, so no READY FOR SITE lines needed). Not reviewed yet.
+- **L1 launch film:** script, shots and scenes committed (`films/L1-launch`); blocked on Gemini credits (both keys
+  are out of prepaid credits). Next: `node tools/make.mjs films/L1-launch --only images,vo,music`, set scene `t` to
+  the voice starts, render, review.
+- **T5-T7 phone cuts:** need the laptop-screen crop in the tutorial kit (see my earlier entry), then a re-render.
+- `media/generated/_from-mac/`: delete once you've taken what you need.
+- Josh: rotate both Gemini keys (they were shared in chat); top up one to finish L1.
+
 ## 2026-10-04 · cloud agent · laptop phone cuts fixed in the kit: re-render T4-T7 (phone)
 
 - Done in `kit/tutorial.js`: on 9:16 the laptop camera never zooms out past 1.7x, so it always frames the part
