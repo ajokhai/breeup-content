@@ -1,0 +1,4 @@
+{ "size": "2K", "n": 2, "shots": [
+ { "name": "gate", "aspects": ["9:16"], "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A smart, good-looking Nigerian estate security guard in a neat dark uniform and cap stands at the barrier of a gated Abuja estate gatehouse, glancing at his phone with a calm, friendly half-smile. Painted gatehouse, barrier arm and palms behind. Warm morning light. Phone screen facing away from camera." },
+ { "name": "guest", "aspects": ["9:16"], "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A cheerful, well-dressed young Nigerian woman arrives at the pedestrian gate of a gated Lagos estate, showing her phone to the guard off-frame and smiling. Gatehouse wall, potted plants and palms behind. Bright daylight. Phone screen facing away from camera." }
+]}

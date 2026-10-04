@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A cheerful, well-dressed young Nigerian woman arrives at the pedestrian gate of a gated Lagos estate, showing her phone to the guard off-frame and smiling. Gatehouse wall, potted plants and palms behind. Bright daylight. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-04T00:01:55.119Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Realistic depiction of a Nigerian estate entrance with natural lighting and appropriate styling."
+ }
+}

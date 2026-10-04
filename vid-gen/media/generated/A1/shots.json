@@ -1,0 +1,4 @@
+{ "size": "2K", "n": 2, "shots": [
+ { "name": "chasing", "aspects": ["9:16"], "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A stylish, good-looking Nigerian woman in her forties, the treasurer of her estate's residents' association, sits on a sofa in her living room in a gated Lagos estate, frowning at her smartphone as she scrolls a long group chat, one hand on her forehead. Warm evening lamplight. Phone screen facing away from camera." },
+ { "name": "relaxed", "aspects": ["9:16"], "ref": "media/generated/A1/chasing-9x16.jpg", "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. The same woman, now relaxed and smiling, sits on her balcony in the gated estate with a cup of tea, phone resting face-down on the table beside her. Palms and duplexes behind. Soft golden light." }
+]}

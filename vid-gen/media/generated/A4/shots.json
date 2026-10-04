@@ -1,0 +1,4 @@
+{ "size": "2K", "n": 2, "shots": [
+ { "name": "abroad", "aspects": ["9:16"], "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A successful, good-looking Nigerian man in his forties in a smart jumper sits by a large window in a modern apartment in the evening, checking his phone with a reassured smile. Plain modern interior, warm lamp, the window showing only a dusky sky. Phone screen facing away from camera." },
+ { "name": "compound", "aspects": ["9:16"], "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A well-kept block of modern flats (a multiplex) in a gated compound in Lekki, Lagos: clean interlocking paving, painted fence, a gate, a water tank and palms, two residents chatting near the entrance. Bright afternoon light." }
+]}

@@ -1,0 +1,12 @@
+{
+ "kind": "video",
+ "model": "veo-3.1-generate-preview",
+ "aspectRatio": "16:9",
+ "resolution": "4k",
+ "durationSeconds": 8,
+ "negativePrompt": "text, captions, subtitles, watermark, logo, cartoon, distorted hands, extra fingers",
+ "firstFrame": "media/generated/S1/hook-16x9.jpg",
+ "prompt": "He scrolls his phone with a slightly frustrated frown, then sighs, shakes his head a little and looks up and out over the estate. Gentle breeze in the palms. Slow, steady camera push-in. Natural, candid movement.",
+ "house": true,
+ "created": "2026-10-03T23:58:41.881Z"
+}

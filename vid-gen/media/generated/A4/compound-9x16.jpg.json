@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A well-kept block of modern flats (a multiplex) in a gated compound in Lekki, Lagos: clean interlocking paving, painted fence, a gate, a water tank and palms, two residents chatting near the entrance. Bright afternoon light.",
+ "house": true,
+ "created": "2026-10-04T00:02:23.960Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with naturally styled subjects, good lighting, and clean composition."
+ }
+}

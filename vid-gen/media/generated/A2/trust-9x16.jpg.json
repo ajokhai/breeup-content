@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A confident, well-dressed Nigerian woman in her fifties, an estate treasurer, sits at a tidy desk in the estate's management office going over figures on a laptop, calm and assured, reading glasses on. Window behind onto palms and the estate gate. Bright daylight. Laptop screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-04T00:01:09.413Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic real photograph showing a professional Nigerian woman in an estate office setting with good lighting and composition."
+ }
+}

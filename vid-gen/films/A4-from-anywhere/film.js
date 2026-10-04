@@ -17,8 +17,8 @@ ad({
   },
   scenes: [
     { t: 0, kind: 'photo', src: 'abroad' },
-    { t: 3.2, kind: 'screen', device: 'laptop', src: 'assets/screens/admin-payments.jpg', bg: 'abroad',
-      cam: [[3.2, [1.1, 0.5, 0.5]], [3.8, [1.8, 0.45, 0.6]]], rings: [{ r: [1130, 600, 150, 400], a: 4.4, b: 7.2 }],
+    { t: 3.2, kind: 'screen', device: 'laptop', src: 'assets/screens/admin-payments.jpg', bg: 'abroad', crop: [420, 540, 1220, 740],
+      cam: [[3.2, [1, 0.5, 0.5]], [3.8, [1.3, 0.7, 0.45]]], rings: [{ r: [1130, 600, 150, 400], a: 4.4, b: 7.2 }],
       caption: 'Every payment, recorded against each home.' },
     { t: 7.5, kind: 'photo', src: 'compound', caption: 'Rent and charges paid and visible, without being there.' },
   ],

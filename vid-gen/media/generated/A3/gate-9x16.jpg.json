@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A smart, good-looking Nigerian estate security guard in a neat dark uniform and cap stands at the barrier of a gated Abuja estate gatehouse, glancing at his phone with a calm, friendly half-smile. Painted gatehouse, barrier arm and palms behind. Warm morning light. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-04T00:01:55.026Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting showing a security guard at the gate. Natural lighting and convincing composition for marketing."
+ }
+}

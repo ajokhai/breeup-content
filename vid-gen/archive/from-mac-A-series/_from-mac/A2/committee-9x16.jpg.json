@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "4K",
+ "refs": [],
+ "prompt": "Four well-dressed Nigerian residents' association executives, men and women aged 40 to 60, sit around a polished table in an estate clubhouse reviewing the year's accounts on a laptop and printed sheets, attentive and serious. Evening, warm light, a window onto the estate.",
+ "house": true,
+ "created": "2026-10-04T00:12:49.507Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with a professional, well-cast business meeting and clean composition."
+ }
+}

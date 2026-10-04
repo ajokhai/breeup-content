@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Vertical phone-format photo, subject centred in the middle of the frame with space above and below. A successful, good-looking Nigerian man in his forties in a smart jumper sits by a large window in a modern apartment in the evening, checking his phone with a reassured smile. Plain modern interior, warm lamp, the window showing only a dusky sky. Phone screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-04T00:02:22.790Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Sharp composition with natural lighting, depicting a stylish mature Nigerian man in a realistic estate setting."
+ }
+}

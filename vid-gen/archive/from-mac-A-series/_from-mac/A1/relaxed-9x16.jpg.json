@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "4K",
+ "refs": [],
+ "prompt": "The same kind of elegant Nigerian woman treasurer in her mid forties, relaxed and smiling, sitting at a bright dining table with a laptop and a cup of tea in her Lekki estate home, glancing at the screen with quiet satisfaction. Morning daylight, plants, estate street visible through the window. Laptop screen facing away from the camera.",
+ "house": true,
+ "created": "2026-10-04T00:04:50.440Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "Apple logo on laptop",
+  "note": "Authentic photograph showing a relatable Nigerian estate setting and natural lighting."
+ }
+}

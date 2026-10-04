@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "4K",
+ "refs": [],
+ "prompt": "A handsome, well-groomed Nigerian estate security guard in his thirties, crisp navy uniform and cap, stands at the gatehouse of a smart gated estate in Lekki, checking a visitor code on his phone as a dark SUV waits at the red-and-white barrier, seen from the side. Golden late-afternoon light.",
+ "house": true,
+ "created": "2026-10-04T00:14:17.599Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with natural lighting and a believable security guard checking a mobile device."
+ }
+}

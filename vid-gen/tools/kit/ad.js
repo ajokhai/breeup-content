@@ -24,9 +24,9 @@ const TALL = H > W;                                      // 9:16, 4:5
 const SHAPE = FORMAT.name;                              // 9x16 | 4x5 | 1x1 | 16x9
 // caption band and sizes per shape (9:16 keeps clear of the Reels/TikTok UI; 4:5 and 1:1 of feed chrome)
 const LAY = {
-  '9x16': { capY: 1220, cap: 78, phoneH: 1080, phoneCY: 760, typeSize: 120 },
-  '4x5': { capY: 1010, cap: 70, phoneH: 820, phoneCY: 560, typeSize: 110 },
-  '1x1': { capY: 860, cap: 62, phoneH: 690, phoneCY: 440, typeSize: 96 },
+  '9x16': { capY: 1220, cap: 78, phoneH: 1080, phoneCY: 760, typeSize: 106 },
+  '4x5': { capY: 1010, cap: 70, phoneH: 820, phoneCY: 560, typeSize: 96 },
+  '1x1': { capY: 860, cap: 62, phoneH: 690, phoneCY: 440, typeSize: 84 },
   '16x9': { capY: 930, cap: 60, phoneH: 760, phoneCY: 470, typeSize: 110 },
 }[SHAPE] || { capY: H * 0.8, cap: 64, phoneH: H * 0.6, phoneCY: H * 0.42, typeSize: 100 };
 const photoName = (src) => `assets/photos/${src}-${SHAPE === '16x9' ? '16x9' : '9x16'}.jpg`;
@@ -89,25 +89,30 @@ export function ad(cfg) {
       const bg = blurred(IMG[`bg${i}`]);
       if (bg) ctx.drawImage(bg, 0, 0); else fill(ctx, C.green);
       const lap = s.device === 'laptop', src = IMG[`s${i}`];
-      const SW = lap ? 2160 : 780, SH = lap ? 1350 : 1688;
-      const ph = lap ? { w: Math.min(W * 0.9, LAY.phoneH * 1.45) } : { h: LAY.phoneH };
+      // crop: [x, y, w, h] of the screenshot to show (desktop screens are unreadable whole on a phone)
+      const cr = s.crop || [0, 0, lap ? 2160 : 780, lap ? 1350 : 1688], SW = cr[2], SH = cr[3];
+      const ph = lap ? { w: Math.min(W * 0.9, LAY.phoneH * SW / SH) } : { h: LAY.phoneH };
       if (lap) ph.h = ph.w * SH / SW; else ph.w = ph.h * SW / SH;
       ph.x = (W - ph.w) / 2; ph.y = LAY.phoneCY - ph.h / 2;
       const camKeys = s.cam || [[a, [1, 0.5, 0.5]]];
       const [z, fx, fy] = springKeys(u, camKeys, SPRING.gentle);
       const fpx = ph.x + fx * ph.w, fpy = ph.y + fy * ph.h, zk = clamp((z - 1) / 0.5);
-      const ax = lerp(fpx, W / 2, zk), ay = lerp(fpy, LAY.phoneCY, zk);
+      let ax = lerp(fpx, W / 2, zk), ay = lerp(fpy, LAY.phoneCY, zk);
+      // never pan past the screenshot's edge: when the zoomed screen is wider (taller) than the frame, keep it covering
+      const L0 = ax + (ph.x - fpx) * z, R0 = ax + (ph.x + ph.w - fpx) * z, T0 = ay + (ph.y - fpy) * z, B0 = ay + (ph.y + ph.h - fpy) * z;
+      if (R0 - L0 >= W) { if (L0 > 0) ax -= L0; else if (R0 < W) ax += W - R0; }
+      if (B0 - T0 >= H) { if (T0 > 0) ay -= T0; else if (B0 < H) ay += H - B0; }
       const drift = 6 * Math.sin(u * 0.6);
       ctx.save(); ctx.translate(ax + drift, ay); ctx.scale(z, z); ctx.translate(-fpx, -fpy);
       ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 70; ctx.shadowOffsetY = 26;
       rrect(ctx, ph.x - (lap ? 12 : 16), ph.y - (lap ? 12 : 16), ph.w + (lap ? 24 : 32), ph.h + (lap ? 24 : 32), lap ? 20 : 60);
       ctx.fillStyle = '#0d0f0d'; ctx.fill(); ctx.shadowColor = 'transparent';
       ctx.save(); rrect(ctx, ph.x, ph.y, ph.w, ph.h, lap ? 6 : 46); ctx.clip();
-      if (src) ctx.drawImage(src, ph.x, ph.y, ph.w, ph.h);
+      if (src) ctx.drawImage(src, ...cr, ph.x, ph.y, ph.w, ph.h);
       ctx.restore();
       (s.rings || []).forEach((r) => {
         if (u < r.a || u > r.b + 0.3) return;
-        const k = ph.w / SW, [x, y, w, h] = r.r, pad = 12 / k;
+        const k = ph.w / SW, [x, y, w, h] = [r.r[0] - cr[0], r.r[1] - cr[1], r.r[2], r.r[3]], pad = 12 / k;
         const rx = ph.x + (x - pad) * k, ry = ph.y + (y - pad) * k, rw = (w + 2 * pad) * k, rh = (h + 2 * pad) * k, per = 2 * (rw + rh);
         ctx.save(); ctx.globalAlpha = 1 - E.inCubic(prog(u, r.b, r.b + 0.25));
         ctx.lineWidth = 7 / z; ctx.strokeStyle = C.gold; ctx.lineCap = 'round';
@@ -126,7 +131,7 @@ export function ad(cfg) {
       if (bg) { ctx.drawImage(bg, 0, 0); ctx.fillStyle = 'rgba(18,50,32,0.82)'; ctx.fillRect(0, 0, W, H); } else fill(ctx, C.green);
       const size = LAY.typeSize, f = font(size, 400, DISPLAY), maxW = W * 0.86;
       const all = s.lines.flatMap((ln, li) => wrap(ctx, ln, f, maxW).map((x) => [x, li]));
-      const lh = size * 1.12, y0 = (TALL ? H * 0.42 : H * 0.45) - (all.length - 1) * lh / 2;
+      const lh = size * 1.12, y0 = (TALL ? H * 0.34 : H * 0.36) - (all.length - 1) * lh / 2;
       all.forEach(([ln, li], j) => {
         const k = springU(u, a + 0.15 + li * 0.45, SPRING.gentle), y = y0 + j * lh;
         ctx.save(); ctx.beginPath(); ctx.rect(0, y - size, W, size * 1.3); ctx.clip();
@@ -141,7 +146,7 @@ export function ad(cfg) {
     const a = end.t, lk = springU(u, a + 0.15, SPRING.gentle);
     const ls = TALL ? 210 : SHAPE === '1x1' ? 170 : 160, cy = TALL ? H * 0.34 : H * 0.3;
     if (IMG.logo) { ctx.save(); ctx.globalAlpha = Math.min(1, lk); const br = 1 + 0.03 * Math.sin((u - a) * 1.8); ctx.translate(W / 2, cy + (1 - lk) * 50); ctx.scale(br, br); ctx.drawImage(IMG.logo, -ls / 2, -ls / 2, ls, ls); ctx.restore(); }
-    const size = TALL ? 92 : 80, f = font(size, 400, DISPLAY);
+    const size = TALL ? 80 : 70, f = font(size, 400, DISPLAY);
     const lines = wrap(ctx, end.line || 'Set up your estate free', f, W * 0.84);
     const y0 = cy + ls * 0.85 + size;
     lines.forEach((ln, i) => {
