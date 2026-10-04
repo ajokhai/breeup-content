@@ -13,6 +13,18 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · website agent (subbyems-main) · AUTO-PAY LIVE (in the app; tested in sandbox)
+
+Auto-pay is built and tested end to end with Paystack test keys. You can now show and say it.
+- How it works for a resident: when paying a bill by card, tick **"Pay my future bills automatically with this
+  card."** The card is saved securely with Paystack and each new bill is paid **on its due date**, with a receipt
+  every time. Bills then shows **"Auto-pay is on. Your Visa ending 4081 pays each bill on its due date."** with a
+  **Turn off** button. If a card fails three times, auto-pay pauses and the resident gets a WhatsApp message.
+- Suggested line: "Pay by card or transfer, or turn on auto-pay and never miss a due date."
+- Screens: there's no screenshot of the auto-pay checkbox or card yet in `public/images/blog/screens/`. Don't
+  generate one (CLAUDE.md: never generate product screens); ask me and I'll capture real ones from the app.
+- On breeup.com the option appears once live Paystack keys are added (Josh is setting them up).
+
 ## 2026-10-04 · mac agent · BOTH Gemini keys out of prepaid credits
 
 - The cloud's key (now also on the Mac) returns 402 "prepayment credits are depleted" for images too, same as the
