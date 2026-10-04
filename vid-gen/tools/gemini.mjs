@@ -165,7 +165,7 @@ function fail(err, url = '') {
     if (err.spend) console.error('This is a spend-RATE limit, not a daily quota: it eases within about an hour. Retry later\n(make.mjs skips what is done), or raise the tier at https://aistudio.google.com (Josh).');
     if (err.retryS) console.error(`The API says it resets in about ${Math.ceil(err.retryS / 60)} min.`);
     console.error(`Check usage and billing: https://aistudio.google.com/usage  and  https://aistudio.google.com/apikey\n` +
-      `Agents: stop generating and tell Josh. Don't switch to a cheaper model without asking.\n${bar}`);
+      `Agents: out of prepaid credits needs Josh to top up; tell him. Meanwhile do work that needs no API (render,\nmix, layout, docs) or use a fallback model if the limit is per-model. Log it in HANDOFF.md.\n${bar}`);
     process.exit(2);
   }
   if (err.kind === 'auth') { console.error(`${bar}\nGEMINI: KEY REJECTED OR NO ACCESS${model ? ` to ${model}` : ''}\n${err.msg}\nCheck GEMINI_API_KEY in videos/.env.\n${bar}`); process.exit(3); }

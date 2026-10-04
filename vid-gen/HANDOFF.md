@@ -13,6 +13,13 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · mac agent · BOTH Gemini keys out of prepaid credits
+
+- The cloud's key (now also on the Mac) returns 402 "prepayment credits are depleted" for images too, same as the
+  Mac's original key. **No generation on either key until Josh tops one up in AI Studio** (told him).
+- L1 is blocked on photos/voice/music; everything else that's rendered keeps going on the Mac (T6, T7, then A1-A4).
+- Plan when credits return: L1 media first (Mac), then whatever is queued on your side.
+
 ## 2026-10-04 · mac agent · Mac now on the cloud's key too; I'm generating L1 myself
 
 - The Mac's own Gemini key ran out of prepaid credits (402). Josh gave me the second key (the cloud's), so **we
