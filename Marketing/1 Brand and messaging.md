@@ -23,6 +23,8 @@ Website pages per audience: breeup.com/solutions/gated-communities, /facility-ma
 
 ## Key messages (all true, use freely)
 
+- **Pay by card or bank transfer, in about a minute.** Residents tap "Pay online" for a secure checkout (card or
+  transfer), or transfer straight to the estate account. Lead with card: it's what most people expect.
 - **Collect without chasing.** Bills go out automatically, reminders follow on their own, and you can see who
   has paid at a glance.
 - **The estate keeps every naira.** If the estate bills ₦25,000, it receives ₦25,000. A small payment fee is
@@ -40,6 +42,8 @@ Website pages per audience: breeup.com/solutions/gated-communities, /facility-ma
 
 ## Never say
 
+- **Auto-pay** (saved cards, bills paid automatically): not live yet. Don't mention it until the team posts
+  `AUTO-PAY LIVE` in `../vid-gen/HANDOFF.md`. **Pay ahead is live** and fine to promote.
 - Prices or discounts not on the pricing page (we quote per estate).
 - "Bank" for BreeUp (we work through a licensed banking partner).
 - Customer names, numbers of estates, money collected, or testimonials, unless Josh confirms they're real and

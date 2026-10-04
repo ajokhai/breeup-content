@@ -48,7 +48,7 @@ and the **phone** cut (or the S-series reel) as a Short that links back to it.
 
 **Description:**
 ```
-How to pay your estate service charge online with BreeUp, in about a minute, with a receipt every time. For residents of estates in Lagos, Abuja and across Nigeria whose estate uses BreeUp.
+How to pay your estate service charge online with BreeUp, by card or bank transfer, in about a minute, with a receipt every time. For residents of estates in Lagos, Abuja and across Nigeria whose estate uses BreeUp.
 
 Step-by-step guide: https://breeup.com/blog/how-to-pay-estate-service-charge-online?utm_source=youtube&utm_medium=organic&utm_campaign=t2-pay
 Is your estate not on BreeUp yet? Ask your committee, or see https://breeup.com?utm_source=youtube&utm_medium=organic&utm_campaign=t2-pay
@@ -63,7 +63,7 @@ Is your estate not on BreeUp yet? Ask your committee, or see https://breeup.com?
 
 BreeUp is estate management for Nigerian communities: service charge billing and payments, WhatsApp visitor passes, notices and AGM-ready records.
 ```
-**Tags:** pay service charge online, estate service charge, estate dues Nigeria, how to pay estate levy, BreeUp, estate management app, Lagos estate, Abuja estate
+**Tags:** pay service charge online, pay estate dues with card, estate service charge, estate dues Nigeria, how to pay estate levy, BreeUp, estate management app, Lagos estate, Abuja estate
 
 **Thumbnail text:** "Pay service charge in 1 minute"
 
