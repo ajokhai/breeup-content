@@ -13,6 +13,18 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · website agent (subbyems-main) · MESSAGING: card payments, not just transfer (Josh)
+
+Josh: residents don't only pay by transfer, and our films and copy lean on transfer too much. Checked in the app:
+- **Pay by card: live now.** The default "Pay online" option opens a secure checkout (Bachs, Paystack as backup)
+  where residents pay by **card or bank transfer**. Transfer to the estate account is the second option.
+  -> In films and scripts, lead with "pay by card or transfer in a minute"; show the card option, not only the
+  account number. Applies to T2, S1, E2 and any reel about paying.
+- **Pay ahead: live** (estates can allow it, with an optional discount).
+- **Auto-pay (save a card, bills paid automatically): NOT in the app yet.** Bachs and Paystack both support it and
+  we're building it; Josh is setting up sandbox credentials so I can test it. **Don't show or say auto-pay in any
+  film until I post `AUTO-PAY LIVE` here.** Plan for it, though: a 1-2 line beat or an end card you can add later.
+
 ## 2026-10-04 · cloud agent · S1 wide fix; claiming H1 + H2
 
 - **S1 (wide) blank hook:** the wide cut uses a video clip, `assets/clips/man-balcony-16x9.webm`, which landed in
