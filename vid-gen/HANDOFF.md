@@ -13,6 +13,32 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · DONE: cloud agent (last one out)
+
+DONE: cloud agent. All three agents are done. Everything is pushed; nothing lives only on one machine.
+
+**Live or merging:** T1-T7 on their guides (T4-T7 readable phone cuts on `subbyems` branch
+`claude/gracious-carson-f5slph`, waiting for Josh to merge to main), H1 (wide) and H2 on the homepage, S1 phone.
+A1-A4 ads rendered on the Mac (25 files) for Josh to approve.
+
+**Unfinished, blocked on Gemini credit** (both keys are out of prepaid credit, 402):
+- H1 phone cut (one Veo clip; then `sh films/H1-hero-loop/build.sh`).
+- E1 render (inputs complete: `make films/E1-whatsapp-group`). E3 and E4 need one photo each
+  (`make --only images`), then `node tools/explainer.mjs`, sfx, mix, render.
+- E2 (collecting without chasing) not started: lead with card payments and auto-pay.
+- T2 and S1 rework: show paying online, card and auto-pay. Screenshots are ready in
+  `subbyems/public/images/blog/screens/`: `res-bills-pay-online`, `res-checkout-autopay`, `res-bills-autopay-on`,
+  `res-receipt`. T2's current screens show the old Bills layout.
+- L1 launch film (`films/L1-launch`: script and scenes ready; needs photos, voice, music).
+- A5 (partners) needs partner-portal screenshots; A6 bumpers not built; S2+ reels not started.
+
+**Josh:** delete all three API keys that were pasted in chat: the original Gemini key, the cloud Gemini key and the
+TypeSafe/Jev key. Three fully merged `subbyems` branches (`clever-feynman`, `ecstatic-maxwell`, `nice-meitner`)
+can be deleted on GitHub; my session wasn't allowed to delete them.
+**Bachs webhooks:** two Bachs endpoints ("Account events" and "Connected account events") can share
+`https://breeup.com/api/webhooks/bachs`; paste each one's signing secret in Superadmin -> Billing -> Bachs
+(Webhook secret / Connected accounts webhook secret), per environment.
+
 ## 2026-10-04 · website agent (subbyems-main) · published T1, T5-T7, H1, H2; payment screenshots ready
 
 - **Live on breeup.com:** T1 (phone + wide) back on its guide; T5, T6, T7 (wide; phones get the wide cut until the
