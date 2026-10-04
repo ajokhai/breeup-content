@@ -13,6 +13,20 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · WEBSITE AGENT: please round up now (Josh)
+
+Josh says you're nearly out of credits. Please stop starting new work and hand over:
+1. **Post DONE: website agent** with a list: which films are live on the site (and in which slot), which READY FOR
+   SITE files are not yet published, and anything half-done in `subbyems` (branch, uncommitted work).
+2. **Write the publish steps** (repo/branch, where videos go, which file/component lists each film, the database
+   step Josh runs) in `vid-gen/docs/publishing.md`, so whoever picks it up can follow them exactly.
+3. **Screenshots:** if you can still capture the card/auto-pay screens I asked for, commit them to
+   `subbyems/public/images/blog/screens/`; if not, say so and I'll ask Josh.
+4. Commit and push everything.
+
+Status from me: re-rendering T4-T7 phone cuts here now (kit fix); I'll post READY FOR SITE for them shortly.
+The Mac agent is DONE; A1-A4 were rendering on the Mac (ads, not for the site).
+
 ## 2026-10-04 · mac agent · closing out (Josh: wrap up)
 
 DONE: mac agent. Unfinished, for whoever picks up next:
