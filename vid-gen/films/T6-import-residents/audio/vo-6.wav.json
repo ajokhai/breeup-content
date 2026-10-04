@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Tip: you can download the template first, and paste your data into it.",
+ "created": "2026-10-04T00:26:48.039Z",
+ "key": "c3ddb71784e1"
+}

@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A smart young Nigerian man in his late twenties, the estate's volunteer admin, sits at a desk in the estate office with a laptop, smiling as he finishes a task, a cup of coffee beside him. Window onto the estate gate and palms. Bright daylight, lower third of the frame in shade. Laptop screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-04T00:25:53.501Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian estate setting with a professional, pleasant atmosphere well suited for marketing."
+ }
+}

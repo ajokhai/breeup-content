@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Three members of an estate committee, Nigerian men and women aged thirty-five to sixty, well dressed, sit around a table in the estate clubhouse, one turning a laptop towards the others with a smile. Palms visible through the window. Soft daylight. Laptop screen facing away from camera, hands relaxed on the table.",
+ "house": true,
+ "created": "2026-10-04T00:27:27.724Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "High-quality, realistic portrayal of Nigerian estate living with natural lighting, well-styled subjects, and no discernible AI flaws."
+ }
+}

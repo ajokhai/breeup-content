@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Everyone who helps run the estate should have their own login, so each person sees only what they need.",
+ "created": "2026-10-04T00:28:01.119Z",
+ "key": "25c1a2bce9a9"
+}

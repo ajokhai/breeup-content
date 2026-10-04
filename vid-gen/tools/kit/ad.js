@@ -15,7 +15,7 @@
 //   end: { t: 12.5, line: 'Set up your estate free', url: 'breeup.com' }
 //   hits: [[t, label, sound, opts]]   for tools/sfx.mjs (also `const HITS` in film.js)
 import * as M from '/kit/motion.js';
-import { C, wrap } from '/kit/tutorial.js';
+import { C, wrap, warp } from '/kit/tutorial.js';
 
 const { W, H, FORMAT, E, prog, lerp, clamp, springU, springKeys, SPRING, font, text, fill, cover, rrect } = M;
 const DISPLAY = 'Display', UI = 'UI';
@@ -74,6 +74,9 @@ function caption(ctx, str, t, a, b) {
 }
 
 export function ad(cfg) {
+  cfg.scenes.forEach((s) => { s.t = warp(s.t); s.cam?.forEach((q) => { q[0] = warp(q[0]); }); (s.rings || []).forEach((r) => { for (const k of ['a', 'b', 'tap']) if (r[k] != null) r[k] = warp(r[k]); }); });
+  cfg.end.t = warp(cfg.end.t);
+  (cfg.hits || []).forEach((h) => { h[0] = warp(h[0]); });
   const sc = cfg.scenes, end = cfg.end, dur = M.CFG?.duration;
   const hook = (cfg.hooks && (cfg.hooks[VARIANT] || cfg.hooks.a)) || '';
   const span = (i) => [sc[i].t, i + 1 < sc.length ? sc[i + 1].t : end.t];

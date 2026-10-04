@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A confident Nigerian estate security lead in a neat uniform and a well-dressed female estate manager talk at the gatehouse of a gated Abuja estate, both smiling, hands relaxed. Barrier arm and palms behind. Warm morning light.",
+ "house": true,
+ "created": "2026-10-04T00:27:26.494Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "ESTATE SECURITY",
+  "note": "Authentic Nigerian gated estate context with polished talent and clear composition."
+ }
+}

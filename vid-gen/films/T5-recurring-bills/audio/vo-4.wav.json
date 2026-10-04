@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Enter the amount per household, choose how often it's charged, and pick the date of the first bill.",
+ "created": "2026-10-04T00:24:28.443Z",
+ "key": "3666f05ae030"
+}

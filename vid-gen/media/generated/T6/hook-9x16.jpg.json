@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A stylish, good-looking Nigerian woman in her thirties, the secretary of her estate's residents' association, sits at a dining table in her estate home with a laptop open, looking relieved and pleased as she works. Large window onto palms and a painted fence. Soft daylight. Laptop screen facing away from camera, hands resting naturally on the keyboard.",
+ "house": true,
+ "created": "2026-10-04T00:25:32.545Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "none",
+  "note": "Authentic Nigerian compound setting, natural subject and lighting, well-suited for marketing."
+ }
+}

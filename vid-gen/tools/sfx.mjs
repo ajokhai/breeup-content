@@ -83,12 +83,18 @@ if (!m) { console.error('No `const HITS = [...];` block in film.js'); process.ex
 const HITS = new Function(`return ${m[1]}`)();
 const grid = JSON.parse(fs.readFileSync(path.join(dir, 'beats.json'), 'utf8'));
 const cfg = JSON.parse(fs.readFileSync(path.join(dir, 'film.json'), 'utf8'));
+// film.json "retime" (make.mjs): authored times -> real times, the same map the kits use
+const warp = (x) => {
+  const K = grid.period === 1 ? cfg.retime : null; if (!K) return x;   // only for films timed in seconds
+  for (let i = 1; i < K.length; i++) { const [a0, b0] = K[i - 1], [a1, b1] = K[i]; if (x <= a1) return b0 + (x - a0) * (b1 - b0) / (a1 - a0 || 1); }
+  return K.at(-1)[1] + (x - K.at(-1)[0]);
+};
 const L = buf(cfg.duration), R = buf(cfg.duration);
 const unknown = new Set();
 for (const [u, , name, o = {}] of HITS) {
   if (!SOUNDS[name]) { unknown.add(name); continue; }
   const s = SOUNDS[name](o), g = o.gain ?? 1, pan = o.pan ?? 0;
-  const at = Math.round((grid.offset + u * grid.period) * SR);
+  const at = Math.round((grid.offset + warp(u) * grid.period) * SR);
   for (let i = 0; i < s.length && at + i < L.length; i++) { L[at + i] += s[i] * g * (1 - Math.max(0, pan)); R[at + i] += s[i] * g * (1 + Math.min(0, pan)); }
 }
 if (unknown.size) console.warn(`unknown sounds skipped: ${[...unknown].join(', ')} (have: ${Object.keys(SOUNDS).join(' ')})`);

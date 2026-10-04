@@ -109,18 +109,31 @@ if (want('vo') && fs.existsSync(linesFile)) {
     const f = path.join(dir, 'audio', `vo-${i + 1}.wav`), d = len(f), room = at[i + 1] - at[i] - 0.15;
     if (d <= room) return;
     const k = d / room;
-    if (k > 1.15) { console.warn(`  vo-${i + 1}: ${d.toFixed(1)} s won't fit ${room.toFixed(1)} s even at 1.15x; shorten the line or move vo_at`); return; }
+    if (k > 1.15) { console.log(`  vo-${i + 1}: ${d.toFixed(1)} s doesn't fit ${room.toFixed(1)} s; the timeline will stretch instead`); return; }
     execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', f, '-af', `atempo=${k.toFixed(4)}`, f + '.fit.wav']);
     fs.renameSync(f + '.fit.wav', f);
     console.log(`  vo-${i + 1}: sped up ${((k - 1) * 100).toFixed(0)}% to fit before the next line`);
   });
-  let t = 0;
+  // Lines start at their vo_at time, or later if the previous line runs long. When a line has to start late,
+  // the film's timeline stretches from there: "retime" maps authored times to real times, and the kits and
+  // sfx.mjs apply it, so scenes, rings and sounds stay in step with the voice without hand edits.
+  const authored = cfg.duration_authored ?? cfg.duration;
+  let t = 0; const knots = [];
   cfg.vo = lines.map((line, i) => {
     const f = `audio/vo-${i + 1}.wav`, d = len(path.join(dir, f));
-    const start = at[i] ?? (i ? t + gap : 0.3);
+    let start = at[i] ?? (i ? t + gap : 0.3);
+    if (at[i] != null && i && start < t + 0.15) start = t + 0.15;
+    if (at[i] != null) knots.push([at[i], Number(start.toFixed(2))]);
     t = start + d;
     return [Number(start.toFixed(2)), f, line, Number(d.toFixed(3))];
   });
+  const shift = knots.length ? knots.at(-1)[1] - knots.at(-1)[0] : 0;
+  if (knots.some(([a, b]) => b - a > 0.01)) {
+    cfg.duration_authored = authored;
+    cfg.retime = [[0, 0], ...knots, [authored, Number((authored + shift).toFixed(2))]];
+    cfg.duration = Number((authored + shift).toFixed(2));
+    console.log(`  retimed: the film stretches ${shift.toFixed(1)} s to fit the voice (${authored} -> ${cfg.duration} s)`);
+  } else { delete cfg.retime; if (cfg.duration_authored) { cfg.duration = cfg.duration_authored; delete cfg.duration_authored; } }
   if (t + 1.5 > cfg.duration) console.warn(`  the voice-over ends at ${t.toFixed(1)} s; duration is ${cfg.duration} s`);
   save();
 }

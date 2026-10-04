@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "If your estate charges the same service charge every month, set it up once as a recurring bill. BREE-UP bills every household on schedule.",
+ "created": "2026-10-04T00:24:10.463Z",
+ "key": "5843600ce0f7"
+}

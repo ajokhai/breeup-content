@@ -1,8 +1,104 @@
 {
  "title": "How to set up recurring bills and let residents pay ahead",
- "duration": 60,
- "formats": ["16x9", "9x16"],
- "voice": { "gap": 0.5 },
- "vo_at": [0.3, 10.9, 16.7, 21.8, 30.2, 40.8, 48.9],
- "music": "About one minute of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending."
+ "duration": 61.29,
+ "formats": [
+  "16x9",
+  "9x16"
+ ],
+ "voice": {
+  "gap": 0.5
+ },
+ "vo_at": [
+  0.3,
+  10.9,
+  16.7,
+  21.8,
+  30.2,
+  40.8,
+  48.9
+ ],
+ "music": "About one minute of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending.",
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "If your estate charges the same service charge every month, set it up once as a recurring bill. BreeUp bills every household on schedule.",
+   10.43
+  ],
+  [
+   10.9,
+   "audio/vo-2.wav",
+   "Open Recurring bills in the admin sidebar, and click New bill.",
+   5.631
+  ],
+  [
+   16.7,
+   "audio/vo-3.wav",
+   "Give it a name residents will recognise, like Service charge.",
+   4.671
+  ],
+  [
+   21.8,
+   "audio/vo-4.wav",
+   "Enter the amount per household, choose how often it's charged, and pick the date of the first bill.",
+   7.667
+  ],
+  [
+   30.2,
+   "audio/vo-5.wav",
+   "Tick Let residents pay ahead. They can cover several months at once, with an optional discount, like one month free for a year.",
+   10.408
+  ],
+  [
+   40.8,
+   "audio/vo-6.wav",
+   "Click Save bill. Every household is billed on the first bill date, then every period after that.",
+   9.239
+  ],
+  [
+   50.19,
+   "audio/vo-7.wav",
+   "Tip: a small discount for paying a year ahead means fewer people fall behind.",
+   8.271
+  ]
+ ],
+ "duration_authored": 60,
+ "retime": [
+  [
+   0,
+   0
+  ],
+  [
+   0.3,
+   0.3
+  ],
+  [
+   10.9,
+   10.9
+  ],
+  [
+   16.7,
+   16.7
+  ],
+  [
+   21.8,
+   21.8
+  ],
+  [
+   30.2,
+   30.2
+  ],
+  [
+   40.8,
+   40.8
+  ],
+  [
+   48.9,
+   50.19
+  ],
+  [
+   60,
+   61.29
+  ]
+ ]
 }

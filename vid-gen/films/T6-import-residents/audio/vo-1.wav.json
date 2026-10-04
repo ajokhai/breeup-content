@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Most estates already keep their residents in a spreadsheet. You don't need to retype it. Here's how to import it.",
+ "created": "2026-10-04T00:26:12.364Z",
+ "key": "4129bae15724"
+}

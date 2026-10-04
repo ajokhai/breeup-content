@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Now tap Send on WhatsApp. Your visitor gets their code in seconds.",
+ "created": "2026-10-04T00:23:30.073Z",
+ "key": "d86090bba84c"
+}

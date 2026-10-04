@@ -28,6 +28,18 @@ export const C = { green: '#1a472a', deep: '#123220', cream: '#f6f4ee', gold: '#
 const DISPLAY = 'Display', UI = 'UI';
 const P = FORMAT.portrait;
 
+// film.json "retime" (written by make.mjs when the voice runs long): piecewise-linear map from authored to real times
+const RETIME = (await fetch('film.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({}))).retime;
+export function warp(x) {
+  if (!RETIME || typeof x !== 'number') return x;
+  for (let i = 1; i < RETIME.length; i++) {
+    const [a0, b0] = RETIME[i - 1], [a1, b1] = RETIME[i];
+    if (x <= a1) return b0 + (x - a0) * (b1 - b0) / (a1 - a0 || 1);
+  }
+  const [a, b] = RETIME.at(-1); return b + (x - a);
+}
+const W1 = (o, keys) => { if (o) for (const k of keys) if (typeof o[k] === 'number') o[k] = warp(o[k]); return o; };
+
 export function wrap(ctx, str, f, maxW) {
   ctx.font = f;
   const out = []; let line = '';
@@ -107,6 +119,17 @@ function setDevice(device = 'phone') {
 // zoomed controls inside it, and the phone's lower edge is cropped at the stage.
 
 export function tutorial(cfg) {
+  if (RETIME) {   // move every authored time onto the real (voice-fitted) timeline
+    for (const k of ['hook', 'why', 'intro', 'tip']) W1(cfg[k], ['to']);
+    (cfg.steps || []).forEach((s) => W1(s, ['t']));
+    W1(cfg.phone, ['to']);
+    cfg.phone.seq?.forEach((q) => { q[1] = warp(q[1]); });
+    cfg.phone.cam?.forEach((q) => { q[0] = warp(q[0]); });
+    (cfg.phone.rings || []).forEach((r) => W1(r, ['a', 'b', 'tap']));
+    for (const k of ['chips', 'codes']) (cfg[k] || []).forEach((c) => W1(c, ['a', 'b']));
+    (cfg.cards || []).forEach((c) => { W1(c, ['a', 'b']); (c.rings || []).forEach((r) => W1(r, ['a', 'b', 'tap'])); });
+    (cfg.hits || []).forEach((h) => { h[0] = warp(h[0]); });
+  }
   const ph = cfg.phone, steps = cfg.steps;
   setDevice(ph.device);
   const t0 = steps[0].t - 0.4;                       // the phone rises just before step 1

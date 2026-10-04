@@ -16,5 +16,43 @@
   21.8,
   28.3,
   34
+ ],
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "Expecting a guest, a delivery or an artisan? You can send them a gate pass on WhatsApp in under a minute.",
+   7.26
+  ],
+  [
+   9.6,
+   "audio/vo-2.wav",
+   "First, open your estate's sign-in link, and sign in with your phone number and four-digit PIN.",
+   6.903
+  ],
+  [
+   17.1,
+   "audio/vo-3.wav",
+   "On your Home page, find the Visitor gate pass card.",
+   4.532
+  ],
+  [
+   21.8,
+   "audio/vo-4.wav",
+   "Type your visitor's name, choose the type of visit, then tap Create pass.",
+   6.33
+  ],
+  [
+   28.3,
+   "audio/vo-5.wav",
+   "Now tap Send on WhatsApp. Your visitor gets their code in seconds.",
+   5.529
+  ],
+  [
+   34,
+   "audio/vo-6.wav",
+   "At the gate, the guard checks the code. No phone calls to confirm, and the guard still has the final say.",
+   9.575
+  ]
  ]
 }

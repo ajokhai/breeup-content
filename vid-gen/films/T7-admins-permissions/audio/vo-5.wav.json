@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Fine-tune each area to full access, read-only or no access, and allow exports only for people who need them.",
+ "created": "2026-10-04T00:28:29.353Z",
+ "key": "bff796c2f429"
+}

@@ -1,0 +1,18 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "9:16",
+ "size": "2K",
+ "refs": [],
+ "prompt": "A thoughtful, elegant Nigerian woman in her fifties, the estate chairperson, sits at her desk in a home study in a gated estate, reviewing something on her laptop with a calm, careful expression. Bookshelf and window onto palms. Soft daylight, lower third of the frame in shade. Laptop screen facing away from camera.",
+ "house": true,
+ "created": "2026-10-04T00:27:46.471Z",
+ "check": {
+  "score": 7,
+  "african": true,
+  "attractive": true,
+  "artifacts": "none",
+  "text": "Dell-like laptop logo",
+  "note": "High-quality, authentic depiction of a professional Nigerian setting with believable indoor lighting and compound details."
+ }
+}

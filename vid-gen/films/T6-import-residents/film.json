@@ -1,2 +1,93 @@
-{ "title": "How to import residents from a spreadsheet", "duration": 47, "formats": ["16x9", "9x16"],
- "voice": { "gap": 0.5 }, "vo_at": [0.3, 9.5, 16.5, 24, 28, 36.5], "music": "About fifty seconds of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending." }
+{
+ "title": "How to import residents from a spreadsheet",
+ "duration": 48.68,
+ "formats": [
+  "16x9",
+  "9x16"
+ ],
+ "voice": {
+  "gap": 0.5
+ },
+ "vo_at": [
+  0.3,
+  9.5,
+  16.5,
+  24,
+  28,
+  36.5
+ ],
+ "music": "About fifty seconds of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending.",
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "Most estates already keep their residents in a spreadsheet. You don't need to retype it. Here's how to import it.",
+   8.244
+  ],
+  [
+   9.5,
+   "audio/vo-2.wav",
+   "Open Households in the admin sidebar, then click Import CSV, and choose your file.",
+   8.896
+  ],
+  [
+   18.55,
+   "audio/vo-3.wav",
+   "Check the preview. It shows how many rows are ready, and explains any that need fixing.",
+   7.038
+  ],
+  [
+   25.73,
+   "audio/vo-4.wav",
+   "Click Import. Your households appear straight away.",
+   3.83
+  ],
+  [
+   29.71,
+   "audio/vo-5.wav",
+   "Each household gets a temporary four-digit PIN, shown once, with a download so you can share them privately.",
+   8.312
+  ],
+  [
+   38.18,
+   "audio/vo-6.wav",
+   "Tip: you can download the template first, and paste your data into it.",
+   6.998
+  ]
+ ],
+ "duration_authored": 47,
+ "retime": [
+  [
+   0,
+   0
+  ],
+  [
+   0.3,
+   0.3
+  ],
+  [
+   9.5,
+   9.5
+  ],
+  [
+   16.5,
+   18.55
+  ],
+  [
+   24,
+   25.73
+  ],
+  [
+   28,
+   29.71
+  ],
+  [
+   36.5,
+   38.18
+  ],
+  [
+   47,
+   48.68
+  ]
+ ]
+}

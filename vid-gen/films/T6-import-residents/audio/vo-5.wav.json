@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Each household gets a temporary four-digit PIN, shown once, with a download so you can share them privately.",
+ "created": "2026-10-04T00:26:41.106Z",
+ "key": "6fa98a982b5d"
+}

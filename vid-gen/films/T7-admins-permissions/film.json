@@ -1,2 +1,93 @@
-{ "title": "How to add admins and set permissions", "duration": 50, "formats": ["16x9", "9x16"],
- "voice": { "gap": 0.5 }, "vo_at": [0.3, 9.1, 15.3, 23.2, 29.4, 39.2], "music": "About fifty seconds of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending." }
+{
+ "title": "How to add admins and set permissions",
+ "duration": 50.4,
+ "formats": [
+  "16x9",
+  "9x16"
+ ],
+ "voice": {
+  "gap": 0.5
+ },
+ "vo_at": [
+  0.3,
+  9.1,
+  15.3,
+  23.2,
+  29.4,
+  39.2
+ ],
+ "music": "About fifty seconds of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending.",
+ "vo": [
+  [
+   0.3,
+   "audio/vo-1.wav",
+   "Everyone who helps run the estate should have their own login, so each person sees only what they need.",
+   6.328
+  ],
+  [
+   9.1,
+   "audio/vo-2.wav",
+   "Open Admins and roles in the admin sidebar, and click Add Admin User.",
+   7.041
+  ],
+  [
+   16.29,
+   "audio/vo-3.wav",
+   "Enter their name and email. Leave the password blank, and BreeUp creates a temporary one.",
+   7.202
+  ],
+  [
+   23.64,
+   "audio/vo-4.wav",
+   "Pick a role, like Estate Manager, Financial Officer or Security Officer.",
+   6.03
+  ],
+  [
+   29.82,
+   "audio/vo-5.wav",
+   "Fine-tune each area to full access, read-only or no access, and allow exports only for people who need them.",
+   9.63
+  ],
+  [
+   39.6,
+   "audio/vo-6.wav",
+   "Tip: fewer people with export rights means less resident data leaving the platform.",
+   8.325
+  ]
+ ],
+ "duration_authored": 50,
+ "retime": [
+  [
+   0,
+   0
+  ],
+  [
+   0.3,
+   0.3
+  ],
+  [
+   9.1,
+   9.1
+  ],
+  [
+   15.3,
+   16.29
+  ],
+  [
+   23.2,
+   23.64
+  ],
+  [
+   29.4,
+   29.82
+  ],
+  [
+   39.2,
+   39.6
+  ],
+  [
+   50,
+   50.4
+  ]
+ ]
+}

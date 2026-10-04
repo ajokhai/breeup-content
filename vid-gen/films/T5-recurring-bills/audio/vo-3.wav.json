@@ -1,0 +1,9 @@
+{
+ "kind": "tts",
+ "model": "gemini-2.5-pro-preview-tts",
+ "voice": "Kore",
+ "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "text": "Give it a name residents will recognise, like Service charge.",
+ "created": "2026-10-04T00:24:21.619Z",
+ "key": "82ed3f03e98a"
+}
