@@ -22,7 +22,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const flag = (k) => args.includes(`--${k}`);
-const VALUED = new Set(['--format', '--fps', '--scale', '--workers', '--still', '--from', '--to']);
+const VALUED = new Set(['--variant', '--format', '--fps', '--scale', '--workers', '--still', '--from', '--to']);
 const filmArg = args.find((a, i) => !a.startsWith('--') && !VALUED.has(args[i - 1]));
 const filmDir = path.resolve(filmArg || '');
 if (!fs.existsSync(path.join(filmDir, 'index.html'))) { console.error('usage: node tools/render.mjs films/<ID-name> [--format 9x16]'); process.exit(1); }
@@ -34,11 +34,15 @@ const fps = Number(opt('fps', 30)), scale = Number(opt('scale', 1)), draft = fla
 const workers = Math.max(1, Number(opt('workers', Math.max(1, os.cpus().length - 1))));
 const still = opt('still');
 const from = Number(opt('from', 0)), to = Number(opt('to', cfg.duration));
-const SIZES = { '16x9': [1920, 1080], '9x16': [1080, 1920], '1x1': [1080, 1080] };
-const name = `breeup-${path.basename(filmDir)}`;
+const SIZES = { '16x9': [1920, 1080], '9x16': [1080, 1920], '4x5': [1080, 1350], '1x1': [1080, 1080] };
+// hook variants (ads): film.json "variants": ["a", "b"]; --variant picks some; each renders as -<v>
+const variants = opt('variant') ? opt('variant').split(',') : cfg.variants || [null];
+let VAR = null;
+const base = `breeup-${path.basename(filmDir)}`;
+let name = base;
 const outDir = path.join(ROOT, 'renders');
 const mix = path.join(filmDir, 'audio', 'mix.wav');
-const outFile = (fmt) => path.join(outDir, `${name}-${fmt}${scale > 1 ? '-4k' : ''}.mp4`);
+const outFile = (fmt) => path.join(outDir, `${name}-${fmt}${scale > 1 ? '-4k' : ''}.mp4`);   // name includes -<variant>
 const ff = (a) => new Promise((r, j) => spawn('ffmpeg', ['-v', 'error', '-y', ...a], { stdio: 'inherit' }).on('close', (c) => (c ? j(new Error('ffmpeg failed')) : r())));
 const muxArgs = ['-c:a', 'aac', '-b:a', '256k', '-shortest', '-map_metadata', '-1', '-movflags', '+faststart'];
 
@@ -90,7 +94,7 @@ async function openPage(fmt) {
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: scale });
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) console.error(`  [page] ${m.text()}`); });
   page.on('pageerror', (e) => console.error(`  [page] ${e.message}`));
-  await page.goto(`http://127.0.0.1:${port}/index.html?render=1&format=${fmt}&fps=${fps}${draft ? '&blur=0' : ''}`);
+  await page.goto(`http://127.0.0.1:${port}/index.html?render=1&format=${fmt}&fps=${fps}${draft ? '&blur=0' : ''}${VAR ? `&variant=${VAR}` : ''}`);
   await page.waitForFunction(() => window.filmReady === true, null, { timeout: 120000 });
   return { page, canvas: await page.$('#film') };
 }
@@ -112,6 +116,8 @@ async function renderRange(fmt, a, b, seg, tick) {
   await page.close();
 }
 
+for (const v of variants) {
+VAR = v; name = v ? `${base}-${v}` : base;
 for (const fmt of formats) {
   if (still != null) {
     const { page, canvas } = await openPage(fmt);
@@ -147,6 +153,7 @@ for (const fmt of formats) {
     '-c:v', 'copy', ...(withAudio ? muxArgs : ['-map_metadata', '-1', '-movflags', '+faststart']), outFile(fmt)]);
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log(`\r  ${fmt}: done in ${((Date.now() - t0) / 1000).toFixed(0)}s with ${k} workers → ${path.relative(ROOT, outFile(fmt))}${withAudio ? '' : ' (no audio)'}`);
+}
 }
 await browser.close();
 server.close();

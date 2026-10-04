@@ -153,17 +153,18 @@ if (flag('check') || (only && only.includes('stills'))) {
   step(flag('draft') ? 'draft render' : 'render (full quality)');
   tool('render.mjs', dir, ...(flag('draft') ? ['--draft'] : []));
   // 8. strip metadata from the finished files
-  const outs = formats.map((f) => path.join(ROOT, 'renders', `breeup-${path.basename(dir)}-${f}.mp4`)).filter(fs.existsSync);
+  const vs = cfg.variants || [null];
+  const outs = vs.flatMap((v) => formats.map((f) => path.join(ROOT, 'renders', `breeup-${path.basename(dir)}${v ? `-${v}` : ''}-${f}.mp4`))).filter(fs.existsSync);
   if (outs.length) tool('gemini.mjs', 'clean', ...outs);
   // 9. publish: full renders get a plain name in ../Final videos/, the only folder Josh looks at
   if (!flag('draft') && outs.length) {
     const final = path.join(ROOT, '..', 'Final videos');
     fs.mkdirSync(final, { recursive: true });
     const id = path.basename(dir).split('-')[0];
-    const shape = { '9x16': 'phone', '16x9': 'wide', '1x1': 'square' };
+    const shape = { '9x16': 'phone', '16x9': 'wide', '1x1': 'square', '4x5': 'feed' };
     for (const f of outs) {
-      const fmt = f.match(/-(\d+x\d+)\.mp4$/)[1];
-      const name = `${id} ${cfg.title.replace(/[\\/:*?"<>|]/g, '')} (${shape[fmt] || fmt}).mp4`;
+      const [, v, fmt] = f.match(/(?:-([a-z]))?-(\d+x\d+)\.mp4$/);
+      const name = `${id} ${cfg.title.replace(/[\\/:*?"<>|]/g, '')} (${v ? `hook ${v}, ` : ''}${shape[fmt] || fmt}).mp4`;
       fs.copyFileSync(f, path.join(final, name));
       console.log(`  published: Final videos/${name}`);
     }

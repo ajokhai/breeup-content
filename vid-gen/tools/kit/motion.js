@@ -14,11 +14,11 @@ export const TAU = Math.PI * 2;
 // render.mjs passes ?format=16x9|9x16|1x1&w=&h=. Lay out per format; never letterbox.
 const params = new URLSearchParams(location.search);
 export const RENDER = params.get('render') === '1';
-const SIZES = { '16x9': [1920, 1080], '9x16': [1080, 1920], '1x1': [1080, 1080] };
+const SIZES = { '16x9': [1920, 1080], '9x16': [1080, 1920], '4x5': [1080, 1350], '1x1': [1080, 1080] };
 const fmtName = params.get('format') || '16x9';
 const [fw, fh] = SIZES[fmtName] || SIZES['16x9'];
 // Safe areas: 9x16 keeps clear of the social UI (top bar, caption + buttons at the bottom/right).
-const SAFE = { '16x9': [96, 60, 96, 60], '9x16': [72, 250, 150, 430], '1x1': [72, 72, 72, 72] };
+const SAFE = { '16x9': [96, 60, 96, 60], '9x16': [72, 250, 150, 430], '4x5': [72, 80, 72, 120], '1x1': [72, 72, 72, 72] };
 const [sl, st, sr, sb] = SAFE[fmtName] || SAFE['16x9'];
 export const FORMAT = {
   name: fmtName, w: fw, h: fh, portrait: fh > fw, square: fh === fw, landscape: fw > fh,
