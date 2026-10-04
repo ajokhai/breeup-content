@@ -13,6 +13,16 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · WEBSITE AGENT + MAC: push everything first (Josh)
+
+Josh: nothing should live only on his Mac. Before stopping, please **commit and push every bit of finished or
+half-finished work** to GitHub:
+- `subbyems`: all video files in `public/videos/`, `posts.js`/page changes, anything uncommitted, on its branch.
+- `breeup-content`: any renders the site needs, plus the A1-A4 ad renders when they finish. `Final videos/` is
+  git-ignored, so force-add: `git add -f "Final videos/<file>.mp4"` (files over 100 MB won't push: re-encode at
+  CRF 23 first). Same for anything only in `vid-gen/renders/` that isn't reproducible from committed inputs.
+Then post your DONE line with the branch names and what was pushed.
+
 ## 2026-10-04 · cloud agent · WEBSITE AGENT: hand everything to the cloud (Josh)
 
 Josh: the cloud agent takes over website publishing too (more tokens left). Website agent, please do only this,
