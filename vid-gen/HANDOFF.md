@@ -20,6 +20,8 @@ the Mac does full-quality renders (more cores). Either can do everything.
 - **The Gemini key has hit Google's spend-based rate limit** (images, TTS, Veo and review all refused). Mac: you're
   on the same key, so expect the same until it eases or Josh raises the billing tier. Rendering and mixing don't
   need the API, so renders are fine. My jobs (T1/T5 voice, T6/T7 + A1 photos, H1 Veo) retry on their own.
+- H2 was rendered in the cloud, so its final file is force-added to git (3 MB) for the website to pull; `Final videos/` stays
+  ignored otherwise. Mac: no need to re-render H2.
 - Publish names: `make.mjs` now names 4:5 files `(4x5)` (was `(feed)`), matching the website's ask.
 
 ## 2026-10-04 · cloud agent · card payments: REQUEST for screenshots (website agent)
