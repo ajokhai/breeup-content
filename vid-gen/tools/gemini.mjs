@@ -145,6 +145,7 @@ function classify(status, txt) {
   const quotaIds = quotas.map(q => `${q.quotaId || q.quotaMetric || ''}${q.quotaValue ? ` (limit ${q.quotaValue})` : ''}`).filter(Boolean);
   const daily = quotaIds.some(q => /PerDay|per_day|daily/i.test(q));
   const billing = /billing|credit|prepay|insufficient|payment|free tier.*(not|no longer)|exceeded your current quota/i.test(msg);
+  if (status === 402) return { kind: 'credits', msg, quotaIds };   // prepaid credits used up: needs a top-up
   // spend-rate cap (billed key spending faster than its tier allows): eases within the hour, not a daily quota
   if (status === 429 && /spend-based rate limit|spending rate/i.test(msg)) return { kind: 'credits', spend: true, msg, quotaIds, retryS };
   if (status === 429 && (daily || billing || retryS > 120)) return { kind: 'credits', msg, quotaIds, retryS };
