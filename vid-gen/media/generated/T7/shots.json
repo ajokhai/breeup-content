@@ -1,0 +1,5 @@
+{ "size": "2K", "n": 2, "shots": [
+ { "name": "hook", "prompt": "Three members of an estate committee, Nigerian men and women aged thirty-five to sixty, well dressed, sit around a table in the estate clubhouse, one turning a laptop towards the others with a smile. Palms visible through the window. Soft daylight. Laptop screen facing away from camera, hands relaxed on the table." },
+ { "name": "why", "prompt": "A confident Nigerian estate security lead in a neat uniform and a well-dressed female estate manager talk at the gatehouse of a gated Abuja estate, both smiling, hands relaxed. Barrier arm and palms behind. Warm morning light." },
+ { "name": "tip", "prompt": "A thoughtful, elegant Nigerian woman in her fifties, the estate chairperson, sits at her desk in a home study in a gated estate, reviewing something on her laptop with a calm, careful expression. Bookshelf and window onto palms. Soft daylight, lower third of the frame in shade. Laptop screen facing away from camera." }
+]}

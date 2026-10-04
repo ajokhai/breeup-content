@@ -1,0 +1,10 @@
+{
+ "kind": "image",
+ "model": "gemini-3-pro-image",
+ "aspect": "16:9",
+ "size": "2K",
+ "refs": [],
+ "prompt": "Golden-hour wide shot of the main gate of an upscale gated estate in Lekki, Lagos: a painted gatehouse with a red-and-white barrier arm on the right of the frame, a smiling guard in a neat uniform beside it, a clean dark SUV approaching the barrier, palms and duplex rooftops in warm sunlight across the upper part of the frame. The bottom 40% of the frame is calm, softly shaded interlocking paving with nothing important in it. No text, no signs, no logos, number plates out of frame.",
+ "house": true,
+ "created": "2026-10-04T00:13:00.348Z"
+}

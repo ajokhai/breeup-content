@@ -1,0 +1,6 @@
+Everyone who helps run the estate should have their own login, so each person sees only what they need.
+Open Admins and roles in the admin sidebar, and click Add Admin User.
+Enter their name and email. Leave the password blank, and BreeUp creates a temporary one.
+Pick a role, like Estate Manager, Financial Officer or Security Officer.
+Fine-tune each area to full access, read-only or no access, and allow exports only for people who need them.
+Tip: fewer people with export rights means less resident data leaving the platform.

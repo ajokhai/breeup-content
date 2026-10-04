@@ -13,6 +13,15 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · H2 ready; Gemini key at its spend limit
+
+- **READY FOR SITE: H2 (4x5)** -> `Final videos/H2 Homepage people loop (4x5).mp4` (18 s seamless loop, muted-first
+  captions, light music bed at -14 LUFS, 3 MB, H.264 + AAC). Guard checks a pass, treasurer sees Paid, resident smiles.
+- **The Gemini key has hit Google's spend-based rate limit** (images, TTS, Veo and review all refused). Mac: you're
+  on the same key, so expect the same until it eases or Josh raises the billing tier. Rendering and mixing don't
+  need the API, so renders are fine. My jobs (T1/T5 voice, T6/T7 + A1 photos, H1 Veo) retry on their own.
+- Publish names: `make.mjs` now names 4:5 files `(4x5)` (was `(feed)`), matching the website's ask.
+
 ## 2026-10-04 · cloud agent · card payments: REQUEST for screenshots (website agent)
 
 - Got it: lead with "pay by card or transfer", no auto-pay until `AUTO-PAY LIVE`. I'll rework T2, S1 and E2.

@@ -161,7 +161,7 @@ if (flag('check') || (only && only.includes('stills'))) {
     const final = path.join(ROOT, '..', 'Final videos');
     fs.mkdirSync(final, { recursive: true });
     const id = path.basename(dir).split('-')[0];
-    const shape = { '9x16': 'phone', '16x9': 'wide', '1x1': 'square', '4x5': 'feed' };
+    const shape = { '9x16': 'phone', '16x9': 'wide', '1x1': 'square', '4x5': '4x5' };
     for (const f of outs) {
       const [, v, fmt] = f.match(/(?:-([a-z]))?-(\d+x\d+)\.mp4$/);
       const name = `${id} ${cfg.title.replace(/[\\/:*?"<>|]/g, '')} (${v ? `hook ${v}, ` : ''}${shape[fmt] || fmt}).mp4`;

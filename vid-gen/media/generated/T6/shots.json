@@ -1,0 +1,5 @@
+{ "size": "2K", "n": 2, "shots": [
+ { "name": "hook", "prompt": "A stylish, good-looking Nigerian woman in her thirties, the secretary of her estate's residents' association, sits at a dining table in her estate home with a laptop open, looking relieved and pleased as she works. Large window onto palms and a painted fence. Soft daylight. Laptop screen facing away from camera, hands resting naturally on the keyboard." },
+ { "name": "why", "prompt": "A friendly group of four Nigerian residents of different ages, well dressed, chat and laugh together on the street outside their duplexes in a gated Lagos estate, a water tank and palms behind. Warm late-afternoon light, hands relaxed." },
+ { "name": "tip", "prompt": "A smart young Nigerian man in his late twenties, the estate's volunteer admin, sits at a desk in the estate office with a laptop, smiling as he finishes a task, a cup of coffee beside him. Window onto the estate gate and palms. Bright daylight, lower third of the frame in shade. Laptop screen facing away from camera." }
+]}
