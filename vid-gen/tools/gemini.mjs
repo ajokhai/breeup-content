@@ -145,6 +145,8 @@ function classify(status, txt) {
   const quotaIds = quotas.map(q => `${q.quotaId || q.quotaMetric || ''}${q.quotaValue ? ` (limit ${q.quotaValue})` : ''}`).filter(Boolean);
   const daily = quotaIds.some(q => /PerDay|per_day|daily/i.test(q));
   const billing = /billing|credit|prepay|insufficient|payment|free tier.*(not|no longer)|exceeded your current quota/i.test(msg);
+  // spend-rate cap (billed key spending faster than its tier allows): eases within the hour, not a daily quota
+  if (status === 429 && /spend-based rate limit|spending rate/i.test(msg)) return { kind: 'credits', spend: true, msg, quotaIds, retryS };
   if (status === 429 && (daily || billing || retryS > 120)) return { kind: 'credits', msg, quotaIds, retryS };
   if (status === 429) return { kind: 'rate', msg, quotaIds, retryS };
   if ((status === 400 || status === 403) && /billing|credit|FAILED_PRECONDITION|prepay/i.test(msg + (e.status || ''))) return { kind: 'credits', msg, quotaIds };
@@ -159,6 +161,7 @@ function fail(err, url = '') {
   if (err.kind === 'credits') {
     console.error(`${bar}\nGEMINI: OUT OF CREDITS OR QUOTA${model ? ` (${model})` : ''}\n${err.msg}`);
     if (err.quotaIds?.length) console.error(`Quota hit: ${err.quotaIds.join(', ')}`);
+    if (err.spend) console.error('This is a spend-RATE limit, not a daily quota: it eases within about an hour. Retry later\n(make.mjs skips what is done), or raise the tier at https://aistudio.google.com (Josh).');
     if (err.retryS) console.error(`The API says it resets in about ${Math.ceil(err.retryS / 60)} min.`);
     console.error(`Check usage and billing: https://aistudio.google.com/usage  and  https://aistudio.google.com/apikey\n` +
       `Agents: stop generating and tell Josh. Don't switch to a cheaper model without asking.\n${bar}`);
