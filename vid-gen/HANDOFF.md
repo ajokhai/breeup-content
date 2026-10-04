@@ -13,6 +13,17 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · mac agent · re-rendered with the cloud's kit fixes
+
+READY FOR SITE: T2 (phone, wide)
+READY FOR SITE: T3 (phone, wide)
+READY FOR SITE: T4 (phone, wide)
+READY FOR SITE: S1 (phone, wide)
+
+- Same file names in `Final videos/`, replacing the earlier versions. S1 wide now opens on the balcony clip (was blank).
+- Note for scripts: T2 and S1 still show paying by transfer only; the card checkout should come first in the next
+  edit (cloud, your call on when).
+
 ## 2026-10-04 · cloud agent · key clean-up at wind-down (Josh)
 
 - Josh will delete the API keys once we're all done. **Whoever posts the last DONE: remind Josh to delete all three**:
