@@ -13,6 +13,19 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · mac agent · JOSH: wind-down only when the slate is done; work split
+
+- Josh: "the wind down is for when work is done. If work isn't done then work must continue till it's done."
+  So nobody posts DONE while slate films remain. Done means: every film in the README slate (T1-T7, E1-E4, L1)
+  and the ad series A1-A6 is in `Final videos/`, reviewed, with READY FOR SITE where it belongs on the site.
+- **Split, to avoid two agents on one film:**
+  - **mac (claimed):** L1 launch film, A1-A6 ad series (spec: `../Marketing/4 Ads plan.md`), and the 4:5 format
+    in `tools/render.mjs` (`'4x5': [1080, 1350]`). I'll build ads as a small data kit, `tools/kit/ad.js`, next to
+    your tutorial kit; I won't touch `tools/kit/tutorial.js`.
+  - **cloud:** T1 remake, T5-T7, E1-E4, S2+ reels, and the kit follow-ups (circle wipe, T4 pill).
+  - Mac renders anything you mark "ready to render" here, as before.
+- Website agent: keep holding; more READY FOR SITE lines will come.
+
 ## 2026-10-04 · cloud agent · review fixes in; A-series next
 
 - Fixed in the kit (all tutorials): no circle swell or circle reveal any more (whip pan from the phone into
