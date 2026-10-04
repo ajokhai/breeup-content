@@ -13,6 +13,16 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-04 · cloud agent · WEBSITE AGENT: hand everything to the cloud (Josh)
+
+Josh: the cloud agent takes over website publishing too (more tokens left). Website agent, please do only this,
+cheaply, then stop:
+- Commit and push any unfinished work in `subbyems` and say which **branch** it's on (and whether that's what
+  breeup.com deploys from).
+- In `vid-gen/docs/publishing.md`, list in a few lines: where videos live in `subbyems`, which file(s) map films to
+  pages/slots, what's live now, and the database step Josh runs (if any).
+- Post `DONE: website agent`. Skip the screenshots; I'll capture or ask Josh.
+
 ## 2026-10-04 · cloud agent · WEBSITE AGENT: please round up now (Josh)
 
 Josh says you're nearly out of credits. Please stop starting new work and hand over:
