@@ -22,7 +22,7 @@ await page.route('http://frames.local/**', (r) => {
   return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f), contentType: 'model/gltf-binary' }) : r.fulfill({ body: '<!doctype html><body></body>', contentType: 'text/html' });
 });
 await page.goto('http://frames.local/index.html');
-for (const s of ['build/three.min.js', 'examples/js/loaders/GLTFLoader.js', 'examples/js/environments/RoomEnvironment.js']) await page.addScriptTag({ url: `${THREE}/${s}` });
+for (const s of ['build/three.min.js', 'examples/js/loaders/GLTFLoader.js', 'examples/js/loaders/RGBELoader.js']) await page.addScriptTag({ url: `${THREE}/${s}` });
 page.on('console', (m) => m.type() === 'error' && console.error('page:', m.text()));
 
 // screen: the mesh that becomes the hole; long: frame size in px along its longest side
@@ -41,12 +41,22 @@ async function render(file, screen, long, tint) {
     const centre = sb.getCenter(new THREE.Vector3()).applyMatrix4(scr.matrixWorld);
     const scene = new THREE.Scene(); scene.add(root);
     // neutral black-titanium / space-black finish whatever colour the model shipped in
-    root.traverse((o) => { if (o.isMesh && /aluminium|plateau|space-black|antenna/.test(o.material.name)) { o.material = o.material.clone(); o.material.color.set(tint); } });
+    root.traverse((o) => {
+      if (!o.isMesh || !o.material) return;
+      o.material = o.material.clone();
+      if (/aluminium|plateau|space-black/.test(o.material.name)) Object.assign(o.material, { metalness: 1, roughness: 0.28, envMapIntensity: 1.35 }), o.material.color.set(tint);
+      else if (/antenna/.test(o.material.name)) Object.assign(o.material, { metalness: 0.2, roughness: 0.6 }), o.material.color.set('#2a2b2e');
+      else if (/bezel|sensor/.test(o.material.name)) Object.assign(o.material, { metalness: 0, roughness: 0.15, envMapIntensity: 0.6 });
+      else if ('envMapIntensity' in o.material) o.material.envMapIntensity = 1.1;
+    });
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
     renderer.setClearColor(0x000000, 0);
-    scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new THREE.RoomEnvironment(), 0.04).texture;
-    const key = new THREE.DirectionalLight(0xffffff, 0.6); key.position.copy(normal).multiplyScalar(10).add(new THREE.Vector3(-4, 6, 0)); scene.add(key);
+    // a real photo studio (Poly Haven, CC0) for lighting and reflections: this is what makes metal and glass read as real
+    const hdr = await new Promise((ok, bad) => new THREE.RGBELoader().load('http://frames.local/studio.hdr', ok, undefined, bad));
+    hdr.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = new THREE.PMREMGenerator(renderer).fromEquirectangular(hdr).texture;
+    const key = new THREE.DirectionalLight(0xffffff, 0.35); key.position.copy(normal).multiplyScalar(10).add(new THREE.Vector3(-4, 6, 0)); scene.add(key);
     const mats = new Map(); root.traverse((o) => { if (o.isMesh) mats.set(o, o.material); });
     const black = new THREE.MeshBasicMaterial({ color: 0x000000 }), white = new THREE.MeshBasicMaterial({ color: 0xffffff });
     // the screen's normal could point either way: shoot from both sides and keep the one where the screen shows
@@ -91,7 +101,7 @@ async function render(file, screen, long, tint) {
 }
 
 const meta = {};
-for (const [name, file, screen, long, tint] of [['phone', 'iphone.glb', 'front-glass', 2400, '#3b3b3e'], ['laptop', 'macbook.glb', 'display', 3200, '#2e3033']]) {
+for (const [name, file, screen, long, tint] of [['phone', 'iphone.glb', 'front-glass', 2400, '#9a9ba0'], ['laptop', 'macbook.glb', 'display', 3200, '#8a8d93']]) {
   const r = await render(file, screen, long, tint);
   fs.writeFileSync(path.join(DIR, `${name}-frame.png`), Buffer.from(r.png.split(',')[1], 'base64'));
   meta[name] = { w: r.w, h: r.h, screen: r.screen, notch: r.notch };
