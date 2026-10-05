@@ -8,6 +8,7 @@
 //
 // Jobs run one at a time (renders are heavy and Gemini quota is shared), in a queue.
 import http from 'node:http';
+import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
@@ -77,6 +78,8 @@ function detail(folder) {
   const music = path.join(dir, 'audio', 'music.wav'), mix = path.join(dir, 'audio', 'mix.wav');
   return {
     ...summary(folder), cfg: { title: cfg.title, duration: cfg.duration, formats: cfg.formats, music: cfg.music || '', voice: cfg.voice || {}, vo_at: cfg.vo_at || [] },
+    clipwalk: readJSON(path.join(dir, 'clipwalk.json')), stale: (() => { const r = ls(RENDERS).filter((f) => f.startsWith(`breeup-${id}-`) && f.endsWith('.mp4'));
+      return r.length ? mtime(path.join(dir, 'clipwalk.json')) > Math.min(...r.map((f) => mtime(path.join(RENDERS, f)))) : false; })(),
     vo, shots, pictures, docs, lint: lintState(folder), lineSecs: fs.existsSync(linesFile) ? lineSecs(folder) : [],
     music: fs.existsSync(music) ? `/files/films/${folder}/audio/music.wav?v=${mtime(music)}` : null,
     mix: fs.existsSync(mix) ? `/files/films/${folder}/audio/mix.wav?v=${mtime(mix)}` : null,
@@ -153,14 +156,15 @@ function create({ id, name, title, from }) {
 // ------------------------------------------------------------------ workspace, keys, pricing
 // Clipwalk isn't only for BreeUp: the workspace (name, colours, logo, end-card line) brands every film made here.
 const WS = path.join(HERE, 'workspace.json'), BRAND = path.join(HERE, 'brand');
-const WS_DEFAULT = { name: 'BreeUp', tagline: 'Dues, gate access, approvals and notices in one place.', stockHint: 'Black African, Nigerian',
+const WS_DEFAULT = { name: 'BreeUp', tagline: 'Dues, gate access, approvals and notices in one place.', stockHint: 'Black African, Nigerian', accent: 'nigerian',
   brand: { green: '#1a472a', deep: '#123220', cream: '#f6f4ee', gold: '#c9a84c' }, logo: 'films/T3-resident-account/assets/logo.svg' };
-const workspace = () => { const k = keyStatus(); return { ...WS_DEFAULT, ...readJSON(WS, {}), stock: !!(k.pexels || k.pixabay) }; };
+const workspace = () => { const k = keyStatus(); return { ...WS_DEFAULT, ...readJSON(WS, {}), stock: !!(k.pexels || k.pixabay), nigerianVoice: !!k.yarngpt }; };
 function saveWorkspace(b) {
   const w = workspace();
   if (typeof b.name === 'string' && b.name.trim()) w.name = b.name.trim().slice(0, 40);
   if (typeof b.tagline === 'string') w.tagline = b.tagline.trim().slice(0, 120);
   if (typeof b.stockHint === 'string') w.stockHint = b.stockHint.trim().slice(0, 60);
+  if (['nigerian', 'international'].includes(b.accent)) w.accent = b.accent;
   if (b.brand) for (const k of ['green', 'deep', 'cream', 'gold']) if (/^#[0-9a-f]{6}$/i.test(b.brand[k] || '')) w.brand[k] = b.brand[k];
   if (typeof b.logo === 'string' && b.logo.startsWith('data:image/')) {   // an uploaded logo, as a data URL
     const m = /^data:image\/(svg\+xml|png|jpeg);base64,(.+)$/.exec(b.logo);
@@ -172,14 +176,14 @@ function saveWorkspace(b) {
     w.logo = path.relative(ROOT, f);
   }
   if (b.logo === null) w.logo = '';
-  const { stock, ...keep } = w;
+  const { stock, nigerianVoice, ...keep } = w;
   fs.writeFileSync(WS, JSON.stringify(keep, null, 1) + '\n');
   return w;
 }
 // API keys live in videos/.env (git-ignored). Studio only says whether each is set; it never sends a key back.
 const ENV = path.resolve(ROOT, '..', '.env');
 const ENV_LOCAL = path.join(ROOT, '.env');
-const KEYS = { gemini: 'GEMINI_API_KEY', typesafe: 'TYPESAFE_API_KEY', pexels: 'PEXELS_API_KEY', pixabay: 'PIXABAY_API_KEY' };
+const KEYS = { gemini: 'GEMINI_API_KEY', typesafe: 'TYPESAFE_API_KEY', yarngpt: 'YARNGPT_API_KEY', pexels: 'PEXELS_API_KEY', pixabay: 'PIXABAY_API_KEY', fal: 'FAL_KEY' };
 function keyStatus() {
   const txt = [ENV, ENV_LOCAL].map((f) => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } }).join('\n');
   return Object.fromEntries(Object.entries(KEYS).map(([k, v]) => [k, !!process.env[v] || new RegExp(`^${v}\\s*=\\s*\\S`, 'm').test(txt)]));
@@ -190,11 +194,56 @@ function setKeys(b) {
   for (const [k, v] of Object.entries(KEYS)) {
     const val = String(b[k] || '').trim();
     if (!val) continue;
-    if (!/^[\w.-]{10,200}$/.test(val)) throw new Error(`That doesn't look like a ${k} key.`);
+    if (!/^[\w.:-]{10,300}$/.test(val)) throw new Error(`That doesn't look like a ${k} key.`);
     txt = new RegExp(`^${v}\\s*=.*$`, 'm').test(txt) ? txt.replace(new RegExp(`^${v}\\s*=.*$`, 'm'), `${v}=${val}`) : `${txt.replace(/\n?$/, '\n')}${v}=${val}\n`;
   }
   fs.writeFileSync(f, txt.replace(/^\n/, ''), { mode: 0o600 });
   return keyStatus();
+}
+// The admin checklist: every outside service and local tool Clipwalk can use, whether it's connected, what it's for,
+// what it costs and where to get it. Tests are free or near-free calls that prove the key works.
+const SERVICES = [
+  { id: 'gemini', group: 'Needed', name: 'Google Gemini', for: 'International voice-over, music, AI photos and clips, and video reviews.', cost: 'Pay as you go (prepaid). About $0.10 a video without AI photos or clips.', get: 'https://aistudio.google.com/apikey' },
+  { id: 'typesafe', group: 'Needed', name: 'TypeSafe Jev', for: 'The cheap brain: clicks through products, checks scripts, picks stock and effects.', cost: 'About $0.04 per million words read. A video costs well under a cent.', get: 'https://console.typesafe.ai' },
+  { id: 'yarngpt', group: 'Recommended', name: 'YarnGPT', for: 'Nigerian-accented voice-over (also Yoruba, Igbo and Hausa).', cost: 'Free for now: about 80 voice clips a day.', get: 'https://yarngpt.ai' },
+  { id: 'pexels', group: 'Recommended', name: 'Pexels', for: 'Free stock photos and video for openers and backgrounds.', cost: 'Free.', get: 'https://www.pexels.com/api/' },
+  { id: 'pixabay', group: 'Optional', name: 'Pixabay', for: 'Backup stock photos and video when Pexels has nothing.', cost: 'Free.', get: 'https://pixabay.com/api/docs/' },
+  { id: 'fal', group: 'Optional', name: 'fal.ai', for: 'Cheaper AI video and images (Kling, Wan, Seedream) for the Dreamy and promo styles. Coming next.', cost: 'Pay as you go: about $0.30-0.90 per 8-second clip.', get: 'https://fal.ai/dashboard/keys' },
+];
+const TOOLS = [
+  { id: 'ffmpeg', group: 'On this computer', name: 'ffmpeg', for: 'Cuts, mixes and encodes every video.', fix: 'brew install ffmpeg', check: () => which('ffmpeg') },
+  { id: 'ytdlp', group: 'On this computer', name: 'yt-dlp', for: 'Downloads a video someone liked (X, TikTok, Instagram) to match its style.', fix: 'brew install yt-dlp', check: () => which('yt-dlp') },
+  { id: 'chromium', group: 'On this computer', name: 'Browser engine (Playwright)', for: 'Clicks through products and renders videos.', fix: 'npx playwright install chromium', check: () => ls(path.join(os.homedir(), 'Library', 'Caches', 'ms-playwright')).concat(ls(path.join(os.homedir(), '.cache', 'ms-playwright'))).some((f) => f.startsWith('chromium')) },
+  { id: 'cloudflared', group: 'On this computer', name: 'Cloudflare Tunnel', for: 'Lets friends anywhere open Clipwalk from a link (optional; Wi-Fi sharing needs nothing).', fix: 'brew install cloudflared', check: () => which('cloudflared') },
+];
+function which(bin) { try { execFileSync('which', [bin], { stdio: 'ignore', env: { ...process.env, PATH: `/opt/homebrew/bin:/usr/local/bin:${process.env.PATH}` } }); return true; } catch { return false; } }
+const envKey = (name) => process.env[name] || [ENV, ENV_LOCAL].map((f) => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } }).join('\n').match(new RegExp(`^${name}\\s*=\\s*"?([^"\\n]+)"?`, 'm'))?.[1]?.trim();
+const tested = {};   // last test result per service, while the server runs
+function services() {
+  const k = keyStatus();
+  return [...SERVICES.map((x) => ({ ...x, kind: 'key', connected: !!k[x.id], test: tested[x.id] || null })),
+    ...TOOLS.map(({ check, ...x }) => ({ ...x, kind: 'tool', connected: check() }))];
+}
+async function testService(id) {
+  const key = envKey(KEYS[id]);
+  if (!key) return { ok: false, msg: 'No key yet.' };
+  const go = async (url, init) => { const r = await fetch(url, { ...init, signal: AbortSignal.timeout(15000) }); return { ok: r.ok, status: r.status, text: r.ok ? '' : (await r.text()).slice(0, 160) }; };
+  let r;
+  try {
+    if (id === 'gemini') {   // listing models is free; it proves the key, not the credit balance
+      r = await go('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1', { headers: { 'x-goog-api-key': key } });
+      if (r.ok) return (tested[id] = { ok: true, msg: 'Key works. (Credit is only checked when something is made: watch for "out of credit".)', at: Date.now() });
+    }
+    if (id === 'typesafe') {   // in its own process: jev.mjs exits on a bad key, which must not take the server down
+      const code = await new Promise((ok) => spawn(process.execPath, ['tools/jev.mjs', 'lint', 'Hello.'], { cwd: ROOT, stdio: 'ignore' }).on('close', ok));
+      return (tested[id] = code === 0 || code === 5 ? { ok: true, msg: 'Works.', at: Date.now() } : { ok: false, msg: code === 3 ? 'Key rejected.' : code === 2 ? 'Out of credit.' : `Didn't work (exit ${code}).`, at: Date.now() });
+    }
+    if (id === 'yarngpt') r = await go('https://api.yarngpt.ai/api/v1/voices', { headers: { Authorization: `Bearer ${key}` } });
+    if (id === 'pexels') r = await go('https://api.pexels.com/v1/search?query=phone&per_page=1', { headers: { Authorization: key } });
+    if (id === 'pixabay') r = await go(`https://pixabay.com/api/?key=${encodeURIComponent(key)}&q=phone&per_page=3`);
+    if (id === 'fal') r = await go('https://api.fal.ai/v1/models?limit=1', { headers: { Authorization: `Key ${key}` } });
+  } catch (e) { r = { ok: false, text: e.message }; }
+  return (tested[id] = r?.ok ? { ok: true, msg: 'Works.', at: Date.now() } : { ok: false, msg: r?.status === 401 || r?.status === 403 ? 'Key rejected. Check you copied all of it.' : `Didn't work${r?.status ? ` (${r.status})` : ''}: ${r?.text || ''}`.trim(), at: Date.now() });
 }
 const PRICING = path.join(HERE, 'pricing.json');
 // what's been spent so far, from tools/usage.log (one line per API call on this machine)
@@ -218,119 +267,157 @@ function spend() {
 
 // A walkthrough becomes a tutorial film: each captured screen is a step, its caption the voice-over line,
 // and the control the AI pressed gets the kit's gold ring and a tap. Branded with the workspace.
-// Several walks make one film with "parts": e.g. the admin on a laptop, then a resident on a phone. Each view is
-// { name, role }; the kit switches device between them.
-function filmFromWalk(walks, { id, name, title, voice = true, brand: vb, voiceName, owner, opener }) {
+// A Clipwalk video is a list of scenes in films/<folder>/clipwalk.json: one screenshot each, with its words and the
+// button to ring. The simple editor changes that list; writeFilm() turns it into film.js, film.json and the script,
+// so the kit, make.mjs and render.mjs never need to know an editor exists.
+const MOODS = {
+  calm: 'About one minute of original, calm, modern instrumental background music for a friendly product walkthrough. Soft percussion, light plucked guitar, warm keys, relaxed tempo around 96 BPM, even dynamics under a voice, no vocals, a soft resolved ending.',
+  upbeat: 'About one minute of original, bright and upbeat instrumental music for a product video. Claps, plucky synths and a bouncy bass line, around 118 BPM, positive and energetic but even enough for a voice on top, no vocals, a clean ending.',
+  pro: 'About one minute of original, confident and polished instrumental music for a business product video. Soft piano, light strings and a steady pulse, around 100 BPM, even dynamics under a voice, no vocals, a resolved ending.',
+  afro: 'About one minute of original, warm West African inspired instrumental music for a product video. Soft hand percussion, shaker, clean guitar picking and mellow keys, relaxed groove around 100 BPM, even dynamics under a voice, no vocals, a soft ending.',
+};
+const NEUTRAL = { green: '#1f3a5f', deep: '#0f1b2d', cream: '#f7f7f4', gold: '#f5a524' };
+const human = (s) => { const t = String(s).replace(/-\d+$/, '').replace(/-/g, ' ').trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
+const words = (s) => String(s || '').split(/\s+/).filter(Boolean).length;
+
+// Several walks make one video ("views"): e.g. the admin on a laptop, then a resident on a phone.
+function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, voiceName, owner, opener, provider, style }) {
   const views = (Array.isArray(walks) ? walks : [{ name: walks }]).map((v) => ({ ...v, w: readJSON(path.join(SCREENS, v.name, 'walk.json')) }))
     .filter((v) => v.w?.shots?.length);
   if (!views.length) throw new Error('That walkthrough has no screens.');
-  const walkName = views.map((v) => v.name).join(' + '), multi = views.length > 1;
   const folder = create({ id, name, title, from: 'T3-resident-account' });
-  const dir = path.join(FILMS, folder);
-  // a friend's video starts neutral, never in the workspace owner's brand
-  const ws0 = owner && owner !== 'owner' ? { name: vb?.host || 'Product', tagline: '', logo: '',
-    brand: { green: '#1f3a5f', deep: '#0f1b2d', cream: '#f7f7f4', gold: '#f5a524' } } : workspace();
-  // this video's own brand (from the follow-up questions) over the workspace's
-  const ws = { ...ws0, ...(vb?.name ? { name: String(vb.name).slice(0, 40) } : {}), ...(vb?.tagline ? { tagline: String(vb.tagline).slice(0, 120) } : {}),
-    brand: { ...ws0.brand, ...brandFromColor(vb?.color) },
-    logo: vb?.logo ? saveUpload(vb.logo, path.join('media', 'brands', `${id}-logo`)) || ws0.logo : ws0.logo };
+  const dir = path.join(FILMS, folder), multi = views.length > 1, friend = owner && owner !== 'owner';
   // drop the template's screens, photos and script: everything comes from the walk
-  fs.rmSync(path.join(dir, 'assets', 'screens'), { recursive: true, force: true });
+  for (const d of ['screens', 'photos']) fs.rmSync(path.join(dir, 'assets', d), { recursive: true, force: true });
   fs.mkdirSync(path.join(dir, 'assets', 'screens'), { recursive: true });
   fs.rmSync(path.join(ROOT, 'media', 'generated', id), { recursive: true, force: true });
-  if (ws.logo && fs.existsSync(path.join(ROOT, ws.logo))) {
-    const ext = path.extname(ws.logo);
-    for (const f of ls(path.join(dir, 'assets'))) if (/^logo\./.test(f)) fs.rmSync(path.join(dir, 'assets', f));
-    fs.copyFileSync(path.join(ROOT, ws.logo), path.join(dir, 'assets', 'logo.svg' + (ext === '.svg' ? '' : '')));
-    if (ext !== '.svg') fs.renameSync(path.join(dir, 'assets', 'logo.svg'), path.join(dir, 'assets', `logo${ext}`));
-  } else for (const f of ls(path.join(dir, 'assets'))) if (/^logo\./.test(f)) fs.rmSync(path.join(dir, 'assets', f));
-  const human = (s) => { const t = String(s).replace(/-\d+$/, '').replace(/-/g, ' ').trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
-  const words = (s) => String(s || '').split(/\s+/).filter(Boolean).length;
+  const ws = workspace();
+  const logo = vb.logo ? saveUpload(vb.logo, path.join('media', 'brands', `${id}-logo`)) : friend ? '' : ws.logo;
+  const scenes = [];
+  for (const [vi, { name: wn, role, w }] of views.entries()) {
+    const laptop = w.device === 'laptop', who = multi && role ? role.trim() : '';
+    w.shots.forEach((s, si) => {
+      const file = multi ? `v${vi + 1}-${s.file}` : s.file;
+      fs.copyFileSync(path.join(SCREENS, wn, s.file), path.join(dir, 'assets', 'screens', file));
+      const does = s.does || [], sentence = does.map((x, k) => (k ? x[0].toLowerCase() + x.slice(1) : x)).join(', then ');
+      const heading = String(s.caption || human(s.name)).replace(/[.!]$/, '');
+      const where = s.caption && s.caption !== human(s.name) ? `On “${heading}”.` : '';
+      const body = w.brain === 'gemini' || !does.length ? s.caption || '' : does.length > 1 ? `${sentence}.` : where;
+      const whoLine = who && si === 0 ? `${who}${/computer|laptop|desktop|phone|mobile|tablet/i.test(who) ? '' : laptop ? ', on a computer' : ', on a phone'}. ` : '';
+      let line = w.brain === 'gemini' && s.caption ? s.caption : does.length ? `${sentence.replace(/[“”]/g, '')}.` : s.caption || human(s.name);
+      if (who && si === 0) line = `${vi ? 'Now, as the' : 'As the'} ${who.toLowerCase()}: ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
+      const marks = Object.entries(s.regions || {});
+      scenes.push({ id: `s${scenes.length + 1}`, file, device: laptop ? 'laptop' : 'phone', size: w.size || (laptop ? [2160, 1350] : [780, 1688]),
+        title: (does.at(-1) || (si === 0 ? 'Start here' : heading.split(/\s+/).slice(0, 5).join(' '))).replace(/[“”]/g, ''),
+        body: `${whoLine}${body}`.trim(), line, ring: marks.length ? { mark: marks.at(-1)[0], box: marks.at(-1)[1] } : null });
+    });
+  }
+  const last = scenes.at(-1); if (last && !(views.at(-1).w.shots.at(-1).does || []).length) last.line = `And you're there: ${last.line.charAt(0).toLowerCase()}${last.line.slice(1)}`;
+  const model = {
+    title, scenes, voiceOn: voice, voiceName: voiceName || '', provider: provider || '', opener: opener || null,
+    // a video they liked sets the pace and the music's feel (never its colours or words)
+    mood: style?.mood || (voice ? 'calm' : 'none'), pace: style?.pace || 'slow', like: style?.source || undefined,
+    brand: { name: vb.name || (friend ? vb.host || 'Product' : ws.name), tagline: vb.tagline || (friend ? '' : ws.tagline), site: vb.site || '',
+      logo, colors: { ...(friend ? NEUTRAL : ws.brand), ...brandFromColor(vb.color) } },
+    owner: friend ? owner : undefined, sources: views.map((v) => ({ walk: v.name, role: v.role || '', goal: v.w.goal, device: v.w.device })),
+  };
+  writeFilm(folder, model);
+  return folder;
+}
+
+const modelPath = (folder) => path.join(FILMS, folder, 'clipwalk.json');
+// clipwalk.json -> film.js (scenes, rings, camera, device parts, sounds), film.json (title, length, brand, voice, music)
+// and docs/vo/lines.txt. Timing comes from how much each scene says, so edits re-time the video by themselves.
+function writeFilm(folder, model) {
+  const dir = path.join(FILMS, folder);
+  const b = model.brand || {}, scenes = model.scenes.filter((s) => fs.existsSync(path.join(dir, 'assets', 'screens', s.file)));
+  if (!scenes.length) throw new Error('A video needs at least one scene.');
+  for (const f of ls(path.join(dir, 'assets'))) if (/^logo\./.test(f)) fs.rmSync(path.join(dir, 'assets', f));
+  if (b.logo && fs.existsSync(path.join(ROOT, b.logo))) fs.copyFileSync(path.join(ROOT, b.logo), path.join(dir, 'assets', `logo${path.extname(b.logo) === '.svg' ? '.svg' : '.svg'}`));
   const hookTo = 4.5;
   let t = hookTo + 0.4;
-  const screens = {}, seq = [], steps = [], rings = [], cam = [], regions = {}, hits = [[0, 'hook', 'sub', { len: 0.8 }]], lines = [title], at = [0.3], parts = [];
-  const total = views.reduce((a, v) => a + v.w.shots.length, 0);
-  let i = -1;
-  for (const [vi, { name: wn, role, w }] of views.entries()) {
-  const laptop = w.device === 'laptop', [SW, SH] = w.size || (laptop ? [2160, 1350] : [780, 1688]);
-  parts.push({ from: vi ? +t.toFixed(2) : 0, device: laptop ? 'laptop' : 'phone' });
-  if (vi) hits.push([+(t - 0.35).toFixed(2), 'switch device', 'whoosh', { len: 0.6, from: 600, to: 2600 }]);
-  w.shots.forEach((s, si) => {
-    i++;
-    const firstOfView = si === 0, who = multi && role ? role.trim() : '';
-    const key = `s${i + 1}`, dur = Math.min(9, Math.max(4.2, Math.max(words(s.caption), words((s.does || []).join(' '))) / 2.5 + 1.8));
-    const file = multi ? `v${vi + 1}-${s.file}` : s.file;
-    fs.copyFileSync(path.join(SCREENS, wn, s.file), path.join(dir, 'assets', 'screens', file));
-    screens[key] = `assets/screens/${file}`;
+  const screens = {}, seq = [], steps = [], rings = [], cam = [], regions = {}, parts = [], hits = [[0, 'hook', 'sub', { len: 0.8 }]], lines = [model.title], at = [0.3];
+  scenes.forEach((s, i) => {
+    const laptop = s.device === 'laptop', [SW, SH] = s.size || (laptop ? [2160, 1350] : [780, 1688]);
+    if (!i || scenes[i - 1].device !== s.device) {
+      parts.push({ from: i ? +t.toFixed(2) : 0, device: s.device });
+      if (i) hits.push([+(t - 0.35).toFixed(2), 'switch device', 'whoosh', { len: 0.6, from: 600, to: 2600 }]);
+    } else hits.push([+t.toFixed(2), 'screen', 'whoosh', { len: 0.35, from: 2400, to: 700 }]);
+    const w = Math.max(words(s.line), words(s.body)), pace = model.pace || 'slow';
+    const key = `s${i + 1}`, dur = pace === 'fast' ? Math.min(6, Math.max(2.6, w / 3 + 1)) : pace === 'medium' ? Math.min(8, Math.max(3.4, w / 2.7 + 1.4)) : Math.min(10, Math.max(4.2, w / 2.5 + 1.8));
+    screens[key] = `assets/screens/${s.file}`;
     seq.push([key, i ? +t.toFixed(2) : 0]);
-    // step text: what was done on the screen (from the walk), else the screen's own caption
-    const does = s.does || [], sentence = does.map((x, k) => (k ? x[0].toLowerCase() + x.slice(1) : x)).join(', then ');
-    const last = i === total - 1;
-    // one action: the title says it all, so the line under it says where you are; several: list them in order
-    const where = s.caption && s.caption !== human(s.name) ? `On “${s.caption.replace(/[.!]$/, '')}”.` : '';
-    const body = w.brain === 'gemini' || !does.length ? s.caption || '' : does.length > 1 ? `${sentence}.` : where;
-    // no click on this screen (it only scrolled or arrived): title it from the page's own heading, whole words only
-    const heading = String(s.caption || human(s.name)).replace(/[.!]$/, '').split(/\s+/).slice(0, 5).join(' ');
-    const title = does.at(-1) || (firstOfView ? 'Start here' : heading);
-    const whoLine = who && firstOfView ? `${who}${/computer|laptop|desktop|phone|mobile|tablet/i.test(who) ? '' : laptop ? ', on a computer' : ', on a phone'}. ` : '';
-    steps.push({ t: +t.toFixed(2), title: title.replace(/[“”]/g, ''), body: `${whoLine}${body}`.trim() });
-    const line = w.brain === 'gemini' && s.caption ? s.caption : does.length ? `${sentence.replace(/[“”]/g, '')}.` : last ? `And you're there: ${s.caption || human(s.name)}` : s.caption || human(s.name);
-    lines.push(who && firstOfView ? `${vi ? 'Now, as the' : 'As the'} ${who.toLowerCase()}: ${line.charAt(0).toLowerCase()}${line.slice(1)}` : line);
-    at.push(+(t + 0.3).toFixed(2));
+    steps.push({ t: +t.toFixed(2), title: s.title || ' ', body: s.body || '' });
+    lines.push(s.line || s.title); at.push(+(t + 0.3).toFixed(2));
     hits.push([+t.toFixed(2), `step ${i + 1}`, 'pop', { pitch: 'A5' }]);
-    if (si) hits.push([+t.toFixed(2), 'screen', 'whoosh', { len: 0.35, from: 2400, to: 700 }]);
-    // the last control pressed on this screen gets the ring; the camera leans in on it
-    const marks = Object.entries(s.regions || {});
-    if (marks.length) {
-      const [mk, box] = marks.at(-1), r = `${key}-${mk}`.slice(0, 40);
+    if (s.ring?.box) {
+      const r = `${key}-${String(s.ring.mark || 'tap').replace(/[^a-z0-9-]/gi, '')}`.slice(0, 40), box = s.ring.box;
       regions[r] = box;
-      const a = +(t + 1.2).toFixed(2), b = +(t + dur - 0.35).toFixed(2), tap = +(b - 0.45).toFixed(2);
-      rings.push({ r, a, b, tap });
-      hits.push([a, `ring ${mk}`, 'blip', { pitch: 'C6' }], [tap, 'tap', 'click']);
+      const a = +(t + 1.2).toFixed(2), e = +(t + dur - 0.35).toFixed(2), tap = +(e - 0.45).toFixed(2);
+      rings.push({ r, a, b: e, tap });
+      hits.push([a, 'ring', 'blip', { pitch: 'C6' }], [tap, 'tap', 'click']);
       const fx = Math.min(0.85, Math.max(0.15, (box[0] + box[2] / 2) / SW)), fy = Math.min(0.85, Math.max(0.15, (box[1] + box[3] / 2) / SH));
       cam.push([+(t + 0.9).toFixed(2), [laptop ? 1.6 : 1.25, +fx.toFixed(3), +fy.toFixed(3)]], [+(t + dur - 0.1).toFixed(2), [1, 0.5, 0.5]]);
     }
     t += dur;
   });
-  }
   const phoneTo = +t.toFixed(2), duration = +(phoneTo + 4).toFixed(1);
+  // where each scene starts and the whole length, for the editor's timeline (before any stretch for a long voice)
+  model.times = Object.fromEntries(scenes.map((sc, i) => [sc.id, steps[i].t])); model.duration = duration;
+  fs.writeFileSync(modelPath(folder), JSON.stringify(model, null, 1) + '\n');
   hits.push([phoneTo, 'end card', 'impact'], [+(phoneTo + 0.2).toFixed(2), 'logo', 'bell', { pitch: 'F6' }]);
-  const tl = title.split(' '), half = Math.ceil(tl.length / 2), third = Math.ceil(tl.length / 3);
+  hits.sort((x, y) => x[0] - y[0]);
+  const tl = String(model.title).split(' '), half = Math.ceil(tl.length / 2), third = Math.ceil(tl.length / 3);
   const cfgJs = {
-    kicker: `${ws.name.toUpperCase()} · WALKTHROUGH`,
+    kicker: `${String(b.name || '').toUpperCase()} · HOW TO`,
     hook: { to: hookTo, lines: { '16x9': [tl.slice(0, half).join(' '), tl.slice(half).join(' ')].filter(Boolean),
       '9x16': [tl.slice(0, third).join(' '), tl.slice(third, 2 * third).join(' '), tl.slice(2 * third).join(' ')].filter(Boolean) } },
-    ...(opener === 'photo' ? { photos: { hook: 'hook' } } : opener === 'video' ? { clips: { hook: 'hook' } } : {}),
+    ...(model.opener === 'photo' && fs.existsSync(path.join(dir, 'assets', 'photos', 'hook-9x16.jpg')) ? { photos: { hook: 'hook' } }
+      : model.opener === 'video' && fs.existsSync(path.join(dir, 'assets', 'clips', 'hook-9x16.webm')) ? { clips: { hook: 'hook' } } : {}),
     steps,
-    phone: { ...(parts[0].device === 'laptop' ? { device: 'laptop' } : {}), ...(multi ? { parts } : {}), to: phoneTo, screens, seq, regions, cam, rings },
-    end: { tagline: [ws.tagline || ws.name, vb?.site ? String(vb.site).replace(/^https?:\/\//, '').replace(/\/$/, '') : ''].filter(Boolean).join(' · ') },
+    phone: { ...(parts[0].device === 'laptop' ? { device: 'laptop' } : {}), ...(parts.length > 1 ? { parts } : {}), to: phoneTo, screens, seq, regions, cam, rings },
+    end: { tagline: [b.tagline || b.name, b.site ? String(b.site).replace(/^https?:\/\//, '').replace(/\/$/, '') : ''].filter(Boolean).join(' · ') },
   };
-  fs.writeFileSync(path.join(dir, 'film.js'), `// ${id} ${title}. Made in Studio from the walkthrough "${walkName}" (media/screens/${walkName}/).
-` +
-    `// Pure data on the shared tutorial kit (tools/kit/tutorial.js); times are seconds. Edit freely.
-import { tutorial } from '/kit/tutorial.js';
-
-` +
-    `const HITS = [\n${hits.map((h) => `  ${JSON.stringify(h)},`).join('\n')}\n];
-
-tutorial({ ...${JSON.stringify(cfgJs, null, 1)}, hits: HITS });
-`);
+  fs.writeFileSync(path.join(dir, 'film.js'), `// ${idOf(folder)} ${model.title}. Written by Clipwalk from clipwalk.json: edit the scenes in the app, not here.\n` +
+    `import { tutorial } from '/kit/tutorial.js';\n\nconst HITS = [\n${hits.map((h) => `  ${JSON.stringify(h)},`).join('\n')}\n];\n\n` +
+    `tutorial({ ...${JSON.stringify(cfgJs, null, 1)}, hits: HITS });\n`);
   const cfg = readJSON(path.join(dir, 'film.json'), {});
-  for (const k of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills']) delete cfg[k];
-  Object.assign(cfg, { title, duration, formats: ['9x16', '16x9'], vo_at: at, brand: ws.brand, publish: false, ...(owner && owner !== 'owner' ? { owner } : {}),
-    ...(voiceName ? { voice: { ...(cfg.voice || {}), voice: String(voiceName).replace(/[^A-Za-z]/g, '').slice(0, 20) } } : {}),
-    music: 'About one minute of original, calm, modern instrumental background music for a friendly product walkthrough. Soft percussion, light plucked guitar, warm keys, relaxed tempo around 96 BPM, even dynamics under a voice, no vocals, a soft resolved ending.' });
+  for (const k of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills', 'music']) delete cfg[k];
+  const voice = { ...(cfg.voice || {}), ...(model.provider ? { provider: model.provider } : {}) };
+  if (!model.provider) delete voice.provider;
+  if (model.voiceName) voice.voice = model.voiceName; else delete voice.voice;
+  Object.assign(cfg, { title: model.title, duration, formats: ['9x16', '16x9'], brand: model.brand.colors, publish: false, voice,
+    ...(model.owner ? { owner: model.owner } : {}), ...(model.voiceOn ? { vo_at: at } : {}), ...(model.mood && model.mood !== 'none' && MOODS[model.mood] ? { music: MOODS[model.mood] } : {}) });
   fs.writeFileSync(path.join(dir, 'film.json'), JSON.stringify(cfg, null, 1) + '\n');
-  fs.mkdirSync(path.join(dir, 'docs', 'vo'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'docs', 'vo', 'lines.txt'), lines.join('\n') + '\n');
-  if (!voice) {   // captions and sound effects only: no Gemini voice or music
-    fs.rmSync(path.join(dir, 'docs', 'vo', 'lines.txt'));
-    const c = readJSON(path.join(dir, 'film.json'));
-    delete c.music; delete c.vo_at;
-    fs.writeFileSync(path.join(dir, 'film.json'), JSON.stringify(c, null, 1) + '\n');
+  const lf = path.join(dir, 'docs', 'vo', 'lines.txt');
+  fs.mkdirSync(path.dirname(lf), { recursive: true });
+  if (model.voiceOn) fs.writeFileSync(lf, lines.map((l) => String(l).replace(/\s+/g, ' ').trim()).join('\n') + '\n'); else fs.rmSync(lf, { force: true });
+  // no music wanted: drop the old track so the mix doesn't keep it
+  if (!cfg.music) for (const f of ['music.wav', 'music.wav.json']) fs.rmSync(path.join(dir, 'audio', f), { force: true });
+  if (!model.voiceOn) for (const f of ls(path.join(dir, 'audio'))) if (/^vo-\d+\.wav/.test(f)) fs.rmSync(path.join(dir, 'audio', f));
+  fs.writeFileSync(path.join(dir, 'docs', 'shotlist.md'), `# ${idOf(folder)} ${model.title}\n\nMade in Clipwalk from ${(model.sources || []).map((v) => `\`${v.walk}\`${v.role ? ` (${v.role})` : ''}, ${v.device}: ${v.goal}`).join('; then ')}\n`);
+}
+
+// the editor saves scenes, words, music, colour and voice; everything else in the model stays as it was
+function editFilm(folder, b) {
+  const m = readJSON(modelPath(folder));
+  if (!m) throw new Error('This video was not made in Clipwalk, so it has no simple editor.');
+  if (typeof b.title === 'string' && b.title.trim()) m.title = b.title.trim().slice(0, 80);
+  if (Array.isArray(b.scenes)) {
+    const byId = Object.fromEntries(m.scenes.map((s) => [s.id, s]));
+    const next = b.scenes.map((s) => byId[s.id] && { ...byId[s.id], title: String(s.title ?? byId[s.id].title).slice(0, 60), body: String(s.body ?? byId[s.id].body).slice(0, 200),
+      line: String(s.line ?? byId[s.id].line).slice(0, 300), ring: s.ring === false ? null : byId[s.id].ring }).filter(Boolean);
+    if (!next.length) throw new Error('Keep at least one scene.');
+    m.scenes = next;
   }
-  fs.writeFileSync(path.join(dir, 'docs', 'shotlist.md'), `# ${id} ${title}\n\nMade in Clipwalk from ${views.map((v) => `\`${v.name}\`${v.role ? ` (${v.role})` : ''}, ${v.w.device}, ${v.w.shots.length} screens: ${v.w.goal}`).join('; then ')}\n`);
-  return folder;
+  if (b.mood && (b.mood === 'none' || MOODS[b.mood])) m.mood = b.mood;
+  if (typeof b.voiceOn === 'boolean') m.voiceOn = b.voiceOn;
+  if (typeof b.voiceName === 'string') m.voiceName = b.voiceName.replace(/[^A-Za-z]/g, '').slice(0, 20);
+  if (typeof b.provider === 'string') m.provider = b.provider === 'yarn' ? 'yarn' : '';
+  if (b.color) m.brand.colors = { ...m.brand.colors, ...brandFromColor(b.color) };
+  if (typeof b.tagline === 'string') m.brand.tagline = b.tagline.slice(0, 120);
+  writeFilm(folder, m);
+  return m;
 }
 
 // One brand colour from the site or the person: a dark one becomes the main colour (panels, end card) with a deeper
@@ -463,10 +550,11 @@ function enqueue(action, folder, opts = {}, who = OWNER) {
   // the Jev gate: only when the script changed since its last clean lint, and not when Josh says run anyway
   if (GATED.has(action) && !opts.force && ['never', 'stale', 'problems'].includes(lintState(folder))) steps.push({ args: lintArgs(folder), gate: true });
   steps.push({ args: a.args(d, opts, folder) });
+  if (action === 'full' && opts.update) steps.splice(0, steps.length - 1);   // "Update video": the script was checked when it was made
   // logins live only in this job's environment, for as long as it runs: never on disk, in the log or the API
   const env = action === 'walk' ? { WALK_USER: String(opts.user || ''), WALK_PASS: String(opts.pass || '') } : {};
   const meta = action === 'walk' ? { name: opts.name, device: opts.device === 'laptop' ? 'laptop' : 'phone' } : undefined;
-  const job = { meta, id: ++seq, action, label: action === 'walk' ? `${a.label}: ${opts.name}` : a.label, folder, steps, env, state: 'queued', lines: [], progress: '', code: null, created: Date.now(), clients: new Set() };
+  const job = { meta, owner: who.id, id: ++seq, action, label: opts.update ? 'Updating your video' : action === 'walk' ? `${a.label}: ${opts.name}` : a.label, folder, steps, env, state: 'queued', lines: [], progress: '', code: null, created: Date.now(), clients: new Set() };
   jobs.push(job);
   pump();
   return job;
@@ -495,11 +583,18 @@ function enqueueMake(o, who = OWNER) {
   const opener = ['photo', 'video'].includes(o.opener) && workspace().stock ? o.opener : null;
   const hint = who.role === 'owner' ? workspace().stockHint : '';
   const openerQuery = `${String(o.openerQuery || '').trim().slice(0, 100) || (views[0].device === 'laptop' ? 'person working on a laptop in a bright modern office' : 'person smiling while using a smartphone')}${hint ? `, ${hint}` : ''}`;
+  // "make one like this": a video they liked sets pace and music feel
+  const like = /^https?:\/\//.test(String(o.like || '').trim()) ? String(o.like).trim() : null;
+  const styleFile = path.join('media', 'styles', `${base}.json`);
+  // the voice: Nigerian English (YarnGPT, free) or international (Gemini)
+  const provider = (o.accent || (who.role === 'owner' ? workspace().accent : '')) === 'nigerian' && keyStatus().yarngpt ? 'yarn' : '';
   const steps = [
+    ...(like ? [{ stage: 'style', soft: true, args: () => ['tools/style.mjs', like, '--out', styleFile] }] : []),
     ...views.map((v, k) => ({ stage: 'capture', walk: names[k], env: { WALK_USER: v.user, WALK_PASS: v.pass },
       args: () => ACTIONS.walk.args('', { url: v.url, goal: v.goal, name: names[k], device: v.device, brain, steps: o.steps || 25, risky: !!o.risky }) })),
     { stage: 'build', fn: (job) => {
-      const folder = filmFromWalk(views.map((v, k) => ({ name: names[k], role: v.role })), { id, name: base, title, voice, opener, brand: { ...(o.brand || {}), host: host.charAt(0).toUpperCase() + host.slice(1) }, voiceName: o.voiceName, owner: who.id });
+      const folder = filmFromWalk(views.map((v, k) => ({ name: names[k], role: v.role })), { id, name: base, title, voice, opener, provider, style: like ? readJSON(path.join(ROOT, styleFile)) : null,
+        brand: { ...(o.brand || {}), host: host.charAt(0).toUpperCase() + host.slice(1) }, voiceName: o.voiceName, owner: who.id });
       job.folder = folder; job.meta.folder = folder;
       log(job, `made films/${folder}`);
     } },
@@ -584,7 +679,7 @@ function pump() {
 // ------------------------------------------------------------------ http
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.md': 'text/plain; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.mp4': 'video/mp4',
-  '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.otf': 'font/otf', '.ttf': 'font/ttf' };
+  '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.webm': 'video/webm', '.mjs': 'text/javascript', '.woff2': 'font/woff2', '.otf': 'font/otf', '.ttf': 'font/ttf' };
 
 function sendFile(req, res, file, download) {
   let st; try { st = fs.statSync(file); } catch { return send(res, 404, 'Not found'); }
@@ -620,6 +715,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x'), p = decodeURIComponent(url.pathname);
   try {
     if (p === '/' || p === '/index.html') return sendFile(req, res, path.join(HERE, 'index.html'));
+    if (p.startsWith('/kit/')) { const f = within(path.join(ROOT, 'tools', 'kit'), p.slice(5)); return f ? sendFile(req, res, f) : send(res, 404, 'No'); }   // the live preview loads the film kit
     const who = whoIs(req);
     if (p === '/api/login' && req.method === 'POST') {   // a friend enters their code once; it lives in a cookie
       const code = String((await readBody(req)).code || '').trim().toUpperCase();
@@ -633,6 +729,7 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/sniff' && req.method === 'POST' && who) return send(res, 200, await sniff((await readBody(req)).url).catch(() => ({})));
     if (!who) return send(res, 401, { error: 'Enter your access code first.' });
     if (who.role === 'friend') return await friendRoute(req, res, p, url, who);
+    if (p === '/pro') return sendFile(req, res, path.join(HERE, 'pro.html'));   // the owner's power tools
     // the owner manages friends and their credits
     if (p === '/api/accounts' && req.method === 'GET') { const a = accounts(); return send(res, 200, { ...a, log: a.log.slice(-200).reverse() }); }
     if (p === '/api/accounts' && req.method === 'POST') {
@@ -656,7 +753,9 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/films' && req.method === 'POST') return send(res, 200, { folder: create(await readBody(req)) });
     if (p === '/api/final') return send(res, 200, ls(FINAL).filter((f) => f.endsWith('.mp4')).sort()
       .map((f) => ({ name: f, id: f.split(' ')[0], size: fs.statSync(path.join(FINAL, f)).size, updated: mtime(path.join(FINAL, f)) })));
-    let m = /^\/api\/films\/([^/]+)$/.exec(p);
+    let m = /^\/api\/films\/([^/]+)\/clipwalk$/.exec(p);
+    if (m && req.method === 'PUT' && filmDir(m[1])) { editFilm(m[1], await readBody(req)); return send(res, 200, detail(m[1])); }
+    m = /^\/api\/films\/([^/]+)$/.exec(p);
     if (m) {
       if (!filmDir(m[1])) return send(res, 404, { error: 'No such film' });
       if (req.method === 'GET') return send(res, 200, detail(m[1]));
@@ -671,6 +770,7 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/jobs' && req.method === 'POST') {
       const b = await readBody(req);
       if (!GLOBAL.has(b.action) && !filmDir(b.folder || '')) return send(res, 400, { error: 'Pick a film' });
+      if (b.action === 'update') return send(res, 200, pub(enqueue('full', b.folder, { update: true })));
       return send(res, 200, pub(enqueue(b.action, GLOBAL.has(b.action) ? null : b.folder, b)));
     }
     if (p === '/api/walks') return send(res, 200, ls(SCREENS).filter((n) => fs.existsSync(path.join(SCREENS, n, 'walk.json')))
@@ -688,6 +788,9 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === '/api/workspace') return send(res, 200, req.method === 'PUT' ? saveWorkspace(await readBody(req)) : workspace());
     if (p === '/api/keys') return send(res, 200, req.method === 'PUT' ? setKeys(await readBody(req)) : keyStatus());
+    if (p === '/api/services') return send(res, 200, services());
+    let sm = /^\/api\/services\/([a-z]+)\/test$/.exec(p);
+    if (sm && req.method === 'POST' && KEYS[sm[1]]) return send(res, 200, await testService(sm[1]));
     if (p === '/api/pricing') {
       if (req.method === 'PUT') { const b = await readBody(req); if (!b.rates) throw new Error('Bad pricing'); fs.writeFileSync(PRICING, JSON.stringify(b, null, 1) + '\n'); }
       return send(res, 200, { ...readJSON(PRICING, {}), spent: spend() });
@@ -731,9 +834,12 @@ async function friendRoute(req, res, p, url, who) {
   if (p === '/api/films') return send(res, 200, [...mine].map(safeSummary).filter(Boolean));
   let m = /^\/api\/films\/([^/]+)$/.exec(p);
   if (m && req.method === 'GET' && mine.has(m[1])) return send(res, 200, detail(m[1]));
+  m = /^\/api\/films\/([^/]+)\/clipwalk$/.exec(p);
+  if (m && req.method === 'PUT' && mine.has(m[1])) { editFilm(m[1], await readBody(req)); return send(res, 200, detail(m[1])); }
   if (p === '/api/jobs' && req.method === 'GET') return send(res, 200, jobs.filter((j) => j.owner === who.id).slice(-30).reverse().map(pub));
   if (p === '/api/jobs' && req.method === 'POST') {
     const b = await readBody(req);
+    if (b.action === 'update' && mine.has(b.folder)) return send(res, 200, pub(enqueue('full', b.folder, { update: true }, who)));   // re-rendering is free
     if (b.action !== 'make') return send(res, 403, { error: 'Only making videos is available on a shared link.' });
     return send(res, 200, pub(enqueueMake(b, who)));
   }

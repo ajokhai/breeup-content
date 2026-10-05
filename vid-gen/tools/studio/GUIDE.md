@@ -16,11 +16,15 @@ Open http://localhost:4747. The first time, a short tour shows you around.
 
 ## Make a video
 
-1. **Paste the link** to your product.
+1. **Paste your app's link** in the big box and pick a style (App walkthrough, or Like a video I saw).
 2. **Say what to show**, as one task: "Sign in, open Billing and pay by card. Stop before paying."
-3. Tick **It needs a login** if it does, and give a demo account. The password is used once and thrown away; the AI
-   never sees it.
-4. Press **Make my video**. You'll watch the screens appear, then get both video files to download.
+3. Tick **My app needs a login** if it does, and give a demo account. The password is used once and thrown away.
+4. Check the name, logo and colour it found on your site, then **Yes, make it**.
+
+## Change it
+
+Open the video. Tap a scene at the bottom to change its words, move it or remove it. Use **Music**, **Colour** and
+**Voice** on the right. The preview changes straight away; press **Update video**, then **Download** (phones or computers).
 
 Then a few optional questions, filled in from your website where possible: product name, logo, colour, the line and
 link on the end card, the voice, an opening stock photo or video, and **another view** (e.g. the admin on a computer,

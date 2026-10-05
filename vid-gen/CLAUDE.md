@@ -112,6 +112,13 @@ film, so every tutorial gets it.
   `walk.json`; colours, logo and end card from `tools/studio/workspace.json` (film.json "brand" recolours the kit).
 - Real device frames: `tools/kit/devices/` (rendered by `tools/frames.mjs` from the registry's 3D models). The kit
   uses them automatically; `"frame": false` in film.json turns them off.
+- The simple app (`tools/studio/index.html`) is a home page (link box + style cards) and a CapCut-style editor. Each
+  Clipwalk video keeps its scenes in `films/<film>/clipwalk.json`; the server's `writeFilm()` regenerates film.js,
+  film.json and the script from it after every edit, so never hand-edit those three for a Clipwalk video. The owner's
+  admin (connections checklist, people and credits, pricing, old step-by-step tools) is `pro.html` at /pro.
+- Voices: `"provider": "yarn"` in film.json "voice" uses YarnGPT (Nigerian accent, free for now); default is Gemini.
+- "Make it like a video I saw": `tools/style.mjs` measures pace (motion + cuts), energy and shape for free; the video
+  takes its pace and music feel, never its colours or words.
 - A video can have up to three views (e.g. the admin on a laptop, then a resident on a phone): the kit's
   `phone.parts` switches device mid-film. Optional opener: a free stock photo or clip (`tools/stock.mjs`; the workspace's
   "stock hint", "Black African, Nigerian" for BreeUp, is added to every search, so rule 1 still holds).

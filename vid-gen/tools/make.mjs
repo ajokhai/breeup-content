@@ -12,7 +12,8 @@
 // cloud agents do everything up to --check (and --draft); Josh's Mac does the final render (more cores).
 //
 // film.json keys the pipeline reads (all optional except duration):
-//   "voice": { "style": "...", "voice": "Kore", "model": "...", "gap": 0.35, "trim": true }
+//   "voice": { "style": "...", "voice": "Kore", "model": "...", "gap": 0.35, "trim": true, "provider": "yarn" }
+//            provider "yarn" = YarnGPT (tools/yarn.mjs): Nigerian-accented and free; the default is Gemini
 //   "vo_at": [0.3, 10.0, ...]   start time per line; missing entries follow the previous line by "gap"
 //   "music": "prompt for Lyria"  (regenerated only when the prompt changes)
 //   "stills": [2, 10, 30]        times for the --check contact sheet (default: 8 evenly spaced)
@@ -79,12 +80,13 @@ if (want('vo') && fs.existsSync(linesFile)) {
   // the key uses the spoken form, so a pronunciation fix (tools/pronounce.json) re-voices only the lines it changes
   const pron = fs.existsSync(path.join(ROOT, 'tools', 'pronounce.json')) ? JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'pronounce.json'), 'utf8')) : {};
   const spoken = (l) => Object.entries(pron).reduce((t, [w, say]) => t.replace(new RegExp(`\\b${w}\\b`, 'g'), say), l);
-  const key = (l) => hash(JSON.stringify([spoken(l), v.style, v.voice, v.model]));
+  const key = (l) => hash(JSON.stringify([spoken(l), v.style, v.voice, v.model, ...(v.provider ? [v.provider] : [])]));
   lines.forEach((line, i) => {
     const out = path.join(dir, 'audio', `vo-${i + 1}.wav`), side = out + '.json';
     const cached = fs.existsSync(out) && fs.existsSync(side) && JSON.parse(fs.readFileSync(side, 'utf8')).key === key(line);
     if (cached) return;
-    tool('gemini.mjs', 'tts', '--text', line, '--out', out, ...(v.style ? ['--style', v.style] : []),
+    if (v.provider === 'yarn') tool('yarn.mjs', 'tts', '--text', line, '--out', out, ...(v.voice ? ['--voice', v.voice] : []));   // Nigerian accent, free
+    else tool('gemini.mjs', 'tts', '--text', line, '--out', out, ...(v.style ? ['--style', v.style] : []),
       ...(v.voice ? ['--voice', v.voice] : []), ...(v.model ? ['--model', v.model] : []));
     if (v.trim !== false) {   // cut leading and trailing silence so lines sit where they're placed
       const t = out + '.trim.wav';
