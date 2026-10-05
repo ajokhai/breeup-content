@@ -7,7 +7,8 @@
 //        --goal "Sign in as a resident, open Bills and get to the card payment sheet" [--device phone|laptop]
 //        [--brain jev|gemini] [--steps 30] [--show] [--see] [--risky]
 //
-// Output: media/screens/<name>/NN-<screen>.jpg + walk.json (caption, url and regions per screen, every step).
+// Output: media/screens/<name>/NN-<screen>.jpg + walk.json (caption, url and regions per screen, every step), and
+// cuts/ with UI cut-outs (cards, big numbers, the main button) per screen for launch films (--no-cuts to skip).
 // Cheap by design, text only. Two brains:
 //   jev (default, cheapest): each step Jev chooses the next control from the page's list. It can type the login
 //        and any "quoted text" in the goal; screens are named and captioned from the page's own heading.
@@ -75,6 +76,75 @@ async function snapshot() {
     return { url: location.href, title: document.title, heading: (h?.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 80),
       text: document.body.innerText.replace(/\n{2,}/g, '\n').slice(0, 1500), els };
   });
+}
+
+// UI cut-outs: on each captured screen, the pieces a launch film can lift out on their own: cards (pricing tiers,
+// features), big numbers (prices, stats; they become count-ups) and the main button. Found from the page's own layout
+// and styles (free, no AI), cropped as PNGs at screenshot resolution. Saved in cuts/ next to the screens.
+async function findCuts(prefix) {
+  const found = await page.evaluate(() => {
+    document.querySelectorAll('[data-cut]').forEach((e) => e.removeAttribute('data-cut'));
+    const vw = innerWidth, vh = innerHeight, txt = (e) => (e.innerText || '').replace(/\s+/g, ' ').trim();
+    const inView = (r) => r.left >= 0 && r.top >= 0 && r.right <= vw + 1 && r.bottom <= vh + 1;
+    const solid = (c) => !!c && c !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(c);
+    const ok = (e, st) => st.visibility !== 'hidden' && st.display !== 'none' && +st.opacity >= 0.6;
+    const cards = [], buttons = [], stats = [];
+    for (const e of document.querySelectorAll('body *')) {
+      if (/^(SCRIPT|STYLE|SVG|PATH|IMG|VIDEO|CANVAS|IFRAME|HTML|BODY)$/i.test(e.tagName)) continue;
+      const R = e.getBoundingClientRect(); if (R.width < 40 || R.height < 24 || R.right <= 0 || R.bottom <= 0 || R.left >= vw || R.top >= vh) continue;
+      // the part on screen: cards running off the bottom are cropped to what's visible (if most of their top is there)
+      const r = { x: Math.max(0, R.left), y: Math.max(0, R.top), width: Math.min(vw, R.right) - Math.max(0, R.left), height: Math.min(vh, R.bottom) - Math.max(0, R.top) };
+      const whole = inView(R), mostly = r.width >= R.width - 2 && R.top >= 0 && r.height >= Math.min(R.height * 0.45, vh * 0.4);
+      const st = getComputedStyle(e); if (!ok(e, st)) continue;
+      const t = txt(e); if (!t) continue;
+      const pbg = e.parentElement ? getComputedStyle(e.parentElement).backgroundColor : '';
+      const bg = solid(st.backgroundColor) && st.backgroundColor !== pbg, border = parseFloat(st.borderTopWidth) > 0 && solid(st.borderTopColor) && parseFloat(st.borderLeftWidth) > 0;
+      const shadow = st.boxShadow !== 'none', radius = parseFloat(st.borderTopLeftRadius) || 0;
+      const clickable = /^(BUTTON|A)$/.test(e.tagName) || e.getAttribute('role') === 'button';
+      if (whole && clickable && bg && t.length <= 28 && r.height >= 28 && r.height <= 80 && r.width <= vw * 0.5) buttons.push({ e, r, t, radius, area: r.width * r.height });
+      // cards come in sets (a row of pricing tiers): siblings of about the same width in a row, each with a heading
+      const head = !!e.querySelector('h1,h2,h3,h4,strong,b,[class*=title],[class*=heading]');
+      const sib = !!e.parentElement && [...e.parentElement.children].filter((o) => { const q = o.getBoundingClientRect(); return o !== e && Math.abs(q.width - R.width) < 8 && Math.abs(q.top - R.top) < 40; }).length >= 1;
+      if (mostly && (bg || border || shadow || (sib && head)) && !clickable && r.width >= vw * 0.16 && r.width <= vw * 0.92 && r.height >= 90 && r.height <= vh * 0.9 && t.length >= 12 && t.length <= 420) {
+        cards.push({ e, r, t, radius, area: r.width * r.height, score: (sib ? 3 : 0) + (head ? 1 : 0) + (radius >= 6 ? 1 : 0) + (shadow ? 1 : 0) + (border ? 0.5 : 0) - (r.width * r.height) / (vw * vh) });
+      }
+      // a big number on its own: "$8", "99.9%", "10,000+", "4.9"
+      // prices count at any readable size ("$10 per user/month"); plain numbers only when set big ("99.9%", "10,000+")
+      if (whole && e.children.length <= 2 && t.length <= 32 && parseFloat(st.fontSize) >= 14) {
+        const m = /^([^\d\s-]{0,4})\s?(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s?([kKmMbB]\+?|%|\+|x|×)?(\s*(?:per\s|\/)\s?[\w \/]{1,20})?$/.exec(t);
+        const money = m && /[$€£₦¥₹]/.test(m[1]);
+        if (m && (money || (parseFloat(st.fontSize) >= 26 && !m[4]))) {
+          let lab = '', p = e.parentElement;
+          for (let k = 0; p && k < 3 && !lab; k++, p = p.parentElement) { const pt = txt(p).replace(t, '').trim(); if (pt && pt.length <= 60) lab = pt; }
+          stats.push({ e, r, t, radius: 0, area: r.width * r.height, num: { prefix: m[1], value: Number(m[2].replace(/,/g, '')), decimals: (m[2].split('.')[1] || '').length, comma: m[2].includes(','), suffix: m[3] || '', unit: (m[4] || '').trim() }, label: lab, size: parseFloat(st.fontSize) + (money ? 20 : 0) });
+        }
+      }
+    }
+    // keep the best few that don't sit inside each other
+    const pick = (list, n, by) => {
+      const out = [];
+      for (const c of list.sort(by)) {
+        if (out.some((o) => o.e.contains(c.e) || c.e.contains(o.e) || o.t === c.t)) continue;
+        out.push(c); if (out.length >= n) break;
+      }
+      return out;
+    };
+    const res = [...pick(cards, 4, (a, b) => b.score - a.score).map((c) => ({ ...c, kind: 'card' })), ...pick(buttons, 1, (a, b) => b.area - a.area).map((c) => ({ ...c, kind: 'button' })),
+      ...pick(stats, 3, (a, b) => b.size - a.size).map((c) => ({ ...c, kind: 'stat' }))];
+    return res.map((c, i) => { c.e.setAttribute('data-cut', i); return { i, kind: c.kind, text: c.t.slice(0, 200), box: [c.r.x, c.r.y, c.r.width, c.r.height], radius: c.radius, ...(c.num ? { num: c.num, label: c.label } : {}) }; });
+  }).catch(() => []);
+  const cuts = [];
+  if (found.length) fs.mkdirSync(path.join(out, 'cuts'), { recursive: true });
+  for (const c of found) {
+    const file = `cuts/${prefix}-${c.kind}${c.i + 1}.png`;
+    // a clip of the viewport, as captured: the page never scrolls, so cut-outs match the screenshot exactly
+    const [x, y, w, h] = c.box;
+    try { await page.screenshot({ path: path.join(out, file), clip: { x, y, width: w, height: h }, timeout: 4000 }); }
+    catch { continue; }
+    const { i, box, ...rest } = c;
+    cuts.push({ ...rest, file, box: box.map((v) => Math.round(v * 2)), radius: Math.round(c.radius * 2) });   // screenshot px
+  }
+  return cuts;
 }
 
 const SCHEMA = {
@@ -177,8 +247,9 @@ for (let step = 1; step <= maxSteps; step++) {
       seen.add(h);
       const file = `${String(shots.length + 1).padStart(2, '0')}-${d.shot.replace(/[^a-z0-9-]/g, '').slice(0, 40) || 'screen'}.jpg`;
       fs.writeFileSync(path.join(out, file), buf);
-      shots.push({ name: d.shot, file, caption: d.caption, url: snap.url, regions: {}, sig: screenSig(snap) });
-      console.log(`  shot ${file}: ${d.caption}`);
+      const cuts = flag('no-cuts') ? [] : await findCuts(file.replace(/\.jpg$/, ''));
+      shots.push({ name: d.shot, file, caption: d.caption, url: snap.url, regions: {}, ...(cuts.length ? { cuts } : {}), sig: screenSig(snap) });
+      console.log(`  shot ${file}: ${d.caption}${cuts.length ? `  (cut-outs: ${cuts.map((c) => c.kind).join(', ')})` : ''}`);
     }
   }
   // what was done on this screen, in tutorial words ("Tap “Pricing”"), only onto the screen it happened on

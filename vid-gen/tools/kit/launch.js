@@ -8,6 +8,8 @@
 //       { type: 'logo', t: 0, d: 1.6 },
 //       { type: 'words', t: 1.6, d: 2, text: 'Your launch video takes', accent: 'minutes' },
 //       { type: 'screen', t: 3.6, d: 2.4, img: 's1', device: 'phone' | 'laptop', label: 'Pricing', zoom: [x, y, w, h] },
+//       { type: 'cards', t: 6, d: 2.9, cards: [{ img: 's1c1', radius: 24 }, ...], focus: 1, beat: 0.48, label: 'Plans' },
+//       { type: 'stat', t: 9, d: 1.9, num: { prefix: '$', value: 10, decimals: 0, comma: false, suffix: '', unit: 'per user/month' }, label: 'Basic', land: 0.97 },
 //       { type: 'big', t: 6, d: 1.6, text: 'Simple.' },
 //       { type: 'end', t: 7.6, d: 2.4, line: 'Your app, on video.' },
 //     ],
@@ -170,6 +172,55 @@ export function launch(cfg) {
     ctx.restore();
   }
 
+  // UI cut-outs from the capture (cards: pricing tiers, features). They rise in one per half beat, then the one that
+  // matters steps forward with a highlight while the others dim. Portrait: a fan, the focus card in front.
+  function cardsShot(ctx, u, s, IMG) {
+    const cards = s.cards.map((c) => ({ ...c, im: IMG[c.img] })).filter((c) => c.im), n = cards.length; if (!n) return;
+    const beat = s.beat || 0.5, lt = u - s.t, fk = springU(u, s.t + 3 * beat, SPRING.snappy);
+    const top = P ? H * 0.3 : H * 0.24, availH = P ? H * 0.5 : H * 0.62, availW = P ? W * 0.74 : W * 0.86;
+    // one size for every card, so the set reads as a row of equals
+    const ar = Math.max(...cards.map((c) => c.im.naturalHeight / c.im.naturalWidth));
+    let cw = P ? (n > 1 ? W * 0.58 : availW) : Math.min(availW / n - 30 * S, W * 0.3), ch = cw * ar;
+    if (ch > availH) { ch = availH; cw = ch / ar; }
+    const order = cards.map((c, k) => k).sort((a, b) => (a === s.focus) - (b === s.focus));   // focus drawn last (in front)
+    for (const k of order) {
+      const c = cards[k], kin = springU(u, s.t + 0.08 + k * beat * 0.5, SPRING.gentle); if (kin <= 0) continue;
+      const focus = k === s.focus && n > 1, off = k - (n - 1) / 2;
+      // portrait: a fan wide enough that the side cards show a third of themselves either side of the front one
+      let x = P ? W / 2 + off * W * 0.27 : W / 2 + off * (cw + 30 * S), y = top + availH / 2 + (P ? Math.abs(off) * H * 0.02 : 0), rot = P ? off * 0.1 : 0, sc = P && !focus ? 0.84 : 1;
+      if (focus) { sc *= 1 + 0.08 * fk; y -= 18 * S * fk; if (P) { x = lerp(x, W / 2, fk); rot = lerp(rot, 0, fk); } }
+      const dim = n > 1 && !focus ? 1 - 0.45 * fk : 1, drift = Math.sin(lt * 0.8 + k) * 6 * S;
+      ctx.save(); ctx.translate(x, y + (1 - kin) * H * 0.35 + drift); ctx.rotate(rot + (1 - kin) * 0.25 * (off || 1)); ctx.scale(sc * (0.85 + 0.15 * kin), sc * (0.85 + 0.15 * kin));
+      ctx.globalAlpha = clamp(kin * 1.8);
+      const r = Math.max(16 * S, Math.min(40 * S, (c.radius || 0) * cw / c.im.naturalWidth));
+      ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 80 * S; ctx.shadowOffsetY = 34 * S;
+      rrect(ctx, -cw / 2, -ch / 2, cw, ch, r); ctx.fillStyle = '#111'; ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.save(); rrect(ctx, -cw / 2, -ch / 2, cw, ch, r); ctx.clip(); ctx.drawImage(c.im, -cw / 2, -ch / 2, cw, ch);
+      if (dim < 1) { ctx.fillStyle = `rgba(0,0,0,${1 - dim})`; ctx.fillRect(-cw / 2, -ch / 2, cw, ch); }
+      ctx.restore();
+      ctx.lineWidth = 2 * S; ctx.strokeStyle = 'rgba(255,255,255,0.16)'; rrect(ctx, -cw / 2, -ch / 2, cw, ch, r); ctx.stroke();
+      if (focus && fk > 0) { ctx.globalAlpha = clamp(fk); ctx.lineWidth = 6 * S; ctx.strokeStyle = C.gold; rrect(ctx, -cw / 2 - 9 * S, -ch / 2 - 9 * S, cw + 18 * S, ch + 18 * S, r + 9 * S); ctx.stroke(); }
+      ctx.restore();
+    }
+  }
+  // a number from the app (a price, a stat) counting up and landing on the beat, its name above and its unit below
+  function statShot(ctx, u, s) {
+    const nm = s.num, land = s.land || 1, p = E.outCubic ? E.outCubic(prog(u, s.t + 0.15, s.t + land)) : prog(u, s.t + 0.15, s.t + land);
+    const v = nm.value * p, txt = nm.value === 0 ? 'Free' : `${nm.prefix || ''}${nm.comma ? Math.round(v).toLocaleString('en-US') : v.toFixed(nm.decimals || 0)}${nm.suffix || ''}`;
+    if (s.label) words(ctx, u, s.t + 0.05, s.label, { size: (P ? 84 : 70) * S, y: P ? H * 0.32 : H * 0.24, color: 'rgba(255,255,255,0.75)' });
+    const kl = springU(u, s.t + land, SPRING.bouncy), pulse = 1 + 0.06 * Math.max(0, 1 - Math.abs(kl - 1) * 4) * (u > s.t + land ? 1 : 0);
+    let size = (P ? 330 : 300) * S; ctx.font = font(size, 700, SANS);
+    const full = `${nm.prefix || ''}${nm.comma ? Math.round(nm.value).toLocaleString('en-US') : nm.value.toFixed(nm.decimals || 0)}${nm.suffix || ''}`;
+    const wMax = W * 0.86, fw = ctx.measureText(full).width; if (fw > wMax) { size *= wMax / fw; ctx.font = font(size, 700, SANS); }
+    ctx.save(); ctx.translate(W / 2, P ? H * 0.5 : H * 0.52); ctx.scale(pulse, pulse);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const g = ctx.createLinearGradient(-W * 0.3, 0, W * 0.3, 0);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.6, mix(C.gold, '#ffffff', 0.2)); g.addColorStop(1, C.gold);
+    ctx.globalAlpha = clamp((u - s.t) * 6); ctx.fillStyle = g; ctx.fillText(txt, 0, 0);
+    ctx.restore();
+    if (nm.unit) words(ctx, u, s.t + land * 0.7, nm.unit, { size: (P ? 64 : 54) * S, y: (P ? H * 0.5 : H * 0.52) + size * 0.62, color: 'rgba(255,255,255,0.7)' });
+  }
+
   function drawShot(ctx, u, s, IMG) {
     const lt = u - s.t;
     if (s.type === 'logo') {
@@ -190,6 +241,13 @@ export function launch(cfg) {
       background(ctx, u, IMG, 'dark');
       label(ctx, u, s);
       if (s.device === 'phone') phoneShot(ctx, u, s, IMG); else windowCard(ctx, u, s, IMG);
+    } else if (s.type === 'cards') {
+      background(ctx, u, IMG, 'dark');
+      if (s.label && !P) label(ctx, u, s);
+      cardsShot(ctx, u, s, IMG);
+    } else if (s.type === 'stat') {
+      background(ctx, u, IMG, 'dark');
+      statShot(ctx, u, s);
     } else if (s.type === 'end') {
       background(ctx, u, IMG, 'light');
       const ls = (P ? 80 : 70) * S, y0 = H * 0.4 + 170 * S;

@@ -289,7 +289,7 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
   const folder = create({ id, name, title, from: 'T3-resident-account' });
   const dir = path.join(FILMS, folder), multi = views.length > 1, friend = owner && owner !== 'owner';
   // drop the template's screens, photos and script: everything comes from the walk
-  for (const d of ['screens', 'photos']) fs.rmSync(path.join(dir, 'assets', d), { recursive: true, force: true });
+  for (const d of ['screens', 'photos', 'cuts']) fs.rmSync(path.join(dir, 'assets', d), { recursive: true, force: true });
   fs.mkdirSync(path.join(dir, 'assets', 'screens'), { recursive: true });
   fs.rmSync(path.join(ROOT, 'media', 'generated', id), { recursive: true, force: true });
   const ws = workspace();
@@ -311,9 +311,16 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
       let line = w.brain === 'gemini' && s.caption ? s.caption : does.length ? `${sentence.replace(/[“”]/g, '')}.` : s.caption || human(s.name);
       if (who && si === 0) line = `${vi ? 'Now, as the' : 'As the'} ${who.toLowerCase()}: ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
       const marks = Object.entries(s.regions || {});
+      // UI cut-outs found during capture (cards, prices, the main button), copied in for launch films
+      const cuts = (s.cuts || []).filter((c) => fs.existsSync(path.join(SCREENS, wn, c.file))).map((c) => {
+        const cf = `${multi ? `v${vi + 1}-` : ''}${path.basename(c.file)}`;
+        fs.mkdirSync(path.join(dir, 'assets', 'cuts'), { recursive: true });
+        fs.copyFileSync(path.join(SCREENS, wn, c.file), path.join(dir, 'assets', 'cuts', cf));
+        return { ...c, file: cf };
+      });
       scenes.push({ id: `s${scenes.length + 1}`, file, device: laptop ? 'laptop' : 'phone', size: w.size || (laptop ? [2160, 1350] : [780, 1688]),
         title: (does.at(-1) || (si === 0 ? 'Start here' : heading.split(/\s+/).slice(0, 5).join(' '))).replace(/[“”]/g, ''),
-        body: `${whoLine}${body}`.trim(), line, ring: marks.length ? { mark: marks.at(-1)[0], box: marks.at(-1)[1] } : null });
+        heading: heading.split(/\s+/).slice(0, 6).join(' '), body: `${whoLine}${body}`.trim(), line, ring: marks.length ? { mark: marks.at(-1)[0], box: marks.at(-1)[1] } : null, ...(cuts.length ? { cuts } : {}) });
     });
   }
   const last = scenes.at(-1); if (last && !(views.at(-1).w.shots.at(-1).does || []).length) last.line = `And you're there: ${last.line.charAt(0).toLowerCase()}${last.line.slice(1)}`;
@@ -503,23 +510,47 @@ function writeLaunch(folder, model) {
   add({ type: 'logo' }, intro / 2);
   let t = add({ type: 'words', text: c.intro || `Meet ${b.name}`, accent: c.accent || '' }, intro / 2); whip(t);
   const groove = at(n);
+  // cut-outs: at most two card moments and one count-up per film, so they stay special
+  const hasCut = (s, k) => !s.cutsOff && (s.cuts || []).some((c) => c.kind === k && fs.existsSync(path.join(dir, 'assets', 'cuts', c.file)));
+  const statOf = (s) => (s.cuts || []).filter((c) => c.kind === 'stat' && c.num && fs.existsSync(path.join(dir, 'assets', 'cuts', c.file)))
+    .sort((a, b) => (b.num.prefix ? 1 : 0) - (a.num.prefix ? 1 : 0) || (a.num.value > 0 ? 0 : 1) - (b.num.value > 0 ? 0 : 1) || (a.num.prefix ? a.num.value - b.num.value : b.num.value - a.num.value))[0];
+  const statScene = scenes.find((s) => !s.cutsOff && statOf(s)), cardScenes = scenes.filter((s) => hasCut(s, 'card')).slice(0, 2);
+  const extras = (s) => (cardScenes.includes(s) ? 6 : 0) + (s === statScene ? 4 : 0);
   scenes.forEach((s, i) => {
     const key = `s${i + 1}`; screens[key] = `assets/screens/${s.file}`;
-    const label = String(s.title || '').replace(/^(tap|press|click|open|choose|enter)\s+/i, '').replace(/[“”"]/g, '').replace(/^./, (x) => x.toUpperCase());
+    // the label names the screen: tutorial wording like "Start here" gives way to the page's own heading
+    const label = String(/^start here$/i.test(s.title || '') && s.heading ? s.heading : s.title || '').replace(/^(tap|press|click|open|choose|enter)\s+/i, '').replace(/[“”"]/g, '').replace(/^./, (x) => x.toUpperCase());
     // 6 beats a screen; the last one stretches to the next bar line so the drop is on the one
-    const own = beatsFor(s.len, 6), beats = i === scenes.length - 1 ? own + ((4 - ((n + own) % 4)) % 4) : own;
+    // a trimmed scene keeps its cut-out moments; the screen itself gives up the time (never under 2 beats)
+    const ex = extras(s), own = s.len ? Math.max(2, beatsFor(s.len, 6) - ex) : 6;
+    const beats = i === scenes.length - 1 ? own + ((4 - ((n + own + ex) % 4)) % 4) : own;
     const zoom = s.ring?.box ? { zoom: s.ring.box, zat: at(n + 3) } : {};
-    t = add({ type: 'screen', img: key, device: s.device, label, ...zoom }, beats); whip(t);
+    t = add({ type: 'screen', img: key, device: s.device, label, scene: s.id, ...zoom }, beats); whip(t);
     if (zoom.zat) hits.push([zoom.zat, 'zoom', 'blip', { pitch: 'C6' }]);
+    if (cardScenes.includes(s)) {   // the cards rise in on the beat, then the one that matters steps forward
+      const st = statOf(s), cards = s.cuts.filter((c) => c.kind === 'card' && fs.existsSync(path.join(dir, 'assets', 'cuts', c.file))).slice(0, 3);
+      const hit = st ? cards.findIndex((c) => c.text.includes(st.text)) : -1, focus = hit >= 0 ? hit : cards.length === 3 ? 1 : 0;   // the card with the price, else the middle
+      const imgs = cards.map((c, k) => { const kk = `${key}c${k + 1}`; screens[kk] = `assets/cuts/${c.file}`; return { img: kk, radius: c.radius }; });
+      t = add({ type: 'cards', cards: imgs, focus, beat: +beat.toFixed(4), label, scene: s.id }, 6); whip(t);
+      imgs.forEach((_, k) => hits.push([+(t + k * beat * 0.5).toFixed(3), 'card', 'pop', { pitch: ['E5', 'G5', 'B5'][k] }]));
+      hits.push([+(t + 3 * beat).toFixed(3), 'focus', 'blip', { pitch: 'C6' }]);
+    }
+    if (s === statScene) {   // the number counts up and lands on the beat
+      const st = statOf(s), lab = String(st.label || '').replace(/\s+/g, ' ').trim().split(' ').slice(0, 4).join(' ');
+      t = add({ type: 'stat', num: st.num, label: lab, scene: s.id, land: +(2 * beat).toFixed(4) }, 4); whip(t);
+      for (let k = 0; k < 6; k++) hits.push([+(t + 0.15 + k * (2 * beat - 0.15) / 6).toFixed(3), 'count', 'tick', { gain: 0.5 }]);
+      hits.push([+(t + 2 * beat).toFixed(3), 'land', 'pop', { pitch: 'C6' }]);
+    }
   });
   const drop = at(n);
   t = add({ type: 'big', text: c.big || 'Simple.' }, 4); hits.push([t, 'hero', 'impact']);
   const endAt = at(n);
   t = add({ type: 'end', line: c.outro || b.tagline || b.name }, beatsFor(model.timing?.end, 6)); hits.push([+(t + 0.1).toFixed(3), 'logo', 'bell', { pitch: 'F6' }]);
   const duration = +(shots.at(-1).t + shots.at(-1).d).toFixed(2);
-  model.times = Object.fromEntries(scenes.map((s, i) => [s.id, shots.find((x) => x.img === `s${i + 1}`).t])); model.duration = duration;
+  model.times = Object.fromEntries(scenes.map((s) => [s.id, shots.find((x) => x.scene === s.id).t])); model.duration = duration;
   const sp = (x) => ({ t: x.t, d: x.d });
-  model.spans = [{ id: 'intro', t: 0, d: shots[2].t }, ...scenes.map((s, i) => ({ id: s.id, ...sp(shots[i + 2]) })), { id: 'big', ...sp(shots.at(-2)) }, { id: 'end', ...sp(shots.at(-1)) }];
+  const span = (id) => { const own = shots.filter((x) => x.scene === id); return { t: own[0].t, d: +(own.at(-1).t + own.at(-1).d - own[0].t).toFixed(3) }; };
+  model.spans = [{ id: 'intro', t: 0, d: shots[2].t }, ...scenes.map((s) => ({ id: s.id, ...span(s.id) })), { id: 'big', ...sp(shots.at(-2)) }, { id: 'end', ...sp(shots.at(-1)) }];
   model.beat = { bpm, drop };
   fs.writeFileSync(modelPath(folder), JSON.stringify(model, null, 1) + '\n');
   hits.sort((x, y) => x[0] - y[0]);
@@ -551,7 +582,7 @@ function editFilm(folder, b) {
       const id = String(s.id || ''), base = byId[id] || (/^[\w-]{1,24}$/.test(id) && byId[s.from]);
       if (!base || seen.has(id)) return null; seen.add(id);
       const len = Number(s.len), ring = s.ring === false ? null : s.ring === true ? base.ring || base.ringWas || null : base.ring;
-      return { ...base, id, title: String(s.title ?? base.title).slice(0, 60), body: String(s.body ?? base.body).slice(0, 200), line: String(s.line ?? base.line).slice(0, 300),
+      return { ...base, id, ...(typeof s.cutsOff === 'boolean' ? { cutsOff: s.cutsOff || undefined } : {}), title: String(s.title ?? base.title).slice(0, 60), body: String(s.body ?? base.body).slice(0, 200), line: String(s.line ?? base.line).slice(0, 300),
         ring, ...(ring ? {} : { ringWas: base.ring || base.ringWas || null }), len: len >= 1 && len <= 20 ? +len.toFixed(2) : undefined };
     }).filter(Boolean);
     if (!next.length) throw new Error('Keep at least one scene.');
@@ -840,11 +871,20 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
   '.txt': 'text/plain; charset=utf-8', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.mp4': 'video/mp4',
   '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.webm': 'video/webm', '.mjs': 'text/javascript', '.woff2': 'font/woff2', '.otf': 'font/otf', '.ttf': 'font/ttf' };
 
+// downloads get the video's own title, not the internal file name ("breeup-W3-linear-l5xd-9x16.mp4" is how renders are
+// found on disk, whatever the brand): "Linear launch (phone).mp4"
+function niceName(file) {
+  const b = path.basename(file), m = /^breeup-(([A-Z]+\d+[a-z]?)-[\w-]+?)(?:-([a-c]))?-(9x16|16x9|1x1)(-4k)?\.mp4$/.exec(b);
+  if (!m) return b;
+  const cfg = readJSON(path.join(FILMS, m[1], 'film.json'), {}), title = String(cfg.title || m[1]).replace(/[\\/:*?"<>|]+/g, '').trim().slice(0, 80);
+  return `${title}${m[3] ? ` ${m[3].toUpperCase()}` : ''} (${{ '9x16': 'phone', '16x9': 'computer', '1x1': 'square' }[m[4]]}${m[5] ? ', 4K' : ''}).mp4`;
+}
+
 function sendFile(req, res, file, download) {
   let st; try { st = fs.statSync(file); } catch { return send(res, 404, 'Not found'); }
   if (!st.isFile()) return send(res, 404, 'Not found');
   const head = { 'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream', 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache' };
-  if (download) head['Content-Disposition'] = `attachment; filename*=UTF-8''${encodeURIComponent(path.basename(file))}`;
+  if (download) head['Content-Disposition'] = `attachment; filename*=UTF-8''${encodeURIComponent(niceName(file))}`;
   const m = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '');
   if (m) {
     const start = m[1] ? Number(m[1]) : st.size - Number(m[2]), end = m[1] && m[2] ? Math.min(Number(m[2]), st.size - 1) : st.size - 1;

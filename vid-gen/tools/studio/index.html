@@ -533,7 +533,7 @@ function drawTools() {
   if (tab === 'text') {
     tb.innerHTML = `<p class="hint" style="margin-top:0">Tap a clip below to change its words or length, move it, cut it or remove it.</p>
       <label class="f">Line at the end</label><input type="text" id="tag" value="${esc(m.brand.tagline || '')}" placeholder="What your app does, in one line">`;
-    if ($('#tag')) $('#tag').oninput = (e) => { m.brand.tagline = e.target.value; queueSave({ tagline: e.target.value }); };
+    if ($('#tag')) $('#tag').oninput = (e) => { cur.clipwalk.brand.tagline = e.target.value; queueSave({ tagline: e.target.value }); };
   }
   if (tab === 'music') tb.innerHTML = `<p class="hint" style="margin-top:0">Pick a feel. The music is made new for your video.</p><div class="opts">${TONES.map(([k, n, d]) => `<button class="opt ${m.mood === k ? 'on' : ''}" onclick="cur.clipwalk.mood='${k}';queueSave({ mood: '${k}' });drawTools()">${n}<small>${d}</small></button>`).join('')}</div>`;
   if (tab === 'color') {
@@ -699,6 +699,7 @@ function drawClip() {
       ${launch ? '' : `<label class="f">Small words</label><textarea id="sbd" rows="2">${esc(s.body)}</textarea>`}
       ${m.voiceOn ? `<label class="f">What the voice says</label><textarea id="sl" rows="3">${esc(s.line)}</textarea><div class="hint" id="slh"></div>` : ''}
       ${s.ring || s.ringWas ? `<label class="check" style="margin-top:16px"><input type="checkbox" id="sr" ${ringOff(s) ? '' : 'checked'}> ${launch ? 'Zoom in on the button' : 'Show the tap circle'}</label>` : ''}
+      ${launch && (s.cuts || []).some((x) => x.kind === 'card' || x.kind === 'stat') ? `<label class="check" style="margin-top:10px"><input type="checkbox" id="scu" ${s.cutsOff ? '' : 'checked'}> Show its ${[(s.cuts.some((x) => x.kind === 'card') ? 'cards' : ''), (s.cuts.some((x) => x.kind === 'stat') ? 'numbers' : '')].filter(Boolean).join(' and ')} up close</label>` : ''}
       <div class="acts">${adv ? `<button class="btn sm ghost" onclick="splitAt()">${icon('cut', 15)} Cut at playhead</button>` : ''}<button class="btn sm ghost" onclick="duplicateScene()">${icon('copy', 15)} Duplicate</button>
         <button class="btn sm ghost" ${i ? '' : 'disabled'} onclick="moveScene(-1)">${icon('left', 15)} Earlier</button><button class="btn sm ghost" ${i < m.scenes.length - 1 ? '' : 'disabled'} onclick="moveScene(1)">Later ${icon('right', 15)}</button>
         <button class="btn sm ghost" style="grid-column:1/-1" onclick="removeScene()">${icon('trash', 15)} Remove clip</button></div>
@@ -714,15 +715,18 @@ function drawClip() {
     <button class="btn sm ghost" aria-label="Close" title="Close (Esc)" onclick="sel=null;drawTools();drawTimeline()">${icon('x', 15)}</button></div><div class="toolbody">${ask}${body}</div>`;
   $('#askf').onsubmit = (e) => { e.preventDefault(); askChange(c.id, $('#askq').value); };
   if (c.kind === 'scene') {
-    const secs = () => { if ($('#slh')) $('#slh').textContent = `About ${Math.max(1, Math.round(words(s.line) / 2.5))} seconds of talking`; };
-    const onT = () => { s.title = $('#st').value; if ($('#sbd')) s.body = $('#sbd').value; if ($('#sl')) s.line = $('#sl').value; secs(); queueSave(); const b = $(`.blk[data-id="${s.id}"] span`); if (b) b.textContent = s.title; };
+    // look the clip up on every edit: a save replaces the model, so a captured object would go stale
+    const S = () => cur.clipwalk.scenes.find((x) => x.id === c.id) || s;
+    const secs = () => { if ($('#slh')) $('#slh').textContent = `About ${Math.max(1, Math.round(words(S().line) / 2.5))} seconds of talking`; };
+    const onT = () => { const x = S(); x.title = $('#st').value; if ($('#sbd')) x.body = $('#sbd').value; if ($('#sl')) x.line = $('#sl').value; secs(); queueSave(); const b = $(`.blk[data-id="${x.id}"] span`); if (b) b.textContent = x.title; };
     ['#st', '#sbd', '#sl'].forEach((q) => { if ($(q)) $(q).oninput = onT; });
-    if ($('#sr')) $('#sr').onchange = (e) => { s.ringOff = !e.target.checked; queueSave(); };
+    if ($('#sr')) $('#sr').onchange = (e) => { S().ringOff = !e.target.checked; queueSave(); };
+    if ($('#scu')) $('#scu').onchange = (e) => { S().cutsOff = !e.target.checked; dirty.add(c.id); queueSave(); };
     secs();
   }
-  const copy = (q, k) => { if ($(q)) $(q).oninput = (e) => { m.copy = { ...(m.copy || {}), [k]: e.target.value }; pending.copy = { ...(pending.copy || {}), [k]: e.target.value }; queueSave(); }; };
+  const copy = (q, k) => { if ($(q)) $(q).oninput = (e) => { const M = cur.clipwalk; M.copy = { ...(M.copy || {}), [k]: e.target.value }; pending.copy = { ...(pending.copy || {}), [k]: e.target.value }; queueSave(); }; };
   copy('#ci', 'intro'); copy('#ca', 'accent'); copy('#cb', 'big'); copy('#co', 'outro');
-  if ($('#tag')) $('#tag').oninput = (e) => { m.brand.tagline = e.target.value; queueSave({ tagline: e.target.value }); };
+  if ($('#tag')) $('#tag').oninput = (e) => { cur.clipwalk.brand.tagline = e.target.value; queueSave({ tagline: e.target.value }); };
 }
 // "Ask for a change": Jev reads the request on the server, we apply the edits here like any other (preview, autosave)
 let lastAsk = null;
@@ -770,15 +774,19 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); setPlayhead(playT + (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 1 : 0.1)); window.seekPreview?.(playT); }
 });
 // edits save themselves, then the preview reloads
-function queueSave(extra = {}) { Object.assign(pending, extra); edited = true; markEdited(); clearTimeout(saveT); saveT = setTimeout(saveNow, 700); }
+let editSeq = 0;
+function queueSave(extra = {}) { editSeq++; Object.assign(pending, extra); edited = true; markEdited(); clearTimeout(saveT); saveT = setTimeout(saveNow, 700); }
 async function saveNow() {
   saveT = null;
-  const m = cur.clipwalk, body = { ...pending, title: m.title, scenes: m.scenes.map((s) => ({ id: s.id, ...(s.from ? { from: s.from } : {}), title: s.title, body: s.body, line: s.line, len: s.len ?? null,
+  const m = cur.clipwalk, body = { ...pending, title: m.title, scenes: m.scenes.map((s) => ({ id: s.id, ...(s.from ? { from: s.from } : {}), title: s.title, body: s.body, line: s.line, len: s.len ?? null, cutsOff: !!s.cutsOff,
     ...(ringOff(s) ? { ring: false } : s.ringWas ? { ring: true } : {}) })) };
-  pending = {};
+  pending = {}; const seq = editSeq;
   try {
     const d = await api(`/api/films/${cur.folder}/clipwalk`, { method: 'PUT', body });
-    cur = d; edited = true; dirty = new Set();
+    // edits made while this save was on its way win: keep them, take only the server's timing
+    if (seq !== editSeq) { const mine = cur.clipwalk; for (const k of ['spans', 'times', 'duration', 'beat', 'bin']) mine[k] = d.clipwalk[k]; cur = { ...d, clipwalk: mine }; }
+    else { cur = d; dirty = new Set(); }
+    edited = true;
     if (!$('#stage .busy')) drawStage();
     if (!document.querySelector('.blk.drag')) drawTimeline();
     // the clip panel shows the real length too, without pulling focus from whatever is being typed
