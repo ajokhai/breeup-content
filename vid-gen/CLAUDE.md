@@ -122,7 +122,9 @@ film, so every tutorial gets it.
 - The simple app (`tools/studio/index.html`) is a home page (link box + style cards) and a CapCut-style editor. Each
   Clipwalk video keeps its scenes in `films/<film>/clipwalk.json`; the server's `writeFilm()` regenerates film.js,
   film.json and the script from it after every edit, so never hand-edit those three for a Clipwalk video. The owner's
-  admin (connections checklist, people and credits, pricing, old step-by-step tools) is `pro.html` at /pro.
+  admin (connections checklist, brand, people and credits, pricing, cheap checks, the raw job log) is `pro.html` at /pro;
+  it no longer makes or edits videos (old links redirect to the app's editor). Hand-built films (no clipwalk.json) show
+  in the editor with Rebuild and Download only; their words and pictures are changed by an agent from the files.
 - Launch films (`template: 'launch'`) are cut on a beat grid: pace sets the tempo (fast 124, medium 112, slow 100 BPM),
   shots last whole beats, the first screen starts on a bar line and the hero word lands on the drop. film.json "score"
   (`{ bpm, mood, groove, drop, end }`) makes `make.mjs` build the music with `tools/beat.mjs` (free, in time, no API).

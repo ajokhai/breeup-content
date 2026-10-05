@@ -526,7 +526,7 @@ const TONES = [['calm', 'Calm', 'relaxed, friendly'], ['upbeat', 'Upbeat', 'brig
 const COLORS = ['#1a472a', '#1f3a5f', '#3b5bdb', '#6741d9', '#c2255c', '#e8590c', '#f59f00', '#2b8a3e', '#0b7285', '#212529'];
 function drawTools() {
   const el = $('#tools'), m = cur.clipwalk;
-  if (!m) { el.innerHTML = `<div class="toolbody"><h2 style="font-size:24px">Finished video</h2><p class="hint">This one was made with the pro tools, so it doesn't have the simple editor. You can still download it.</p>${isOwner() ? `<a class="btn" href="/pro#/film/${cur.folder}">Open in pro tools</a>` : ''}</div>`; return; }
+  if (!m) { el.innerHTML = `<div class="toolbody"><h2 style="font-size:24px">Finished video</h2><p class="hint">This one was built by hand (by an agent, from its script), so its words and pictures are changed there, not here. You can watch it, rebuild it and download it.</p>${isOwner() ? `<button class="btn" onclick="rebuildFilm()">${icon('wand', 16)} Rebuild video</button>` : ''}</div>`; return; }
   if (sel) return drawClip();
   el.innerHTML = `<div class="tooltabs">${[['text', 'Words'], ['music', 'Music'], ['color', 'Colour'], ['voice', 'Voice']].map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" onclick="tab='${k}';drawTools()">${icon(k, 21)}${n}</button>`).join('')}</div><div class="toolbody" id="tb"></div>`;
   const tb = $('#tb');
@@ -793,6 +793,10 @@ async function saveNow() {
     if (sel && !document.activeElement?.closest('#tools')) drawTools();
     else if (sel && document.activeElement?.type !== 'range') { const c = layout().clips.find((x) => x.id === sel), r = $('#tools input[type=range]'); if (c && r) { r.value = c.d.toFixed(1); $('#lenout').textContent = `${c.d.toFixed(1)}s`; } }
   } catch (x) { toast(x.message, true); }
+}
+async function rebuildFilm() {
+  try { const j = await api('/api/jobs', { method: 'POST', body: { action: 'full', folder: cur.folder } }); jobs = await api('/api/jobs'); follow(j.id); busy({ ...j, state: 'queued' }); }
+  catch (x) { toast(x.message, true); }
 }
 async function updateVideo() {
   if (saveT) { clearTimeout(saveT); await saveNow(); }
