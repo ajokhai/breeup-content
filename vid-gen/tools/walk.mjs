@@ -131,20 +131,154 @@ async function findCuts(prefix) {
     };
     const res = [...pick(cards, 4, (a, b) => b.score - a.score).map((c) => ({ ...c, kind: 'card' })), ...pick(buttons, 1, (a, b) => b.area - a.area).map((c) => ({ ...c, kind: 'button' })),
       ...pick(stats, 3, (a, b) => b.size - a.size).map((c) => ({ ...c, kind: 'stat' }))];
-    return res.map((c, i) => { c.e.setAttribute('data-cut', i); return { i, kind: c.kind, text: c.t.slice(0, 200), box: [c.r.x, c.r.y, c.r.width, c.r.height], radius: c.radius, ...(c.num ? { num: c.num, label: c.label } : {}) }; });
-  }).catch(() => []);
-  const cuts = [];
-  if (found.length) fs.mkdirSync(path.join(out, 'cuts'), { recursive: true });
-  for (const c of found) {
+    // an SVG copied with its computed paint written onto every shape (sites colour icons from CSS, which a copy loses)
+    function svgCopy(svg) {
+      const cl = svg.cloneNode(true), src = [svg, ...svg.querySelectorAll('*')], dst = [cl, ...cl.querySelectorAll('*')], r = svg.getBoundingClientRect();
+      src.forEach((e, i) => {
+        const st = getComputedStyle(e), d = dst[i]; if (!d || !d.setAttribute) return;
+        for (const k of ['fill', 'stroke', 'stroke-width', 'opacity', 'fill-opacity', 'stroke-opacity', 'fill-rule']) { const v = st.getPropertyValue(k); if (v && v !== 'normal') d.setAttribute(k, v.replace(/currentcolor/gi, st.color)); }
+        d.removeAttribute('class'); d.removeAttribute('style');
+      });
+      cl.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); if (!cl.getAttribute('viewBox')) cl.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+      cl.setAttribute('width', r.width); cl.setAttribute('height', r.height);
+      return cl.outerHTML.replace(/currentColor/g, getComputedStyle(svg).color);
+    }
+    window.__svgCopy = svgCopy;
+    // rebuild a card from the page itself, not pixels: every line of text with its place, size, weight and colour,
+    // and its icons as real SVG (currentColor resolved), so the video can redraw it sharp and animate each part
+    const icons = {};
+    function rebuild(card, vis) {
+      const R = card.getBoundingClientRect(), cs = getComputedStyle(card);
+      let bg = cs.backgroundColor;
+      for (let p = card; p && !solid(bg); p = p.parentElement) bg = getComputedStyle(p).backgroundColor;
+      const parts = [], seenIcon = new Set();
+      const money = /^[^\d\s-]{0,4}\s?\d[\d,.]*/;
+      for (const e of card.querySelectorAll('*')) {
+        const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
+        if (r.top - R.top > vis.height + 4) continue;   // only what's on screen (cards cropped at the bottom)
+        const st = getComputedStyle(e); if (!ok(e, st)) continue;
+        if (e.tagName.toLowerCase() === 'svg') {
+          if (r.width > 64 || r.height > 64 || [...seenIcon].some((x) => x.contains(e))) continue;
+          seenIcon.add(e);
+          const svg = svgCopy(e);
+          if (svg.length > 8000) continue;
+          let id = Object.keys(icons).find((k) => icons[k] === svg); if (!id) { id = `i${Object.keys(icons).length + 1}`; icons[id] = svg; }
+          parts.push({ kind: 'icon', icon: id, x: r.left - R.left, y: r.top - R.top, w: r.width, h: r.height });
+          continue;
+        }
+        // text that belongs to this element itself (not its children)
+        // switches (billing toggles): a pill with a knob, its colour and state
+        // (or anything shaped like one: a pill with a round knob inside)
+        const pill = r.width > r.height * 1.4 && r.width <= 70 && r.height >= 10 && r.height <= 34 && parseFloat(st.borderTopLeftRadius) >= r.height / 2 - 1 && solid(st.backgroundColor)
+          && [...e.querySelectorAll('*')].some((k) => { const q = k.getBoundingClientRect(); return q.width > 4 && Math.abs(q.width - q.height) < 2 && q.height < r.height && parseFloat(getComputedStyle(k).borderTopLeftRadius) >= q.width / 2 - 1; });
+        if (e.getAttribute('role') === 'switch' || pill || (e.tagName === 'INPUT' && e.type === 'checkbox' && r.width > r.height * 1.4)) {
+          if (parts.some((q) => q.kind === 'switch' && Math.abs(q.y - (r.top - R.top)) < 4)) continue;
+          // on: said so, or the knob sits on the right
+          const knob = [...e.querySelectorAll('*')].find((k) => { const q = k.getBoundingClientRect(); return q.width > 4 && Math.abs(q.width - q.height) < 2; });
+          const on = e.getAttribute('aria-checked') === 'true' || !!e.checked || (knob ? knob.getBoundingClientRect().left - r.left > r.width / 3 : false), bgc = solid(st.backgroundColor) ? st.backgroundColor : '#5e6ad2';
+          parts.push({ kind: 'switch', on, color: bgc, x: r.left - R.left, y: r.top - R.top, w: r.width, h: r.height }); continue;
+        }
+        if (e.closest('[role=switch]')) continue;
+        // custom widgets (e.g. animated numbers) keep their text in a shadow root; their label says what they show
+        const custom = e.tagName.includes('-') && (e.shadowRoot || e.getAttribute('aria-label'));
+        if (e.closest('[class*=visuallyHidden i],[class*=sr-only i],.sr-only')) continue;   // screen-reader copies
+        if (e.parentElement && [...card.querySelectorAll('*')].some((x) => x !== e && x.tagName.includes('-') && x.contains(e))) continue;   // inside a widget: the widget speaks for it
+        const own = custom ? (e.getAttribute('aria-label') || e.shadowRoot?.textContent || '').replace(/\s+/g, ' ').trim()
+          : [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(' ').replace(/\s+/g, ' ').trim();
+        if (!own) continue;
+        const rr = document.createRange(); rr.selectNodeContents(e); const tr = custom ? r : rr.getBoundingClientRect();
+        const full = custom ? own : txt(e), clickable = /^(BUTTON|A)$/.test(e.tagName) || !!e.closest('button,a');
+        const size = parseFloat(st.fontSize), kind = clickable ? 'button' : money.test(full) && /[$€£₦¥₹]/.test(full) ? 'price' : 'text';
+        parts.push({ kind, text: full.length <= own.length + 40 ? full : own, x: tr.left - R.left, y: tr.top - R.top, w: tr.width, h: tr.height,
+          size, weight: Number(st.fontWeight) || 400, color: st.color, family: st.fontFamily.split(',')[0].replace(/["']/g, '').trim() });
+      }
+      // headings: the biggest text; bullets: text lines that sit right of an icon on the same row
+      const top = parts.filter((p) => p.kind === 'text').sort((a, b) => b.size - a.size)[0]; if (top) top.kind = 'heading';
+      for (const p of parts) if (p.kind === 'text' && parts.some((q) => q.kind === 'icon' && Math.abs((q.y + q.h / 2) - (p.y + p.h / 2)) < 8 && q.x < p.x)) p.kind = 'bullet';
+      // the same text twice (a child repeating its parent) keeps only the first
+      const keep = []; for (const p of parts) if (p.kind === 'icon' || !keep.some((q) => q.text && (q.text === p.text || q.text.includes(p.text)) && Math.abs(q.y - p.y) < 6)) keep.push(p);
+      return { w: R.width, h: Math.min(R.height, vis.height), bg, radius: parseFloat(cs.borderTopLeftRadius) || 0,
+        border: parseFloat(cs.borderTopWidth) > 0 && solid(cs.borderTopColor) ? cs.borderTopColor : '', parts: keep.map((p) => ({ ...p, x: Math.round(p.x), y: Math.round(p.y), w: Math.round(p.w), h: Math.round(p.h) })) };
+    }
+    const outList = res.map((c, i) => { c.e.setAttribute('data-cut', i); return { i, kind: c.kind, text: c.t.slice(0, 200), box: [c.r.x, c.r.y, c.r.width, c.r.height], radius: c.radius, ...(c.num ? { num: c.num, label: c.label } : {}),
+      ...(c.kind === 'card' ? { live: rebuild(c.e, c.r) } : {}) }; });
+    return { cuts: outList, icons };
+  }).catch(() => ({ cuts: [], icons: {} }));
+  const { cuts: found2, icons } = found; const cuts = [];
+  if (found2.length) fs.mkdirSync(path.join(out, 'cuts'), { recursive: true });
+  for (const c of found2) {
     const file = `cuts/${prefix}-${c.kind}${c.i + 1}.png`;
     // a clip of the viewport, as captured: the page never scrolls, so cut-outs match the screenshot exactly
     const [x, y, w, h] = c.box;
     try { await page.screenshot({ path: path.join(out, file), clip: { x, y, width: w, height: h }, timeout: 4000 }); }
     catch { continue; }
     const { i, box, ...rest } = c;
+    // a card's live rebuild carries its icons (SVG text) with it, in CSS px; the PNG stays as the fallback
+    if (rest.live) rest.live.icons = Object.fromEntries(Object.entries(icons).filter(([k]) => rest.live.parts.some((p) => p.icon === k)));
     cuts.push({ ...rest, file, box: box.map((v) => Math.round(v * 2)), radius: Math.round(c.radius * 2) });   // screenshot px
   }
   return cuts;
+}
+
+// The brand's own assets, straight from the page (not screenshots): the logo as SVG (or its image), the share image,
+// the big app icon, the hero image at full resolution, theme and button colours, and the heading font. Once per capture.
+async function brandAssets() {
+  const b = await page.evaluate(() => {
+    const abs = (u) => { try { return new URL(u, location.href).href; } catch { return ''; } };
+    const meta = (n) => document.querySelector(`meta[property="${n}"],meta[name="${n}"]`)?.content || '';
+    const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.top < innerHeight; };
+    // the logo: inside the link home, or anything named logo, near the top
+    const homes = [...document.querySelectorAll('header a, nav a, a')].filter((a) => { try { return new URL(a.href).pathname === '/' && vis(a) && a.getBoundingClientRect().top < 160; } catch { return false; } });
+    const cands = [...homes, ...document.querySelectorAll('[class*=logo i],[id*=logo i],[aria-label*=logo i]')].filter(vis);
+    let logoSvg = '', logoImg = '';
+    for (const c of cands) {
+      const svg = c.tagName.toLowerCase() === 'svg' ? c : c.querySelector('svg'), img = c.tagName === 'IMG' ? c : c.querySelector('img');
+      if (svg && !logoSvg) {
+        const cl = svg.cloneNode(true), r = svg.getBoundingClientRect(), color = getComputedStyle(svg).color, src = [svg, ...svg.querySelectorAll('*')], dst = [cl, ...cl.querySelectorAll('*')];
+        src.forEach((e, i) => { const st = getComputedStyle(e), d = dst[i]; if (!d?.setAttribute) return; for (const k of ['fill', 'stroke', 'stroke-width', 'opacity', 'fill-rule']) { const v = st.getPropertyValue(k); if (v) d.setAttribute(k, v.replace(/currentcolor/gi, st.color)); } d.removeAttribute('class'); d.removeAttribute('style'); });
+        cl.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); if (!cl.getAttribute('viewBox')) cl.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+        cl.setAttribute('width', r.width); cl.setAttribute('height', r.height);
+        logoSvg = cl.outerHTML.replace(/currentColor/g, color);
+        // a wordmark next to a symbol: keep the name too, so we know whether the SVG already spells it
+        logoSvg = logoSvg.length < 60000 ? logoSvg : '';
+      }
+      if (img && !logoImg) logoImg = abs(img.currentSrc || img.src);
+      if (logoSvg || logoImg) break;
+    }
+    const icon = [...document.querySelectorAll('link[rel~="apple-touch-icon"],link[rel~="icon"]')].map((l) => ({ href: abs(l.href), s: parseInt((l.sizes?.value || '0').split('x')[0]) || (l.rel.includes('apple') ? 180 : 16) })).sort((a, b) => b.s - a.s)[0]?.href || '';
+    const hero = [...document.images].filter(vis).map((i) => ({ src: abs(i.currentSrc || i.src), a: i.getBoundingClientRect().width * i.getBoundingClientRect().height, nw: i.naturalWidth })).filter((i) => i.nw >= 600 && !/\.svg/.test(i.src)).sort((a, b) => b.a - a.a)[0]?.src || '';
+    const btn = [...document.querySelectorAll('a,button')].filter(vis).map((e) => getComputedStyle(e).backgroundColor).find((c) => c && !/rgba\([^)]*,\s*0\)$|transparent/.test(c) && !/^rgb\((2[3-5]\d|0), ?\1, ?\1\)$/.test(c)) || '';
+    const h = document.querySelector('h1,h2');
+    return { logoSvg, logoImg, ogImage: abs(meta('og:image') || meta('twitter:image')), icon, hero, theme: meta('theme-color'), button: btn,
+      font: h ? getComputedStyle(h).fontFamily.split(',')[0].replace(/["']/g, '').trim() : '', bg: getComputedStyle(document.body).backgroundColor, name: meta('og:site_name') };
+  }).catch(() => null);
+  if (!b) return null;
+  const dir = path.join(out, 'brand'); fs.mkdirSync(dir, { recursive: true });
+  const save = async (u, base) => {
+    if (!u || !/^https?:/.test(u)) return '';
+    try {
+      const r = await page.request.get(u, { timeout: 15000 }); if (!r.ok()) return '';
+      const type = r.headers()['content-type'] || '', ext = /svg/.test(type) ? '.svg' : /png/.test(type) ? '.png' : /webp/.test(type) ? '.webp' : /icon/.test(type) ? '.ico' : '.jpg';
+      const body = await r.body(); if (body.length > 8e6) return '';
+      fs.writeFileSync(path.join(dir, base + ext), body); return `brand/${base}${ext}`;
+    } catch { return ''; }
+  };
+  const res = { theme: b.theme, button: b.button, bg: b.bg, font: b.font, name: b.name };
+  if (b.logoSvg) { fs.writeFileSync(path.join(dir, 'logo.svg'), b.logoSvg); res.logo = 'brand/logo.svg'; }
+  else if (b.logoImg) res.logo = await save(b.logoImg, 'logo');
+  res.icon = await save(b.icon, 'icon'); res.share = await save(b.ogImage, 'share'); res.hero = await save(b.hero, 'hero');
+  // the brand's typeface when it's a free Google font (most are: Inter, Manrope, Poppins...), so rebuilt cards match
+  if (b.font) {
+    const fam = b.font.replace(/\s+(variable|var|display|text|vf)$/i, '').trim();
+    try {
+      const css = await page.request.get(`https://fonts.googleapis.com/css2?family=${encodeURIComponent(fam)}:wght@100..900&display=swap`, { headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36' }, timeout: 15000 });
+      const u = css.ok() ? (/\/\* latin \*\/[\s\S]*?url\((https:[^)]+\.woff2)\)/.exec(await css.text()) || [])[1] : '';
+      if (u) { const f = await page.request.get(u, { timeout: 15000 }); if (f.ok()) { fs.writeFileSync(path.join(dir, 'font.woff2'), await f.body()); res.fontFile = 'brand/font.woff2'; res.fontName = fam; } }
+    } catch {}
+  }
+  for (const k of Object.keys(res)) if (!res[k]) delete res[k];
+  console.log(`  brand assets: ${['logo', 'icon', 'share', 'hero'].filter((k) => res[k]).join(', ') || 'none'}${res.font ? ` · font ${res.font}${res.fontFile ? ' (downloaded, Google Fonts)' : ''}` : ''}`);
+  return res;
 }
 
 const SCHEMA = {
@@ -231,6 +365,7 @@ async function decideJev(snap) {
 let last = '', repeats = 0, exit = 0;
 await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
 await settle();
+const brand = flag('no-cuts') ? null : await brandAssets();
 
 for (let step = 1; step <= maxSteps; step++) {
   const snap = await snapshot();
@@ -294,7 +429,7 @@ for (let step = 1; step <= maxSteps; step++) {
 }
 await browser.close();
 
-fs.writeFileSync(path.join(out, 'walk.json'), JSON.stringify({ url, goal, device, brain, size: [VIEW.width * 2, VIEW.height * 2], at: new Date().toISOString(), shots: shots.map(({ sig, ...s }) => s), steps: log }, null, 1) + '\n');
+fs.writeFileSync(path.join(out, 'walk.json'), JSON.stringify({ url, goal, device, brain, size: [VIEW.width * 2, VIEW.height * 2], at: new Date().toISOString(), ...(brand ? { brand } : {}), shots: shots.map(({ sig, ...s }) => s), steps: log }, null, 1) + '\n');
 console.log(`\n${shots.length} screen(s) in media/screens/${name}/ (walk.json has captions and regions)`);
 // captions become on-screen text: let Jev (cheap) check them for plain English
 if (shots.length) {

@@ -296,7 +296,16 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
   // the workspace's own logo, tagline and colours only go on the workspace's own product (e.g. BreeUp), never on
   // someone else's video, whoever makes it
   const home = !friend && (profile || 'none') !== 'none' && matchProfile({ name: ws.name }) === profile;
-  const logo = vb.logo ? saveUpload(vb.logo, path.join('media', 'brands', `${id}-logo`)) : home ? ws.logo : '';
+  // the capture's own brand assets (walk.mjs): the logo as vector beats a raster one found earlier; the site's font
+  const wb = views[0].w.brand || {}, wdir = path.join(SCREENS, views[0].name);
+  const capturedLogo = wb.logo && fs.existsSync(path.join(wdir, wb.logo)) ? path.join(wdir, wb.logo) : '';
+  let logo = vb.logo && !(capturedLogo?.endsWith('.svg') && !/^data:image\/svg/.test(vb.logo)) ? saveUpload(vb.logo, path.join('media', 'brands', `${id}-logo`)) : '';
+  if (!logo && capturedLogo && !home) { fs.mkdirSync(path.join(ROOT, 'media', 'brands'), { recursive: true }); logo = path.join('media', 'brands', `${id}-logo${path.extname(capturedLogo)}`); fs.copyFileSync(capturedLogo, path.join(ROOT, logo)); }
+  if (!logo && home) logo = ws.logo;
+  // a wide SVG logo already spells the name (a wordmark)
+  const vbx = logo?.endsWith('.svg') ? /viewBox="[\d.\s-]*?\s([\d.]+)\s+([\d.]+)"/.exec(fs.readFileSync(path.join(ROOT, logo), 'utf8')) : null;
+  const wordmark = !!vbx && Number(vbx[1]) / Number(vbx[2]) >= 2.2;
+  if (wb.fontFile && fs.existsSync(path.join(wdir, wb.fontFile))) { fs.mkdirSync(path.join(dir, 'fonts'), { recursive: true }); fs.copyFileSync(path.join(wdir, wb.fontFile), path.join(dir, 'fonts', 'brand.woff2')); }
   const scenes = [];
   for (const [vi, { name: wn, role, w }] of views.entries()) {
     const laptop = w.device === 'laptop', who = multi && role ? role.trim() : '';
@@ -329,7 +338,7 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
     // a video they liked sets the pace and the music's feel (never its colours or words)
     mood: style?.mood || (voice ? 'calm' : 'none'), pace: style?.pace || 'slow', like: style?.source || undefined,
     brand: { name: vb.name || (home ? ws.name : vb.host || 'Product'), tagline: vb.tagline || (home ? ws.tagline : ''), site: vb.site || '',
-      logo, colors: { ...(home ? ws.brand : NEUTRAL), ...brandFromColor(vb.color) } },
+      logo, ...(wordmark ? { wordmark } : {}), ...(wb.fontName ? { font: wb.fontName } : {}), colors: { ...(home ? ws.brand : NEUTRAL), ...brandFromColor(vb.color || wb.button) } },
     owner: friend ? owner : undefined, sources: views.map((v) => ({ walk: v.name, role: v.role || '', goal: v.w.goal, device: v.w.device })),
   };
   if (template === 'launch') {   // a launch film: no voice by default, upbeat, short punchy copy from the site's own description
@@ -530,7 +539,7 @@ function writeLaunch(folder, model) {
     if (cardScenes.includes(s)) {   // the cards rise in on the beat, then the one that matters steps forward
       const st = statOf(s), cards = s.cuts.filter((c) => c.kind === 'card' && fs.existsSync(path.join(dir, 'assets', 'cuts', c.file))).slice(0, 3);
       const hit = st ? cards.findIndex((c) => c.text.includes(st.text)) : -1, focus = hit >= 0 ? hit : cards.length === 3 ? 1 : 0;   // the card with the price, else the middle
-      const imgs = cards.map((c, k) => { const kk = `${key}c${k + 1}`; screens[kk] = `assets/cuts/${c.file}`; return { img: kk, radius: c.radius }; });
+      const imgs = cards.map((c, k) => { const kk = `${key}c${k + 1}`; screens[kk] = `assets/cuts/${c.file}`; return { img: kk, radius: c.radius, ...(c.live?.parts?.length ? { live: c.live } : {}) }; });
       t = add({ type: 'cards', cards: imgs, focus, beat: +beat.toFixed(4), label, scene: s.id }, 6); whip(t);
       imgs.forEach((_, k) => hits.push([+(t + k * beat * 0.5).toFixed(3), 'card', 'pop', { pitch: ['E5', 'G5', 'B5'][k] }]));
       hits.push([+(t + 3 * beat).toFixed(3), 'focus', 'blip', { pitch: 'C6' }]);
@@ -556,12 +565,16 @@ function writeLaunch(folder, model) {
   hits.sort((x, y) => x[0] - y[0]);
   const cfgJs = { brand: { name: b.name || '', site: b.site ? String(b.site).replace(/^https?:\/\//, '').replace(/\/$/, '') : '' }, shots, screens,
     ...(model.opener === 'photo' && fs.existsSync(path.join(dir, 'assets', 'photos', 'hook-16x9.jpg')) ? { bg: 'assets/photos/hook' } : {}),
-    logo: logoFile ? `assets/${logoFile}` : false };
+    logo: logoFile ? `assets/${logoFile}` : false, ...(logoFile && b.wordmark ? { wordmark: true } : {}) };
+  // the site's own typeface (downloaded by the capture when it's a free Google font)
+  const brandFont = fs.existsSync(path.join(dir, 'fonts', 'brand.woff2'));
+  if (brandFont) { const ix = path.join(dir, 'index.html'), h = fs.readFileSync(ix, 'utf8'); if (!/font-family: Brand/.test(h)) fs.writeFileSync(ix, h.replace(/(@font-face \{ font-family: UI;[^\n]*\n)/, `$1  @font-face { font-family: Brand; src: url(fonts/brand.woff2) format('woff2'); font-weight: 100 900; }\n`)); }
   fs.writeFileSync(path.join(dir, 'film.js'), `// ${idOf(folder)} ${model.title}. Written by Clipwalk from clipwalk.json (launch style): edit in the app, not here.\n` +
     `import { launch } from '/kit/launch.js';\n\nconst HITS = [\n${hits.map((h) => `  ${JSON.stringify(h)},`).join('\n')}\n];\n\nlaunch({ ...${JSON.stringify(cfgJs, null, 1)}, hits: HITS });\n`);
   const cfg = readJSON(path.join(dir, 'film.json'), {});
-  for (const k2 of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills', 'music', 'score']) delete cfg[k2];
+  for (const k2 of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills', 'music', 'score', 'brandFont']) delete cfg[k2];
   Object.assign(cfg, { title: model.title, duration, formats: ['9x16', '16x9'], brand: b.colors, publish: false, profile: model.profile || 'none', ...(model.owner ? { owner: model.owner } : {}),
+    ...(brandFont ? { brandFont: true } : {}),
     // the music is made in code to this exact grid (free, always in time); 'none' means no music
     ...(model.mood && model.mood !== 'none' && MOODS[model.mood] ? { score: { bpm, mood: model.mood, groove, drop, end: endAt } } : {}) });
   fs.writeFileSync(path.join(dir, 'film.json'), JSON.stringify(cfg, null, 1) + '\n');

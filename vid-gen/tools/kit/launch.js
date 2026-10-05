@@ -24,7 +24,7 @@ const { W, H, FORMAT, E, prog, lerp, clamp, springU, SPRING, font, rrect, cover,
 const FILM = await fetch('film.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
 const C = { green: '#1f3a5f', deep: '#0f1b2d', cream: '#f7f7f4', gold: '#f5a524', ...(FILM.brand || {}) };
 const P = FORMAT.portrait, S = Math.min(W, H) / 1080;   // S: type scale, 1 at 1080
-const SANS = 'UI', DISPLAY = 'Display';
+const SANS = 'UI', DISPLAY = 'Display', BRAND = FILM.brandFont ? 'Brand' : SANS;   // Brand: the site's own typeface (fonts/brand.woff2), when it was free to download
 const rgba = (hex, a) => { const [r, g, b] = hexRgb(hex); return `rgba(${r},${g},${b},${a})`; };
 const lum = (hex) => { const [r, g, b] = hexRgb(hex); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
 const WHIP = 0.28;   // seconds of whip at each cut
@@ -159,27 +159,76 @@ export function launch(cfg) {
     const y = P ? H * 0.2 : H * 0.135;   // above the window (9:16: below the top 250 px the apps cover)
     words(ctx, u, s.t + 0.15, s.label, { size: (P ? 92 : 68) * S, y, color: ink === '#ffffff' ? '#fff' : '#111', accent: s.accent });
   }
+  // the logo on a tile: kept in proportion, on a dark tile if the logo itself is light (a white mark on white vanishes)
+  let logoLight = false;
   function logoMark(ctx, u, t0, IMG, size, cx, cy) {
     const k = springU(u, t0, SPRING.bouncy); if (k <= 0) return;
     ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); ctx.rotate((1 - k) * -0.5);
-    if (IMG.logo) {
-      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 40 * S; rrect(ctx, -size / 2, -size / 2, size, size, size * 0.24); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowColor = 'transparent';
-      ctx.save(); rrect(ctx, -size / 2, -size / 2, size, size, size * 0.24); ctx.clip(); ctx.drawImage(IMG.logo, -size * 0.38, -size * 0.38, size * 0.76, size * 0.76); ctx.restore();
+    if (IMG.logo && !cfg.wordmark) {
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 40 * S; rrect(ctx, -size / 2, -size / 2, size, size, size * 0.24); ctx.fillStyle = logoLight ? '#111214' : '#fff'; ctx.fill(); ctx.shadowColor = 'transparent';
+      const L = IMG.logo, ar = (L.naturalWidth || 1) / (L.naturalHeight || 1), lw = ar >= 1 ? size * 0.7 : size * 0.7 * ar, lh = ar >= 1 ? size * 0.7 / ar : size * 0.7;
+      ctx.drawImage(L, -lw / 2, -lh / 2, lw, lh);
     } else {
       rrect(ctx, -size / 2, -size / 2, size, size, size * 0.24); ctx.fillStyle = C.gold; ctx.fill();
       ctx.fillStyle = C.deep; ctx.font = font(size * 0.55, 700, SANS); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((cfg.brand.name || '?')[0], 0, size * 0.03);
     }
     ctx.restore();
   }
-
+  // a wordmark (logo that already spells the name): shown on its own, big, on a background it reads on
+  function wordmark(ctx, u, t0, IMG, cx, cy, maxW, maxH) {
+    const k = springU(u, t0, SPRING.gentle); if (k <= 0 || !IMG.logo) return;
+    const L = IMG.logo, ar = (L.naturalWidth || 1) / (L.naturalHeight || 1), w = Math.min(maxW, maxH * ar), h = w / ar;
+    ctx.save(); ctx.globalAlpha = clamp(k * 1.5); if (k < 0.97) ctx.filter = `blur(${(1 - k) * 18 * S}px)`;
+    ctx.translate(cx, cy + (1 - k) * 40 * S); ctx.drawImage(L, -w / 2, -h / 2, w, h); ctx.restore();
+  }
+  // a card rebuilt from the site's own HTML (walk.mjs): its text in the brand's font, its icons as SVG, drawn sharp at any
+  // size. Lines arrive one after another, the price counts up, the features tick in.
+  const ICONS = {};
+  // cards cropped tight to their first line get breathing room above and below (once per card)
+  function padCard(L) {
+    if (L._pad) return L; L._pad = true;
+    const top = Math.min(...L.parts.map((p) => p.y)), add = Math.max(0, 24 - top);
+    if (add) { L.parts.forEach((p) => { p.y += add; }); L.h += add; }
+    const bottom = Math.max(...L.parts.map((p) => p.y + p.h)); if (L.h - bottom < 20) L.h = bottom + 20;
+    return L;
+  }
+  function liveCard(ctx, u, t0, L, cw, ch, { dim = 1 } = {}) {
+    const k = cw / L.w, r = Math.max(14 * S, Math.min(40 * S, (L.radius || 12) * k));
+    ctx.save();
+    rrect(ctx, -cw / 2, -ch / 2, cw, ch, r); ctx.fillStyle = L.bg || '#111'; ctx.fill();
+    ctx.lineWidth = 2 * S; ctx.strokeStyle = L.border || 'rgba(255,255,255,0.14)'; ctx.stroke();
+    rrect(ctx, -cw / 2, -ch / 2, cw, ch, r); ctx.clip();
+    ctx.translate(-cw / 2, -ch / 2);
+    const rows = [...new Set(L.parts.map((p) => Math.round(p.y / 6)))].sort((a, b) => a - b);   // reading order by row
+    for (const p of L.parts) {
+      const row = rows.indexOf(Math.round(p.y / 6)), a = springU(u, t0 + 0.12 + row * 0.07, SPRING.gentle); if (a <= 0) continue;
+      ctx.save(); ctx.globalAlpha = clamp(a * 1.6) * dim; ctx.translate(0, (1 - a) * 14 * k);
+      if (p.kind === 'icon') { const im = ICONS[p.icon]; if (im) ctx.drawImage(im, p.x * k, p.y * k, p.w * k, p.h * k); }
+      else if (p.kind === 'switch') {
+        const x = p.x * k, y = p.y * k, w = p.w * k, h = p.h * k; rrect(ctx, x, y, w, h, h / 2); ctx.fillStyle = p.on ? p.color : 'rgba(255,255,255,0.2)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(p.on ? x + w - h / 2 : x + h / 2, y + h / 2, h * 0.38, 0, M.TAU); ctx.fillStyle = '#fff'; ctx.fill();
+      } else {
+        let str = p.text;
+        if (p.kind === 'price') {   // count up to the price, keeping its symbol and unit
+          const m = /^([^\d\s-]{0,4}\s?)(\d[\d,]*(?:\.\d+)?)(.*)$/.exec(str);
+          if (m) { const v = Number(m[2].replace(/,/g, '')), q = E.outCubic(prog(u, t0 + 0.25, t0 + 1.1)), dec = (m[2].split('.')[1] || '').length;
+            str = `${m[1]}${m[2].includes(',') ? Math.round(v * q).toLocaleString('en-US') : (v * q).toFixed(dec)}${m[3]}`; }
+        }
+        ctx.font = font(p.size * k, p.weight || 400, BRAND); ctx.fillStyle = p.color || '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+        ctx.fillText(str, p.x * k, (p.y + p.h / 2) * k, Math.max(p.w * k * 1.15, (L.w - p.x - 8) * k));
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+  }
   // UI cut-outs from the capture (cards: pricing tiers, features). They rise in one per half beat, then the one that
   // matters steps forward with a highlight while the others dim. Portrait: a fan, the focus card in front.
   function cardsShot(ctx, u, s, IMG) {
-    const cards = s.cards.map((c) => ({ ...c, im: IMG[c.img] })).filter((c) => c.im), n = cards.length; if (!n) return;
+    const cards = s.cards.map((c) => ({ ...c, im: IMG[c.img], live: c.live && padCard(c.live) })).filter((c) => c.im || c.live), n = cards.length; if (!n) return;
     const beat = s.beat || 0.5, lt = u - s.t, fk = springU(u, s.t + 3 * beat, SPRING.snappy);
     const top = P ? H * 0.3 : H * 0.24, availH = P ? H * 0.5 : H * 0.62, availW = P ? W * 0.74 : W * 0.86;
     // one size for every card, so the set reads as a row of equals
-    const ar = Math.max(...cards.map((c) => c.im.naturalHeight / c.im.naturalWidth));
+    const ar = Math.max(...cards.map((c) => (c.live ? c.live.h / c.live.w : c.im.naturalHeight / c.im.naturalWidth)));
     let cw = P ? (n > 1 ? W * 0.58 : availW) : Math.min(availW / n - 30 * S, W * 0.3), ch = cw * ar;
     if (ch > availH) { ch = availH; cw = ch / ar; }
     const order = cards.map((c, k) => k).sort((a, b) => (a === s.focus) - (b === s.focus));   // focus drawn last (in front)
@@ -192,6 +241,12 @@ export function launch(cfg) {
       const dim = n > 1 && !focus ? 1 - 0.45 * fk : 1, drift = Math.sin(lt * 0.8 + k) * 6 * S;
       ctx.save(); ctx.translate(x, y + (1 - kin) * H * 0.35 + drift); ctx.rotate(rot + (1 - kin) * 0.25 * (off || 1)); ctx.scale(sc * (0.85 + 0.15 * kin), sc * (0.85 + 0.15 * kin));
       ctx.globalAlpha = clamp(kin * 1.8);
+      if (c.live) {   // rebuilt from the page: sharp, and each line animates
+        ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 80 * S; ctx.shadowOffsetY = 34 * S; rrect(ctx, -cw / 2, -ch / 2, cw, ch, 20 * S); ctx.fillStyle = c.live.bg || '#111'; ctx.fill(); ctx.shadowColor = 'transparent';
+        liveCard(ctx, u, s.t + 0.08 + k * beat * 0.5, c.live, cw, ch, { dim });
+        if (focus && fk > 0) { ctx.globalAlpha = clamp(fk); ctx.lineWidth = 6 * S; ctx.strokeStyle = C.gold; rrect(ctx, -cw / 2 - 9 * S, -ch / 2 - 9 * S, cw + 18 * S, ch + 18 * S, 29 * S); ctx.stroke(); }
+        ctx.restore(); continue;
+      }
       const r = Math.max(16 * S, Math.min(40 * S, (c.radius || 0) * cw / c.im.naturalWidth));
       ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 80 * S; ctx.shadowOffsetY = 34 * S;
       rrect(ctx, -cw / 2, -ch / 2, cw, ch, r); ctx.fillStyle = '#111'; ctx.fill(); ctx.shadowColor = 'transparent';
@@ -225,6 +280,7 @@ export function launch(cfg) {
     const lt = u - s.t;
     if (s.type === 'logo') {
       background(ctx, u, IMG, 'light');
+      if (cfg.wordmark && IMG.logo) { if (logoLight) background(ctx, u, IMG, 'dark'); wordmark(ctx, u, s.t + 0.1, IMG, W / 2, H / 2, W * (P ? 0.7 : 0.42), H * 0.16); return; }
       const size = 150 * S, k = springU(u, s.t + 0.45, SPRING.gentle), name = cfg.brand.name || '';
       ctx.font = font(110 * S, 700, SANS); const nw = ctx.measureText(name).width;
       const total = size + 30 * S + nw, x0 = W / 2 - lerp(size / 2, total / 2, k);
@@ -243,7 +299,7 @@ export function launch(cfg) {
       if (s.device === 'phone') phoneShot(ctx, u, s, IMG); else windowCard(ctx, u, s, IMG);
     } else if (s.type === 'cards') {
       background(ctx, u, IMG, 'dark');
-      if (s.label && !P) label(ctx, u, s);
+      label(ctx, u, s);
       cardsShot(ctx, u, s, IMG);
     } else if (s.type === 'stat') {
       background(ctx, u, IMG, 'dark');
@@ -251,9 +307,10 @@ export function launch(cfg) {
     } else if (s.type === 'end') {
       background(ctx, u, IMG, 'light');
       const ls = (P ? 80 : 70) * S, y0 = H * 0.4 + 170 * S;
-      logoMark(ctx, u, s.t + 0.1, IMG, 170 * S, W / 2, H * 0.4);
-      const n = words(ctx, u, s.t + 0.35, s.line || cfg.brand.name || '', { size: ls, y: y0, color: '#111', maxW: W * (P ? 0.84 : 0.62) });
-      if (cfg.brand.site) words(ctx, u, s.t + 0.7, cfg.brand.site, { size: 40 * S, y: y0 + (n - 1) * ls * 1.12 + 80 * S, color: '#666' });
+      const dark = cfg.wordmark && logoLight; if (dark) background(ctx, u, IMG, 'dark');
+      if (cfg.wordmark && IMG.logo) wordmark(ctx, u, s.t + 0.1, IMG, W / 2, H * 0.4, W * (P ? 0.6 : 0.34), H * 0.12); else logoMark(ctx, u, s.t + 0.1, IMG, 170 * S, W / 2, H * 0.4);
+      const n = words(ctx, u, s.t + 0.35, s.line || cfg.brand.name || '', { size: ls, y: y0, color: dark ? '#fff' : '#111', maxW: W * (P ? 0.84 : 0.62) });
+      if (cfg.brand.site) words(ctx, u, s.t + 0.7, cfg.brand.site, { size: 40 * S, y: y0 + (n - 1) * ls * 1.12 + 80 * S, color: dark ? 'rgba(255,255,255,0.6)' : '#666' });
     }
   }
 
@@ -261,8 +318,13 @@ export function launch(cfg) {
   if (cfg.logo !== false) images.logo = typeof cfg.logo === 'string' ? cfg.logo : 'assets/logo.svg';
   if (cfg.bg) images.bg = `${cfg.bg}-${P ? '9x16' : '16x9'}.jpg`;
   M.film({
-    fonts: [font(100, 600, SANS), font(100, 700, SANS), font(100, 400, DISPLAY)], images, hits: cfg.hits || [],
+    fonts: [font(100, 600, SANS), font(100, 700, SANS), font(100, 400, DISPLAY), ...(BRAND !== SANS ? [font(100, 400, BRAND), font(100, 600, BRAND)] : [])], images, hits: cfg.hits || [],
     init: async () => {
+      // the rebuilt cards' icons: SVG text from the page, decoded once
+      const svgs = {}; for (const sh of shots) for (const c of sh.cards || []) Object.assign(svgs, c.live?.icons || {});
+      await Promise.all(Object.entries(svgs).map(async ([k, svg]) => { const im = new Image(); im.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`; try { await im.decode(); ICONS[k] = im; } catch {} }));
+      // is the logo light? (then it goes on a dark tile / background)
+      try { const im = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = images.logo; }); const c = document.createElement('canvas'); c.width = c.height = 48; const g = c.getContext('2d'); g.drawImage(im, 0, 0, 48, 48 * im.naturalHeight / im.naturalWidth || 48); const d = g.getImageData(0, 0, 48, 48).data; let sum = 0, n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 128) { sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; n++; } logoLight = n > 0 && sum / n > 190; } catch {}
       if (shots.some((s) => s.device === 'phone') && FILM.phone3d !== false) P3 = await phone3d(W, H);
       grain = document.createElement('canvas'); grain.width = grain.height = Math.round(W + 128);   // fixed seed: the same grain every render
       const g = grain.getContext('2d'), d = g.createImageData(grain.width, grain.height), rnd = M.mulberry32(7);

@@ -134,6 +134,12 @@ film, so every tutorial gets it.
   Removed clips wait in `bin` (last 20) so Undo works. "Ask for a change" (`POST /api/films/<f>/ask`, `askEdit()`):
   `jev.mjs edit` classifies the request into the clip's edits; words come only from quotes in the request and seconds
   from the request (Jev never writes text), and requests outside those edits get a plain "can't do that yet".
+- Captures rebuild the site, not just screenshot it (`walk.mjs`): each screen's cards are saved as **live** data (every
+  text line with its place, size, weight and colour, icons and logo as SVG with their CSS paint inlined, switches as
+  shapes, custom number widgets read from their label), plus a PNG fallback; prices and big numbers as `stat`; once per
+  capture `brand/`: logo (SVG when it exists), app icon, share and hero images, colours, and the heading font (downloaded
+  only when it's a free Google font). Launch films redraw the cards sharp in the brand's font (lines arrive in order,
+  the price counts up, features tick in), count stats up, and show a wide SVG logo as a wordmark (dark ground if it's light).
 - Voices: `"provider": "yarn"` in film.json "voice" uses YarnGPT (Nigerian accent, free for now); default is Gemini.
 - "Make it like a video I saw": `tools/style.mjs` measures pace (motion + cuts), energy and shape for free; the video
   takes its pace and music feel, never its colours or words.
@@ -224,6 +230,10 @@ Inside `vid-gen/`, keep to the map at the top of `README.md`:
 
 ## Josh's taste (keep updating)
 
+- 2026-10-05: Reverse-engineer the product's visuals from the site itself (its HTML, SVGs, fonts, colours, full-size
+  images) so they can be redrawn and animated, rather than relying on rough screenshot crops. Crops are only a fallback.
+- 2026-10-05: Editing should never mean remaking the whole video: select a clip, change it (controls or a typed request),
+  and only that part is rebuilt. Advanced users get a real timeline (trim, cut, reorder).
 - 2026-10-05: Use Jev aggressively to cut costs in every workflow you build: Jev first for any text decision, paid
   models only for vision and generation, and a Jev gate before anything paid. (Section 7.)
 - 2026-10-05: **Never more than 2-3 variants of anything**: hook versions per ad, picture variants per shot, music or

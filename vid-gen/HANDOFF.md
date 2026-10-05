@@ -26,8 +26,11 @@ the Mac does full-quality renders (more cores). Either can do everything.
 - **Ask for a change** on a selected clip (Josh: prompt an edit to one clip without regenerating the video): Jev
   classifies, the server builds a patch, the editor applies it with Undo. Tested: length, words, move, remove + undo,
   opening clip, and the refusals.
-- **Next:** UI cut-outs during capture (element crops for count-ups/cards), then the motion-design critique loop and
-  the remake engine (see the entry below). Josh: Gemini still has no credit; music no longer needs it.
+- **UI cut-outs, rebuilt from the page** (Josh: reverse-engineer the site's assets, don't just crop): cards come back
+  as live data and are redrawn in the brand's real font with their SVG icons; prices count up; the logo is the site's
+  SVG. Tested end to end on linear.app (W4). Downloads are now named after the video ("Title (phone).mp4").
+- **Next:** the motion-design critique loop and the remake engine (see the entry below); use the captured hero/share
+  images in launch films; more live parts (feature grids, testimonials, charts). Josh: Gemini still has no credit; music no longer needs it.
 
 ## 2026-10-05 · Mac session · Clipwalk launch films: state when paused
 
