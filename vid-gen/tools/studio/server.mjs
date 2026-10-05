@@ -11,7 +11,7 @@ import http from 'node:http';
 import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn, spawnSync, execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { loadProfile, matchProfile } from '../profiles.mjs';
@@ -293,7 +293,10 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
   fs.mkdirSync(path.join(dir, 'assets', 'screens'), { recursive: true });
   fs.rmSync(path.join(ROOT, 'media', 'generated', id), { recursive: true, force: true });
   const ws = workspace();
-  const logo = vb.logo ? saveUpload(vb.logo, path.join('media', 'brands', `${id}-logo`)) : friend ? '' : ws.logo;
+  // the workspace's own logo, tagline and colours only go on the workspace's own product (e.g. BreeUp), never on
+  // someone else's video, whoever makes it
+  const home = !friend && (profile || 'none') !== 'none' && matchProfile({ name: ws.name }) === profile;
+  const logo = vb.logo ? saveUpload(vb.logo, path.join('media', 'brands', `${id}-logo`)) : home ? ws.logo : '';
   const scenes = [];
   for (const [vi, { name: wn, role, w }] of views.entries()) {
     const laptop = w.device === 'laptop', who = multi && role ? role.trim() : '';
@@ -318,16 +321,12 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
     title, scenes, voiceOn: voice, voiceName: voiceName || '', provider: provider || '', opener: opener || null, profile: profile || 'none',
     // a video they liked sets the pace and the music's feel (never its colours or words)
     mood: style?.mood || (voice ? 'calm' : 'none'), pace: style?.pace || 'slow', like: style?.source || undefined,
-    brand: { name: vb.name || (friend ? vb.host || 'Product' : ws.name), tagline: vb.tagline || (friend ? '' : ws.tagline), site: vb.site || '',
-      logo, colors: { ...(friend ? NEUTRAL : ws.brand), ...brandFromColor(vb.color) } },
+    brand: { name: vb.name || (home ? ws.name : vb.host || 'Product'), tagline: vb.tagline || (home ? ws.tagline : ''), site: vb.site || '',
+      logo, colors: { ...(home ? ws.brand : NEUTRAL), ...brandFromColor(vb.color) } },
     owner: friend ? owner : undefined, sources: views.map((v) => ({ walk: v.name, role: v.role || '', goal: v.w.goal, device: v.w.device })),
   };
   if (template === 'launch') {   // a launch film: no voice by default, upbeat, short punchy copy from the site's own description
-    const d = String(vb.desc || '').replace(/\s+/g, ' ').trim(), first = d.split(/(?<=[.!?])\s/)[0] || '';
-    const intro = first && first.split(' ').length <= 9 ? first.replace(/[.!]$/, '') : `Meet ${model.brand.name}`;
-    const longest = intro.split(' ').filter((w) => w.length > 3 && !/^(your|with|from|that|this|meet)$/i.test(w)).sort((a, b) => b.length - a.length)[0] || '';
-    Object.assign(model, { template: 'launch', voiceOn: false, mood: style?.mood || 'upbeat', pace: style?.pace || 'fast',
-      copy: { intro, accent: longest.replace(/[^\w]/g, ''), big: 'Simple.', outro: model.brand.tagline || (d && d.split(' ').length <= 12 ? d : `${model.brand.name}. Try it today.`) } });
+    Object.assign(model, { template: 'launch', voiceOn: false, mood: style?.mood || 'upbeat', pace: style?.pace || 'fast', copy: launchCopy(model.brand.name, vb.desc, model.brand.tagline) });
   }
   writeFilm(folder, model);
   return folder;
@@ -407,6 +406,24 @@ function writeFilm(folder, model) {
   fs.writeFileSync(path.join(dir, 'docs', 'shotlist.md'), `# ${idOf(folder)} ${model.title}\n\nMade in Clipwalk from ${(model.sources || []).map((v) => `\`${v.walk}\`${v.role ? ` (${v.role})` : ''}, ${v.device}: ${v.goal}`).join('; then ')}\n`);
 }
 
+// Launch copy from the product's own words: the intro line is its description, trimmed to a few words; Jev (cheap)
+// picks the hero word from the description's words; the ending is its tagline or a short call to action.
+function launchCopy(name, desc, tagline) {
+  const d = String(desc || '').replace(/\s+/g, ' ').trim(), first = (d.split(/(?<=[.!?])\s/)[0] || '').replace(/[.!]$/, '');
+  let line = first.replace(new RegExp(`^${String(name).replace(/[^\w ]/g, '')}\\s+(is|helps you|helps|lets you|makes)\\s+`, 'i'), '');
+  line = line.split(/[,;:–—]/)[0].trim();
+  const words = line.split(' ');
+  const intro = line && words.length <= 9 ? line.charAt(0).toUpperCase() + line.slice(1) : `Meet ${name}`;
+  const accent = intro.split(' ').filter((w) => w.length > 4 && !/^(your|with|from|that|this|meet|their|every)$/i.test(w)).sort((a, b) => b.length - a.length)[0] || '';
+  const cands = [...new Set([...d.split(/[\s,.;:]+/).filter((w) => w.length >= 5 && /^[a-z-]+$/i.test(w) && !/^(their|about|which|where|there|these|those|other|every)$/i.test(w))
+    .map((w) => `${w.charAt(0).toUpperCase()}${w.slice(1)}.`), 'Simple.', 'Fast.', 'Effortless.', `${name}.`])].slice(0, 40);
+  let big = 'Simple.';
+  const r = spawnSync(process.execPath, ['tools/jev.mjs', 'choose', 'Which one word makes the strongest, most confident hero word for this product\'s launch video?', '--context', d || name, '--profile', 'none', ...cands], { cwd: ROOT, encoding: 'utf8', timeout: 30000 });
+  if (r.status === 0 && r.stdout.trim()) big = r.stdout.trim().split('\n').pop();
+  const outro = tagline || (intro.startsWith('Meet ') ? `Try ${name} today.` : `${name}. Try it today.`);
+  return { intro, accent: accent.replace(/[^\w-]/g, ''), big, outro };
+}
+
 // A launch film: beat-cut shots on tools/kit/launch.js. Scenes become screen shots (their button zoomed in);
 // the copy (intro line, hero word, ending) frames them. Pace sets how long each shot holds.
 function writeLaunch(folder, model) {
@@ -414,7 +431,8 @@ function writeLaunch(folder, model) {
   const scenes = model.scenes.filter((s) => fs.existsSync(path.join(dir, 'assets', 'screens', s.file))).slice(0, 6);
   if (!scenes.length) throw new Error('A video needs at least one scene.');
   for (const f of ls(path.join(dir, 'assets'))) if (/^logo\./.test(f)) fs.rmSync(path.join(dir, 'assets', f));
-  if (b.logo && fs.existsSync(path.join(ROOT, b.logo))) fs.copyFileSync(path.join(ROOT, b.logo), path.join(dir, 'assets', 'logo.svg'));
+  const logoFile = b.logo && fs.existsSync(path.join(ROOT, b.logo)) ? `logo${path.extname(b.logo)}` : null;   // keep its real type (PNG logos break as .svg)
+  if (logoFile) fs.copyFileSync(path.join(ROOT, b.logo), path.join(dir, 'assets', logoFile));
   const k = model.pace === 'slow' ? 1.35 : model.pace === 'medium' ? 1.15 : 1;
   const shots = [], screens = {}, hits = [], add = (sh, d) => { const t = shots.length ? +(shots.at(-1).t + shots.at(-1).d).toFixed(2) : 0; shots.push({ ...sh, t, d: +(d * k).toFixed(2) }); return t; };
   hits.push([0.05, 'logo', 'pop', { pitch: 'C6' }]);
@@ -435,7 +453,7 @@ function writeLaunch(folder, model) {
   hits.sort((x, y) => x[0] - y[0]);
   const cfgJs = { brand: { name: b.name || '', site: b.site ? String(b.site).replace(/^https?:\/\//, '').replace(/\/$/, '') : '' }, shots, screens,
     ...(model.opener === 'photo' && fs.existsSync(path.join(dir, 'assets', 'photos', 'hook-16x9.jpg')) ? { bg: 'assets/photos/hook' } : {}),
-    ...(b.logo && fs.existsSync(path.join(dir, 'assets', 'logo.svg')) ? {} : { logo: false }) };
+    logo: logoFile ? `assets/${logoFile}` : false };
   fs.writeFileSync(path.join(dir, 'film.js'), `// ${idOf(folder)} ${model.title}. Written by Clipwalk from clipwalk.json (launch style): edit in the app, not here.\n` +
     `import { launch } from '/kit/launch.js';\n\nconst HITS = [\n${hits.map((h) => `  ${JSON.stringify(h)},`).join('\n')}\n];\n\nlaunch({ ...${JSON.stringify(cfgJs, null, 1)}, hits: HITS });\n`);
   const cfg = readJSON(path.join(dir, 'film.json'), {});
@@ -633,14 +651,14 @@ function enqueueMake(o, who = OWNER) {
   const voice = o.template === 'launch' ? false : o.voice !== false, names = views.map((v, k) => (views.length > 1 ? `${base}-v${k + 1}` : base));
   const brain = o.brain === 'gemini' ? 'gemini' : 'jev';
   // the opening shot: a free stock photo or clip behind the title (needs a Pexels or Pixabay key)
+  // the brand's own rules (tools/profiles/) apply only when the video is for that brand, e.g. BreeUp
+  const profile = matchProfile({ name: o.brand?.name, site: `${o.brand?.site || ''} ${views[0].url}` }), prof = loadProfile(profile);
   const opener = ['photo', 'video'].includes(o.opener) && workspace().stock ? o.opener : null;
   const hint = prof.stockHint || '';
   const openerQuery = `${String(o.openerQuery || '').trim().slice(0, 100) || (views[0].device === 'laptop' ? 'person working on a laptop in a bright modern office' : 'person smiling while using a smartphone')}${hint ? `, ${hint}` : ''}`;
   // "make one like this": a video they liked sets pace and music feel
   const like = /^https?:\/\//.test(String(o.like || '').trim()) ? String(o.like).trim() : null;
   const styleFile = path.join('media', 'styles', `${base}.json`);
-  // the brand's own rules (tools/profiles/) apply only when the video is for that brand, e.g. BreeUp
-  const profile = matchProfile({ name: o.brand?.name, site: `${o.brand?.site || ''} ${views[0].url}` }), prof = loadProfile(profile);
   // the voice: Nigerian English (YarnGPT, free) or international (Gemini)
   const provider = (o.accent || prof.accent) === 'nigerian' && keyStatus().yarngpt ? 'yarn' : '';
   const steps = [

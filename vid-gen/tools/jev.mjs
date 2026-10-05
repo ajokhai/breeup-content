@@ -10,6 +10,9 @@
 //   node tools/jev.mjs dupe "lesson text" [--in moodboard/STYLE.md]
 //        Says whether a lesson is already covered, before anyone appends it to the style guide.
 //   node tools/jev.mjs vet media/generated/<ID>/shots.json [--all]     (all commands: --profile <name>)
+//   node tools/jev.mjs choose "question" --context "..." option1 option2 ...   [--json]
+//        Any multiple-choice decision (copy lines, hero word, music mood, template): prints the winner (or all
+//        options with probabilities, --json). Use this before reaching for a bigger model.
 //        Checks photo prompts BEFORE any picture is paid for (a rejected Gemini picture costs $0.13-0.24): no readable
 //        screens, specific enough, plus the brand's own rules from its profile (BreeUp: African, good-looking cast).
 //        Only prompts whose pictures don't exist yet, unless --all. One line per problem; exit 5 if any.
@@ -152,6 +155,16 @@ async function lint(a) {
 }
 
 // ------------------------------------------------------------ dupe
+// ------------------------------------------------------------ choose
+async function choose(a) {
+  const question = a._[1] || die('choose needs a question'), opts = a._.slice(2).filter(Boolean).slice(0, 255);
+  if (!opts.length) die('choose needs options');
+  if (opts.length === 1) { console.log(a.json ? JSON.stringify({ best: opts[0], probabilities: { [opts[0]]: 1 } }) : opts[0]); return; }
+  const ans = await ask({ context: a.context || PROFILE.context }, { q: { type: 'choice', instructions: question, criteria: Object.fromEntries(opts.map((o, i) => [`o${i}`, o])) } });
+  const ranked = Object.entries(ans.q.probabilities).sort((x, y) => y[1] - x[1]).map(([k, p]) => [opts[Number(k.slice(1))], p]);
+  console.log(a.json ? JSON.stringify({ best: ranked[0][0], probabilities: Object.fromEntries(ranked) }) : ranked[0][0]);
+}
+
 // ------------------------------------------------------------ vet
 async function vet(a) {
   const mf = a._[1] || die('vet needs a shots.json');
@@ -198,7 +211,7 @@ async function dupe(a) {
 export { ask };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = parseArgs(process.argv.slice(2));
-  const cmds = { pick, lint, dupe, vet };
+  const cmds = { pick, lint, dupe, vet, choose };
   if (!cmds[args._[0]]) {
     console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 15).map(l => l.replace(/^\/\/ ?/, '')).join('\n'));
     process.exit(args._[0] ? 1 : 0);

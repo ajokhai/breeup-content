@@ -155,9 +155,12 @@ if (want('music') && cfg.music) {
   if (!same) {
     step('music');
     try { tool('gemini.mjs', 'music', '--prompt', cfg.music, '--out', out); }
-    catch { // Lyria's copyright filter: one retry with a broader framing
-      tool('gemini.mjs', 'music', '--prompt', `An original composition. ${cfg.music}`, '--out', out);
-      fs.writeFileSync(side, JSON.stringify({ ...JSON.parse(fs.readFileSync(side, 'utf8')), prompt: cfg.music }, null, 1));
+    catch (e) {
+      if (e.status === 2 || e.status === 3) console.warn('  no music: the Gemini key is out of credit or missing. The video continues with sound effects only.');
+      else try { // Lyria's copyright filter: one retry with a broader framing
+        tool('gemini.mjs', 'music', '--prompt', `An original composition. ${cfg.music}`, '--out', out);
+        fs.writeFileSync(side, JSON.stringify({ ...JSON.parse(fs.readFileSync(side, 'utf8')), prompt: cfg.music }, null, 1));
+      } catch (e2) { console.warn(`  no music this time (${e2.status === 2 ? 'out of credit' : 'the music model refused'}); continuing with sound effects only`); }
     }
   }
 }

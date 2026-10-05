@@ -56,7 +56,15 @@ export function launch(cfg) {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   // words that rise in one by one, slightly blurred until they land; one accent word in the highlight colour
-  function words(ctx, u, t0, str, { size, y, color, accent, align = 'center', maxW = W * 0.84 }) {
+  function words(ctx, u, t0, str, { size, y, color, accent, align = 'center', maxW = W * 0.84, maxLines = 3 }) {
+    // shrink until the line fits in maxLines (long product descriptions shouldn't become a wall of text)
+    for (let n = 0; n < 8; n++) {
+      ctx.font = font(size, 600, SANS);
+      let lines = 1, lw = 0;
+      for (const w of str.split(' ')) { const ww = ctx.measureText(w + ' ').width; if (lw + ww > maxW && lw) { lines++; lw = 0; } lw += ww; }
+      if (lines <= maxLines) break;
+      size *= 0.88;
+    }
     ctx.font = font(size, 600, SANS);
     const ws = str.split(' '), lines = [[]]; let lw = 0;
     for (const w of ws) { const ww = ctx.measureText(w + ' ').width; if (lw + ww > maxW && lines.at(-1).length) { lines.push([]); lw = 0; } lines.at(-1).push(w); lw += ww; }
@@ -69,7 +77,7 @@ export function launch(cfg) {
         if (k > 0) {
           ctx.save(); ctx.globalAlpha = clamp(k * 1.4);
           if (k < 0.98) ctx.filter = `blur(${(1 - clamp(k)) * 14 * S}px)`;
-          const isAccent = accent && w.replace(/[^\w]/g, '').toLowerCase() === accent.toLowerCase();
+          const norm = (x) => String(x).replace(/[^\w]/g, '').toLowerCase(), isAccent = accent && norm(w) === norm(accent);
           ctx.fillStyle = isAccent ? C.gold : color;
           ctx.fillText(w, x, y + li * size * 1.12 + (1 - k) * size * 0.6);
           ctx.restore();
@@ -94,9 +102,12 @@ export function launch(cfg) {
   function windowCard(ctx, u, s, IMG) {
     const img = IMG[s.img]; if (!img) return;
     const k = springU(u, s.t, SPRING.gentle), lt = u - s.t;
-    const iw = img.naturalWidth, ih = img.naturalHeight, maxW = W * (P ? 0.9 : 0.66), maxH = H * (P ? 0.5 : 0.7);
+    const iw = img.naturalWidth, ih = img.naturalHeight, wide = iw > ih * 1.2, maxW = W * (P ? (wide ? 1.7 : 0.9) : 0.64), maxH = H * (P ? (wide ? 0.42 : 0.48) : 0.62);
     const sc = Math.min(maxW / iw, maxH / ih), w = iw * sc, h = ih * sc, bar = 34 * S;
-    const push = 1 + 0.035 * lt, x = W / 2 - w / 2, y = (P ? H * 0.47 : H / 2) - (h + bar) / 2;
+    // the camera keeps moving while a screen holds: a slow push and a drift; on a phone a wide website pans across,
+    // larger than the frame, so it stays readable
+    const pan = P && wide ? lerp((w - W) / 2 + W * 0.04, -(w - W) / 2 - W * 0.04, E.inOutSine ? E.inOutSine(prog(u, s.t, s.t + s.d)) : prog(u, s.t, s.t + s.d)) : 0;
+    const push = 1 + 0.06 * lt, x = W / 2 - w / 2 - lt * W * 0.008 + pan, y = (P ? H * 0.55 : H * 0.57) - (h + bar) / 2;
     ctx.save();
     ctx.translate(W / 2, y + (h + bar) / 2); ctx.scale(push * (0.86 + 0.14 * k), push * (0.86 + 0.14 * k)); ctx.translate(-W / 2, -(y + (h + bar) / 2));
     ctx.transform(1, (1 - k) * 0.06 - 0.012, 0, 1, 0, (1 - k) * H * 0.12);
@@ -113,8 +124,8 @@ export function launch(cfg) {
     const a = s.t + s.d * 0.42, k = springU(u, a, SPRING.bouncy); if (k <= 0) return;
     const [zx, zy, zw, zh] = s.zoom, pad = 14, srcW = img.naturalWidth / (box.w / box.sc / box.sc) || 1;
     const fx = box.x + (zx + zw / 2) * box.sc, fy = box.y + (zy + zh / 2) * box.sc;
-    const big = Math.min((P ? W * 0.82 : W * 0.42) / (zw + pad * 2), 3.2), cw = (zw + pad * 2) * big, ch = (zh + pad * 2) * big;
-    const tx = lerp(fx, W / 2, k), ty = lerp(fy, P ? H * 0.5 : H * 0.5, k), sk = lerp(box.sc / big, 1, k);
+    const big = Math.min((P ? W * 0.84 : W * 0.5) / (zw + pad * 2), (P ? H * 0.3 : H * 0.42) / (zh + pad * 2), 4.5), cw = (zw + pad * 2) * big, ch = (zh + pad * 2) * big;
+    const tx = lerp(fx, W / 2, k), ty = lerp(fy, P ? H * 0.55 : H * 0.58, k), sk = lerp(box.sc / big, 1, k);
     ctx.save(); ctx.translate(tx, ty); ctx.scale(sk, sk);
     ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 70 * S; ctx.shadowOffsetY = 30 * S;
     rrect(ctx, -cw / 2, -ch / 2, cw, ch, 22 * S); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowColor = 'transparent';
@@ -143,8 +154,8 @@ export function launch(cfg) {
   }
   function label(ctx, u, s) {
     if (!s.label) return;
-    const y = P ? H * 0.15 : H * 0.12;
-    words(ctx, u, s.t + 0.15, s.label, { size: (P ? 92 : 70) * S, y, color: ink === '#ffffff' ? '#fff' : '#111', accent: s.accent });
+    const y = P ? H * 0.2 : H * 0.135;   // above the window (9:16: below the top 250 px the apps cover)
+    words(ctx, u, s.t + 0.15, s.label, { size: (P ? 92 : 68) * S, y, color: ink === '#ffffff' ? '#fff' : '#111', accent: s.accent });
   }
   function logoMark(ctx, u, t0, IMG, size, cx, cy) {
     const k = springU(u, t0, SPRING.bouncy); if (k <= 0) return;
@@ -181,14 +192,15 @@ export function launch(cfg) {
       if (s.device === 'phone') phoneShot(ctx, u, s, IMG); else windowCard(ctx, u, s, IMG);
     } else if (s.type === 'end') {
       background(ctx, u, IMG, 'light');
-      logoMark(ctx, u, s.t + 0.1, IMG, 190 * S, W / 2, H * 0.42);
-      words(ctx, u, s.t + 0.35, s.line || cfg.brand.name || '', { size: (P ? 84 : 76) * S, y: H * 0.42 + 190 * S, color: '#111' });
-      if (cfg.brand.site) words(ctx, u, s.t + 0.7, cfg.brand.site, { size: 44 * S, y: H * 0.42 + 300 * S, color: '#555' });
+      const ls = (P ? 80 : 70) * S, y0 = H * 0.4 + 170 * S;
+      logoMark(ctx, u, s.t + 0.1, IMG, 170 * S, W / 2, H * 0.4);
+      const n = words(ctx, u, s.t + 0.35, s.line || cfg.brand.name || '', { size: ls, y: y0, color: '#111', maxW: W * (P ? 0.84 : 0.62) });
+      if (cfg.brand.site) words(ctx, u, s.t + 0.7, cfg.brand.site, { size: 40 * S, y: y0 + (n - 1) * ls * 1.12 + 80 * S, color: '#666' });
     }
   }
 
   const images = { ...cfg.screens };
-  if (cfg.logo !== false) images.logo = 'assets/logo.svg';
+  if (cfg.logo !== false) images.logo = typeof cfg.logo === 'string' ? cfg.logo : 'assets/logo.svg';
   if (cfg.bg) images.bg = `${cfg.bg}-${P ? '9x16' : '16x9'}.jpg`;
   M.film({
     fonts: [font(100, 600, SANS), font(100, 700, SANS), font(100, 400, DISPLAY)], images, hits: cfg.hits || [],
