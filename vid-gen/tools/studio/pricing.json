@@ -8,12 +8,12 @@
   "veo_second_4k": 0.6,
   "veo_fast_second_1080p": 0.12,
   "music_song": 0.08,
-  "tts_output_per_m": 20.0,
+  "tts_output_per_m": 20,
   "tts_tokens_per_second": 25,
   "flash_in_per_m": 0.75,
   "flash_out_per_m": 3.75,
-  "pro_in_per_m": 2.0,
-  "pro_out_per_m": 12.0,
+  "pro_in_per_m": 2,
+  "pro_out_per_m": 12,
   "jev_in_per_m": 0.042
  },
  "assumptions": {
@@ -29,11 +29,11 @@
   "videos_per_month": 20
  },
  "buffer_pct": 25,
- "profit_pct": 0,
+ "profit_pct": 200,
  "currency": {
   "code": "NGN",
-  "symbol": "\u20a6",
-  "per_usd": 1500,
+  "symbol": "₦",
+  "per_usd": 1450,
   "note": "Set per_usd to today's rate before quoting in naira."
  },
  "credit_usd": 0.1,

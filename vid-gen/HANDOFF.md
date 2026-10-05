@@ -29,7 +29,11 @@ the Mac does full-quality renders (more cores). Either can do everything.
 - **UI cut-outs, rebuilt from the page** (Josh: reverse-engineer the site's assets, don't just crop): cards come back
   as live data and are redrawn in the brand's real font with their SVG icons; prices count up; the logo is the site's
   SVG. Tested end to end on linear.app (W4). Downloads are now named after the video ("Title (phone).mp4").
-- **Next:** the motion-design critique loop and the remake engine (see the entry below); use the captured hero/share
+- **Motion-design skill adopted** (installed in ~/.claude/skills/motion-design): brand accent colour (also fixed: rgb()
+  brand colours from captures were ignored), firm springs, beat punches, no frozen frames, hook first, poster frame 0,
+  `tools/qa.mjs` after every render. W4 critiqued and fixed (hero contrast and fit, phone readability, hook).
+- **Old editor retired:** /pro is admin only.
+- **Next:** the remake engine (see the entry below); use the captured hero/share
   images in launch films; more live parts (feature grids, testimonials, charts). Josh: Gemini still has no credit; music no longer needs it.
 
 ## 2026-10-05 · Mac session · Clipwalk launch films: state when paused

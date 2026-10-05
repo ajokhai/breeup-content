@@ -142,6 +142,12 @@ film, so every tutorial gets it.
   capture `brand/`: logo (SVG when it exists), app icon, share and hero images, colours, and the heading font (downloaded
   only when it's a free Google font). Launch films redraw the cards sharp in the brand's font (lines arrive in order,
   the price counts up, features tick in), count stats up, and show a wide SVG logo as a wordmark (dark ground if it's light).
+- Launch films follow the motion-design skill (`~/.claude/skills/motion-design`, MIT, Howseen): one accent colour (the
+  brand's, `brandFromColor(..., { accent })`), firm springs (damping ratio ~0.74, no cartoon bounce), beat punches on the
+  camera, no frozen frame except the final hold, hook line before the logo, hero word never the product name, frame 0 =
+  a poster (film.json "poster"). `tools/qa.mjs` (free) runs after every render: frozen stretches, one-frame flashes,
+  contact and phone sheets in renders/_qa/. Then score the sheets (hook, phone readability, motion, variety, brand) and fix
+  anything under 8 before calling a film done.
 - Voices: `"provider": "yarn"` in film.json "voice" uses YarnGPT (Nigerian accent, free for now); default is Gemini.
 - "Make it like a video I saw": `tools/style.mjs` measures pace (motion + cuts), energy and shape for free; the video
   takes its pace and music feel, never its colours or words.

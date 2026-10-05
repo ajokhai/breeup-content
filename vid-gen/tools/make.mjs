@@ -189,7 +189,18 @@ if (flag('check') || (only && only.includes('stills'))) {
   // 8. strip metadata from the finished files
   const vs = cfg.variants || [null];
   const outs = vs.flatMap((v) => formats.map((f) => path.join(ROOT, 'renders', `breeup-${path.basename(dir)}${v ? `-${v}` : ''}-${f}.mp4`))).filter(fs.existsSync);
+  // frame 0 = the poster (cfg.poster, seconds): X, Slack and WhatsApp show the first frame as the preview
+  if (!flag('draft') && cfg.poster != null) for (const f of outs) {
+    const png = f.replace(/\.mp4$/, '.poster.png'), tmp = f.replace(/\.mp4$/, '.tmp.mp4');
+    try {
+      execFileSync('ffmpeg', ['-y', '-v', 'error', '-ss', String(cfg.poster), '-i', f, '-frames:v', '1', png]);
+      execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', f, '-i', png, '-filter_complex', "[0:v][1:v]overlay=0:0:enable='eq(n,0)'[v]", '-map', '[v]', '-map', '0:a?', '-c:v', 'libx264', '-crf', '16', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-movflags', '+faststart', tmp]);
+      fs.renameSync(tmp, f); fs.rmSync(png, { force: true });
+    } catch (e) { console.warn(`  poster frame skipped for ${path.basename(f)}: ${e.message.split('\n')[0]}`); fs.rmSync(tmp, { force: true }); }
+  }
   if (outs.length) tool('gemini.mjs', 'clean', ...outs);
+  // free motion QA (frozen stretches, one-frame flashes) and review sheets; reports, never blocks
+  if (!flag('draft')) for (const f of outs) { try { tool('qa.mjs', f); } catch { /* flagged: printed above */ } }
   // 9. publish: full renders get a plain name in ../Final videos/, the only folder Josh looks at
   if (!flag('draft') && outs.length && cfg.publish !== false) {   // Clipwalk videos set publish: false and stay in renders/
     const final = path.join(ROOT, '..', 'Final videos');

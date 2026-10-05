@@ -85,6 +85,7 @@ export function spring(t, { stiffness = 170, damping = 18, mass = 1, velocity = 
 export const SPRING = {
   snappy: { stiffness: 380, damping: 30 },   // UI: fast, a hair of overshoot
   bouncy: { stiffness: 260, damping: 13 },   // characters, pops
+  firm: { stiffness: 260, damping: 24 },     // pops without the cartoon bounce (damping ratio ~0.74; launch films)
   gentle: { stiffness: 120, damping: 20 },   // camera, big type
   wobbly: { stiffness: 180, damping: 8 },    // jelly, secondary motion
 };

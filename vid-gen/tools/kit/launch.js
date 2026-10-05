@@ -95,8 +95,11 @@ export function launch(cfg) {
     ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(1.12 - 0.12 * k, 1.12 - 0.12 * k);
     ctx.globalAlpha = clamp(k * 1.5); if (k < 0.97) ctx.filter = `blur(${(1 - k) * 24 * S}px)`;
     ctx.font = font(size, 700, SANS); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const fit = (W * 0.86) / ctx.measureText(str).width; if (fit < 1) ctx.font = font(size * fit, 700, SANS);   // measured, never clipped
     const g = ctx.createLinearGradient(-W * 0.35, 0, W * 0.35, 0);
-    g.addColorStop(0, mix(C.gold, '#ffffff', 0.15)); g.addColorStop(0.55, C.gold); g.addColorStop(1, mix(C.green, '#ffffff', 0.4));
+    // mostly white, warming into the accent: it has to read on the brand's own colour
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.55, mix(C.gold, '#ffffff', 0.55)); g.addColorStop(1, mix(C.gold, '#ffffff', 0.2));
+    ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 40 * S; ctx.shadowOffsetY = 10 * S;
     ctx.fillStyle = g; ctx.fillText(str, 0, 0);
     ctx.restore();
   }
@@ -123,7 +126,7 @@ export function launch(cfg) {
   }
   // the control that matters, lifted off the screen and enlarged, with a highlight ring
   function callout(ctx, u, s, img, box) {
-    const a = s.zat ?? s.t + s.d * 0.42, k = springU(u, a, SPRING.bouncy); if (k <= 0) return;
+    const a = s.zat ?? s.t + s.d * 0.42, k = springU(u, a, SPRING.firm); if (k <= 0) return;
     const [zx, zy, zw, zh] = s.zoom, pad = 14, srcW = img.naturalWidth / (box.w / box.sc / box.sc) || 1;
     const fx = box.x + (zx + zw / 2) * box.sc, fy = box.y + (zy + zh / 2) * box.sc;
     const big = Math.min((P ? W * 0.84 : W * 0.5) / (zw + pad * 2), (P ? H * 0.3 : H * 0.42) / (zh + pad * 2), 4.5), cw = (zw + pad * 2) * big, ch = (zh + pad * 2) * big;
@@ -162,7 +165,7 @@ export function launch(cfg) {
   // the logo on a tile: kept in proportion, on a dark tile if the logo itself is light (a white mark on white vanishes)
   let logoLight = false;
   function logoMark(ctx, u, t0, IMG, size, cx, cy) {
-    const k = springU(u, t0, SPRING.bouncy); if (k <= 0) return;
+    const k = springU(u, t0, SPRING.firm); if (k <= 0) return;
     ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); ctx.rotate((1 - k) * -0.5);
     if (IMG.logo && !cfg.wordmark) {
       ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 40 * S; rrect(ctx, -size / 2, -size / 2, size, size, size * 0.24); ctx.fillStyle = logoLight ? '#111214' : '#fff'; ctx.fill(); ctx.shadowColor = 'transparent';
@@ -263,14 +266,15 @@ export function launch(cfg) {
     const nm = s.num, land = s.land || 1, p = E.outCubic ? E.outCubic(prog(u, s.t + 0.15, s.t + land)) : prog(u, s.t + 0.15, s.t + land);
     const v = nm.value * p, txt = nm.value === 0 ? 'Free' : `${nm.prefix || ''}${nm.comma ? Math.round(v).toLocaleString('en-US') : v.toFixed(nm.decimals || 0)}${nm.suffix || ''}`;
     if (s.label) words(ctx, u, s.t + 0.05, s.label, { size: (P ? 84 : 70) * S, y: P ? H * 0.32 : H * 0.24, color: 'rgba(255,255,255,0.75)' });
-    const kl = springU(u, s.t + land, SPRING.bouncy), pulse = 1 + 0.06 * Math.max(0, 1 - Math.abs(kl - 1) * 4) * (u > s.t + land ? 1 : 0);
+    const kl = springU(u, s.t + land, SPRING.firm), pulse = 1 + 0.06 * Math.max(0, 1 - Math.abs(kl - 1) * 4) * (u > s.t + land ? 1 : 0);
     let size = (P ? 330 : 300) * S; ctx.font = font(size, 700, SANS);
     const full = `${nm.prefix || ''}${nm.comma ? Math.round(nm.value).toLocaleString('en-US') : nm.value.toFixed(nm.decimals || 0)}${nm.suffix || ''}`;
     const wMax = W * 0.86, fw = ctx.measureText(full).width; if (fw > wMax) { size *= wMax / fw; ctx.font = font(size, 700, SANS); }
     ctx.save(); ctx.translate(W / 2, P ? H * 0.5 : H * 0.52); ctx.scale(pulse, pulse);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const g = ctx.createLinearGradient(-W * 0.3, 0, W * 0.3, 0);
-    g.addColorStop(0, '#ffffff'); g.addColorStop(0.6, mix(C.gold, '#ffffff', 0.2)); g.addColorStop(1, C.gold);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.6, mix(C.gold, '#ffffff', 0.55)); g.addColorStop(1, mix(C.gold, '#ffffff', 0.25));
+    ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 40 * S; ctx.shadowOffsetY = 10 * S;
     ctx.globalAlpha = clamp((u - s.t) * 6); ctx.fillStyle = g; ctx.fillText(txt, 0, 0);
     ctx.restore();
     if (nm.unit) words(ctx, u, s.t + land * 0.7, nm.unit, { size: (P ? 64 : 54) * S, y: (P ? H * 0.5 : H * 0.52) + size * 0.62, color: 'rgba(255,255,255,0.7)' });
@@ -278,6 +282,8 @@ export function launch(cfg) {
 
   function drawShot(ctx, u, s, IMG) {
     const lt = u - s.t;
+    // never a frozen frame: type and logo shots keep a slow push after they land (screens and cards drift on their own)
+    if (['logo', 'words', 'big', 'end'].includes(s.type)) { const pz = 1 + (s.type === 'big' ? 0.03 : 0.018) * lt; ctx.translate(W / 2, H / 2); ctx.scale(pz, pz); ctx.translate(-W / 2, -H / 2); }
     if (s.type === 'logo') {
       background(ctx, u, IMG, 'light');
       if (cfg.wordmark && IMG.logo) { if (logoLight) background(ctx, u, IMG, 'dark'); wordmark(ctx, u, s.t + 0.1, IMG, W / 2, H / 2, W * (P ? 0.7 : 0.42), H * 0.16); return; }
@@ -336,7 +342,14 @@ export function launch(cfg) {
       const i = shotAt(u), s = shots[i], next = shots[i + 1];
       const out = next ? E.inCubic(prog(u, next.t - WHIP, next.t)) : 0, inn = i ? 1 - E.outCubic(prog(u, s.t, s.t + WHIP)) : 0;
       // whip: the shot leaves left at speed (the motion blur smears it), the next arrives from the right
-      ctx.save(); ctx.translate(-out * W * 1.1 + inn * W * 0.9, 0); drawShot(ctx, u, s, IMG); ctx.restore();
+      // beat punches: the camera breathes with the music (a hair on every beat, more on bars after the drop)
+      const sc = FILM.score; let punch = 1;
+      if (sc?.bpm && u >= (sc.groove ?? 0) && u < (sc.end ?? end)) {
+        const b = 60 / sc.bpm, since = (u - (sc.groove ?? 0)) % b, bar = (u - (sc.groove ?? 0)) % (4 * b), after = sc.drop != null && u >= sc.drop;
+        punch = 1 + 0.012 * Math.exp(-since / 0.11) + (after ? 0.03 * Math.exp(-bar / 0.18) : 0);
+      }
+      ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(punch, punch); ctx.translate(-W / 2, -H / 2);
+      ctx.translate(-out * W * 1.1 + inn * W * 0.9, 0); drawShot(ctx, u, s, IMG); ctx.restore();
       if (out > 0 && next) { ctx.save(); ctx.translate((1 - out) * W * 0.9, 0); drawShot(ctx, Math.max(u, next.t), next, IMG); ctx.restore(); }
       if (u > end - 0.3) { ctx.fillStyle = `rgba(0,0,0,${E.inCubic(prog(u, end - 0.3, end))})`; ctx.fillRect(0, 0, W, H); }
     },

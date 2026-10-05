@@ -338,7 +338,7 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
     // a video they liked sets the pace and the music's feel (never its colours or words)
     mood: style?.mood || (voice ? 'calm' : 'none'), pace: style?.pace || 'slow', like: style?.source || undefined,
     brand: { name: vb.name || (home ? ws.name : vb.host || 'Product'), tagline: vb.tagline || (home ? ws.tagline : ''), site: vb.site || '',
-      logo, ...(wordmark ? { wordmark } : {}), ...(wb.fontName ? { font: wb.fontName } : {}), colors: { ...(home ? ws.brand : NEUTRAL), ...brandFromColor(vb.color || wb.button) } },
+      logo, ...(wordmark ? { wordmark } : {}), ...(wb.fontName ? { font: wb.fontName } : {}), colors: { ...(home ? ws.brand : NEUTRAL), ...brandFromColor(vb.color || wb.button, { accent: !home }) } },
     owner: friend ? owner : undefined, sources: views.map((v) => ({ walk: v.name, role: v.role || '', goal: v.w.goal, device: v.w.device })),
   };
   if (template === 'launch') {   // a launch film: no voice by default, upbeat, short punchy copy from the site's own description
@@ -488,7 +488,7 @@ function launchCopy(name, desc, tagline) {
   const intro = line && words.length <= 9 ? line.charAt(0).toUpperCase() + line.slice(1) : `Meet ${name}`;
   const accent = intro.split(' ').filter((w) => w.length > 4 && !/^(your|with|from|that|this|meet|their|every)$/i.test(w)).sort((a, b) => b.length - a.length)[0] || '';
   const cands = [...new Set([...d.split(/[\s,.;:]+/).filter((w) => w.length >= 5 && /^[a-z-]+$/i.test(w) && !/^(their|about|which|where|there|these|those|other|every)$/i.test(w))
-    .map((w) => `${w.charAt(0).toUpperCase()}${w.slice(1)}.`), 'Simple.', 'Fast.', 'Effortless.', `${name}.`])].slice(0, 40);
+    .map((w) => `${w.charAt(0).toUpperCase()}${w.slice(1)}.`), 'Simple.', 'Fast.', 'Effortless.'])].filter((w) => w.toLowerCase() !== `${String(name).toLowerCase()}.`).slice(0, 40);   // never the product's own name: the logo already says it
   let big = 'Simple.';
   const r = spawnSync(process.execPath, ['tools/jev.mjs', 'choose', 'Which one word makes the strongest, most confident hero word for this product\'s launch video?', '--context', d || name, '--profile', 'none', ...cands], { cwd: ROOT, encoding: 'utf8', timeout: 30000 });
   if (r.status === 0 && r.stdout.trim()) big = r.stdout.trim().split('\n').pop();
@@ -512,12 +512,12 @@ function writeLaunch(folder, model) {
   let n = 0;   // beats so far
   const add = (sh, beats) => { const t = at(n); shots.push({ ...sh, t, d: +(at(n + beats) - t).toFixed(3) }); n += beats; return t; };
   const whip = (t) => hits.push([+(t - 0.28).toFixed(3), 'whip', 'whoosh', { len: 0.3, from: 2600, to: 600 }]);
-  hits.push([0.05, 'logo', 'pop', { pitch: 'C6' }]);
   // shot lengths in beats; a trimmed clip (len, seconds) keeps to whole half-bars so the cuts stay on the beat
   const beatsFor = (sec, def, step = 2) => sec ? Math.max(step, Math.round(sec / beat / step) * step) : def;
   const intro = beatsFor(model.timing?.intro, 8, 4);
-  add({ type: 'logo' }, intro / 2);
-  let t = add({ type: 'words', text: c.intro || `Meet ${b.name}`, accent: c.accent || '' }, intro / 2); whip(t);
+  // the hook first (the promise, in words), then the logo answers it
+  add({ type: 'words', text: c.intro || `Meet ${b.name}`, accent: c.accent || '' }, intro / 2);
+  let t = add({ type: 'logo' }, intro / 2); whip(t); hits.push([+(t + 0.05).toFixed(3), 'logo', 'pop', { pitch: 'C6' }]);
   const groove = at(n);
   // cut-outs: at most two card moments and one count-up per film, so they stay special
   const hasCut = (s, k) => !s.cutsOff && (s.cuts || []).some((c) => c.kind === k && fs.existsSync(path.join(dir, 'assets', 'cuts', c.file)));
@@ -531,7 +531,8 @@ function writeLaunch(folder, model) {
     const label = String(/^start here$/i.test(s.title || '') && s.heading ? s.heading : s.title || '').replace(/^(tap|press|click|open|choose|enter)\s+/i, '').replace(/[“”"]/g, '').replace(/^./, (x) => x.toUpperCase());
     // 6 beats a screen; the last one stretches to the next bar line so the drop is on the one
     // a trimmed scene keeps its cut-out moments; the screen itself gives up the time (never under 2 beats)
-    const ex = extras(s), own = s.len ? Math.max(2, beatsFor(s.len, 6) - ex) : 6;
+    // a screen followed by its cards is a short establishing shot (a whole web page is too small to read on a phone)
+    const ex = extras(s), own = s.len ? Math.max(2, beatsFor(s.len, 6) - ex) : cardScenes.includes(s) ? 4 : 6;
     const beats = i === scenes.length - 1 ? own + ((4 - ((n + own + ex) % 4)) % 4) : own;
     const zoom = s.ring?.box ? { zoom: s.ring.box, zat: at(n + 3) } : {};
     t = add({ type: 'screen', img: key, device: s.device, label, scene: s.id, ...zoom }, beats); whip(t);
@@ -572,9 +573,11 @@ function writeLaunch(folder, model) {
   fs.writeFileSync(path.join(dir, 'film.js'), `// ${idOf(folder)} ${model.title}. Written by Clipwalk from clipwalk.json (launch style): edit in the app, not here.\n` +
     `import { launch } from '/kit/launch.js';\n\nconst HITS = [\n${hits.map((h) => `  ${JSON.stringify(h)},`).join('\n')}\n];\n\nlaunch({ ...${JSON.stringify(cfgJs, null, 1)}, hits: HITS });\n`);
   const cfg = readJSON(path.join(dir, 'film.json'), {});
-  for (const k2 of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills', 'music', 'score', 'brandFont']) delete cfg[k2];
+  for (const k2 of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills', 'music', 'score', 'brandFont', 'poster']) delete cfg[k2];
   Object.assign(cfg, { title: model.title, duration, formats: ['9x16', '16x9'], brand: b.colors, publish: false, profile: model.profile || 'none', ...(model.owner ? { owner: model.owner } : {}),
     ...(brandFont ? { brandFont: true } : {}),
+    // frame 0 shows this moment (X, Slack and WhatsApp previews use the first frame): the cards, else the hero word
+    poster: +((shots.find((x) => x.type === 'cards') ? shots.find((x) => x.type === 'cards').t + 4 * beat : drop + 1)).toFixed(2),
     // the music is made in code to this exact grid (free, always in time); 'none' means no music
     ...(model.mood && model.mood !== 'none' && MOODS[model.mood] ? { score: { bpm, mood: model.mood, groove, drop, end: endAt } } : {}) });
   fs.writeFileSync(path.join(dir, 'film.json'), JSON.stringify(cfg, null, 1) + '\n');
@@ -607,7 +610,7 @@ function editFilm(folder, b) {
   if (typeof b.voiceOn === 'boolean') m.voiceOn = b.voiceOn;
   if (typeof b.voiceName === 'string') m.voiceName = b.voiceName.replace(/[^A-Za-z]/g, '').slice(0, 20);
   if (typeof b.provider === 'string') m.provider = b.provider === 'yarn' ? 'yarn' : '';
-  if (b.color) m.brand.colors = { ...m.brand.colors, ...brandFromColor(b.color) };
+  if (b.color) m.brand.colors = { ...m.brand.colors, ...brandFromColor(b.color, { accent: (m.profile || 'none') === 'none' }) };
   if (typeof b.tagline === 'string') m.brand.tagline = b.tagline.slice(0, 120);
   // the opening and the ending can be trimmed on the advanced timeline (seconds; null puts the default back)
   for (const k of ['intro', 'end']) if (k in (b.timing || {})) { const v = Number(b.timing[k]); m.timing = { ...(m.timing || {}), [k]: v >= 1 && v <= 12 ? +v.toFixed(2) : undefined }; }
@@ -618,12 +621,17 @@ function editFilm(folder, b) {
 
 // One brand colour from the site or the person: a dark one becomes the main colour (panels, end card) with a deeper
 // shade for backgrounds; a light, bright one becomes the highlight (rings, step numbers).
-function brandFromColor(hex) {
+// a brand colour (hex or the rgb() a page reports) -> the film palette. With accent, the highlight colour is the brand's
+// too (one accent colour, never our default gold on someone else's brand), lifted when the brand colour is dark.
+function brandFromColor(hex, { accent = false } = {}) {
+  const rgb = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(hex || '');
+  if (rgb) hex = '#' + rgb.slice(1, 4).map((v) => Number(v).toString(16).padStart(2, '0')).join('');
   if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return {};
   const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255];
   const lum = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
-  if (lum < 0.45) return { green: hex, deep: '#' + c.map((v) => Math.round(v * 0.55).toString(16).padStart(2, '0')).join('') };
-  return { gold: hex };
+  const tint = (k) => '#' + c.map((v) => Math.round(v + (255 - v) * k).toString(16).padStart(2, '0')).join('');
+  if (lum < 0.45) return { green: hex, deep: '#' + c.map((v) => Math.round(v * 0.55).toString(16).padStart(2, '0')).join(''), ...(accent ? { gold: tint(lum < 0.25 ? 0.45 : 0.3) } : {}) };
+  return { gold: hex, ...(accent ? { green: '#' + c.map((v) => Math.round(v * 0.45).toString(16).padStart(2, '0')).join(''), deep: '#' + c.map((v) => Math.round(v * 0.22).toString(16).padStart(2, '0')).join('') } : {}) };
 }
 // a data: URL from the page -> a file under vid-gen (logos); returns the path relative to vid-gen
 function saveUpload(dataUrl, relBase) {
