@@ -232,7 +232,7 @@ const STYLES = [
     art: () => `<div style="position:absolute;inset:0;background:linear-gradient(160deg,#6741d9,#c2255c)"></div><div style="position:absolute;inset:18% 14%;border-radius:14px;border:2px dashed rgba(255,255,255,.7);display:grid;place-items:center;color:#fff;text-align:center;font-weight:700;font-size:14px;padding:10px">${icon('link', 26)}<br>Paste a<br>video link</div>` },
   { id: 'hero3d', name: '3D Hero', sub: 'Your phone spins in, icons fly around it', ready: false,
     art: () => `<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#fff,#cfd3d8)"></div><div class="mini-phone spin" style="background:#e8590c;border-color:#c24c0a"></div><div class="coin" style="left:12%;top:20%;background:#3b5bdb"></div><div class="coin" style="right:12%;top:30%;background:#f59f00;animation-delay:.6s"></div><div class="coin" style="left:18%;bottom:18%;background:#c2255c;animation-delay:1.2s"></div>` },
-  { id: 'quick', name: 'Quick Motion', sub: 'Clean cards, numbers counting up, your logo', ready: false,
+  { id: 'quick', name: 'Launch film', sub: 'Fast cuts, big words, your app floating in space', ready: true,
     art: () => `<div style="position:absolute;inset:0;background:#fff"></div><div style="position:absolute;left:12%;top:12%;width:20%;aspect-ratio:1;border-radius:8px;background:#111"></div><div class="count">$260.24</div><div style="position:absolute;left:12%;right:12%;top:46%;height:8%;border-radius:99px;background:#eef0f2"></div><div style="position:absolute;left:12%;right:30%;top:58%;height:8%;border-radius:99px;background:#eef0f2"></div><div style="position:absolute;left:12%;bottom:12%;color:#2b8a3e;font-weight:700;font-size:13px">✓ Secure payment</div>` },
   { id: 'dreamy', name: 'Dreamy Launch', sub: 'A dreamy AI scene, then your app', ready: false,
     art: () => `<div style="position:absolute;inset:0;background:linear-gradient(180deg,#5f3dc4 0%,#9775fa 45%,#f783ac 100%)"></div><div style="position:absolute;left:-10%;right:-10%;bottom:-6%;height:34%;background:radial-gradient(ellipse at 50% 100%,#f8c4e0,transparent 70%)"></div><div class="mini-phone" style="background:#7048e8"></div><div style="position:absolute;left:0;right:0;bottom:16%;text-align:center;color:#fff;font:700 18px var(--sans);text-shadow:0 2px 12px rgba(0,0,0,.3)">live now</div>` },
@@ -292,7 +292,7 @@ async function confirmBrand() {
   $('#maker').innerHTML = `<div class="card panel" style="text-align:center;padding:30px"><div class="hint">Looking at your app…</div></div>`;
   const sn = await api('/api/sniff', { method: 'POST', body: { url: draft.url } }).catch(() => ({}));
   let host = 'Your app'; try { host = new URL(draft.url).hostname.replace(/^(www|app)\./, '').split('.')[0]; host = host.charAt(0).toUpperCase() + host.slice(1); } catch {}
-  brandCheck = { name: sn.name || host, logo: sn.logo || '', color: sn.color || '#3b5bdb', site: sn.site || '' };
+  brandCheck = { name: sn.name || host, logo: sn.logo || '', color: sn.color || '#3b5bdb', site: sn.site || '', desc: sn.desc || '' };
   drawBrand(false);
 }
 function drawBrand(editing) {
@@ -322,7 +322,7 @@ function drawBrand(editing) {
     const d = draft;
     try {
       const j = await api('/api/jobs', { method: 'POST', body: { action: 'make', url: d.url, goal: d.goal, like: d.like, user: d.user, pass: d.pass, voice,
-        accent: naija ? 'nigerian' : 'international', device: 'phone', brand: { name: b.name, logo: b.logo, color: b.color, site: b.site } } });
+        accent: naija ? 'nigerian' : 'international', device: 'phone', template: pick === 'quick' ? 'launch' : '', brand: { name: b.name, logo: b.logo, color: b.color, site: b.site, desc: b.desc } } });
       draft = null; jobs = await api('/api/jobs'); follow(j.id); home();
     } catch (x) { toast(x.message, true); }
   };

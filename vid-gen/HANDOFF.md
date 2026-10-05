@@ -13,6 +13,30 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-05 · Mac session · PAUSED (out of tokens): Clipwalk launch films, next steps
+
+**Josh will say when to resume.** State of things:
+- **Done and working:** Clipwalk simple app (`npm run studio`): Canva-style home, CapCut-style editor, Pricing page
+  (5 credits a video), admin at /pro (connections checklist, people and credits). Real 3D phone in tutorials
+  (`tools/kit/phone3d.js`, three.js vendored, Poly Haven HDRI). YarnGPT voice, style matching, friend access by code.
+- **Just written, NOT yet tested:** the **Launch film** style (`tools/kit/launch.js` + `writeLaunch()` in the server;
+  selectable as "Launch film" on the home page). Josh: our tutorials look like slides next to the launch films on X;
+  this engine is the fix (beat-cut shots, kinetic words, floating app windows, zoom on the button, 3D phone, whips).
+  First thing to do: make one (`curl -XPOST localhost:4747/api/jobs ... "template":"launch"`, voice off, quick),
+  look at stills, fix, iterate with the critique loop below.
+- **Study and adopt:** github.com/howseen-ai/claude-motion-design (open-source Claude Code motion skill, from
+  x.com/RaphaelAubryy/status/2104502744010629269; check its licence). Take: beat map with the drop found by bass
+  energy (not auto grids), SFX placed on their measured peaks, 4 stills before any full render, a harsh scored
+  critique of contact sheets (hook, phone readability, motion, variety every 2-4 s, composition, sync) until all 8+.
+  Our engine already has seek(t), springs and motion blur.
+- **Then:** remake engine ("make it like this video", scene by scene, like Frame by Frame / fbfmotion.whop.site
+  and x.com/notdwd/status/2105968913796526285): Gemini Flash shot list, Claude via API writes HyperFrames per shot;
+  needs an Anthropic key in Connections. UI cut-outs during capture. 3D Hero and Dreamy Launch styles.
+- **Josh:** add YarnGPT and Pexels keys in Admin; Gemini has no credit (402). Friends' link: run `npm run studio`
+  in its own Terminal tab plus `cloudflared tunnel --url http://localhost:4747` (the quick link changes each time).
+- Test video kept for Josh to click through: `films/W1-breeup-8z9m` ("Find BreeUp pricing").
+
+
 ## 2026-10-05 · Mac session · Clipwalk (web app), walkthrough capture, device frames, credits
 
 - **Clipwalk** (`npm run studio`, http://localhost:4747; code in `tools/studio/`, friends' guide `tools/studio/GUIDE.md`):

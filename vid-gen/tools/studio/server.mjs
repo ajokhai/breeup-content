@@ -281,7 +281,7 @@ const human = (s) => { const t = String(s).replace(/-\d+$/, '').replace(/-/g, ' 
 const words = (s) => String(s || '').split(/\s+/).filter(Boolean).length;
 
 // Several walks make one video ("views"): e.g. the admin on a laptop, then a resident on a phone.
-function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, voiceName, owner, opener, provider, style }) {
+function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, voiceName, owner, opener, provider, style, template }) {
   const views = (Array.isArray(walks) ? walks : [{ name: walks }]).map((v) => ({ ...v, w: readJSON(path.join(SCREENS, v.name, 'walk.json')) }))
     .filter((v) => v.w?.shots?.length);
   if (!views.length) throw new Error('That walkthrough has no screens.');
@@ -321,6 +321,13 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
       logo, colors: { ...(friend ? NEUTRAL : ws.brand), ...brandFromColor(vb.color) } },
     owner: friend ? owner : undefined, sources: views.map((v) => ({ walk: v.name, role: v.role || '', goal: v.w.goal, device: v.w.device })),
   };
+  if (template === 'launch') {   // a launch film: no voice by default, upbeat, short punchy copy from the site's own description
+    const d = String(vb.desc || '').replace(/\s+/g, ' ').trim(), first = d.split(/(?<=[.!?])\s/)[0] || '';
+    const intro = first && first.split(' ').length <= 9 ? first.replace(/[.!]$/, '') : `Meet ${model.brand.name}`;
+    const longest = intro.split(' ').filter((w) => w.length > 3 && !/^(your|with|from|that|this|meet)$/i.test(w)).sort((a, b) => b.length - a.length)[0] || '';
+    Object.assign(model, { template: 'launch', voiceOn: false, mood: style?.mood || 'upbeat', pace: style?.pace || 'fast',
+      copy: { intro, accent: longest.replace(/[^\w]/g, ''), big: 'Simple.', outro: model.brand.tagline || (d && d.split(' ').length <= 12 ? d : `${model.brand.name}. Try it today.`) } });
+  }
   writeFilm(folder, model);
   return folder;
 }
@@ -329,6 +336,7 @@ const modelPath = (folder) => path.join(FILMS, folder, 'clipwalk.json');
 // clipwalk.json -> film.js (scenes, rings, camera, device parts, sounds), film.json (title, length, brand, voice, music)
 // and docs/vo/lines.txt. Timing comes from how much each scene says, so edits re-time the video by themselves.
 function writeFilm(folder, model) {
+  if (model.template === 'launch') return writeLaunch(folder, model);
   const dir = path.join(FILMS, folder);
   const b = model.brand || {}, scenes = model.scenes.filter((s) => fs.existsSync(path.join(dir, 'assets', 'screens', s.file)));
   if (!scenes.length) throw new Error('A video needs at least one scene.');
@@ -398,6 +406,46 @@ function writeFilm(folder, model) {
   fs.writeFileSync(path.join(dir, 'docs', 'shotlist.md'), `# ${idOf(folder)} ${model.title}\n\nMade in Clipwalk from ${(model.sources || []).map((v) => `\`${v.walk}\`${v.role ? ` (${v.role})` : ''}, ${v.device}: ${v.goal}`).join('; then ')}\n`);
 }
 
+// A launch film: beat-cut shots on tools/kit/launch.js. Scenes become screen shots (their button zoomed in);
+// the copy (intro line, hero word, ending) frames them. Pace sets how long each shot holds.
+function writeLaunch(folder, model) {
+  const dir = path.join(FILMS, folder), b = model.brand || {}, c = model.copy || {};
+  const scenes = model.scenes.filter((s) => fs.existsSync(path.join(dir, 'assets', 'screens', s.file))).slice(0, 6);
+  if (!scenes.length) throw new Error('A video needs at least one scene.');
+  for (const f of ls(path.join(dir, 'assets'))) if (/^logo\./.test(f)) fs.rmSync(path.join(dir, 'assets', f));
+  if (b.logo && fs.existsSync(path.join(ROOT, b.logo))) fs.copyFileSync(path.join(ROOT, b.logo), path.join(dir, 'assets', 'logo.svg'));
+  const k = model.pace === 'slow' ? 1.35 : model.pace === 'medium' ? 1.15 : 1;
+  const shots = [], screens = {}, hits = [], add = (sh, d) => { const t = shots.length ? +(shots.at(-1).t + shots.at(-1).d).toFixed(2) : 0; shots.push({ ...sh, t, d: +(d * k).toFixed(2) }); return t; };
+  hits.push([0.05, 'logo', 'pop', { pitch: 'C6' }]);
+  add({ type: 'logo' }, 1.8);
+  let t = add({ type: 'words', text: c.intro || `Meet ${b.name}`, accent: c.accent || '' }, 2.2); hits.push([t - 0.28, 'whip', 'whoosh', { len: 0.3, from: 2600, to: 600 }]);
+  scenes.forEach((s, i) => {
+    const key = `s${i + 1}`; screens[key] = `assets/screens/${s.file}`;
+    const label = String(s.title || '').replace(/^(tap|press|click|open|choose|enter)\s+/i, '').replace(/[“”"]/g, '').replace(/^./, (x) => x.toUpperCase());
+    t = add({ type: 'screen', img: key, device: s.device, label, ...(s.ring?.box ? { zoom: s.ring.box } : {}) }, 2.6);
+    hits.push([t - 0.28, 'whip', 'whoosh', { len: 0.3, from: 2600, to: 600 }]);
+    if (s.ring?.box) hits.push([+(t + 2.6 * k * 0.42).toFixed(2), 'zoom', 'blip', { pitch: 'C6' }]);
+  });
+  t = add({ type: 'big', text: c.big || 'Simple.' }, 1.7); hits.push([t, 'hero', 'impact']);
+  t = add({ type: 'end', line: c.outro || b.tagline || b.name }, 2.8); hits.push([t + 0.1, 'logo', 'bell', { pitch: 'F6' }]);
+  const duration = +(shots.at(-1).t + shots.at(-1).d).toFixed(2);
+  model.times = Object.fromEntries(scenes.map((s, i) => [s.id, shots.find((x) => x.img === `s${i + 1}`).t])); model.duration = duration;
+  fs.writeFileSync(modelPath(folder), JSON.stringify(model, null, 1) + '\n');
+  hits.sort((x, y) => x[0] - y[0]);
+  const cfgJs = { brand: { name: b.name || '', site: b.site ? String(b.site).replace(/^https?:\/\//, '').replace(/\/$/, '') : '' }, shots, screens,
+    ...(model.opener === 'photo' && fs.existsSync(path.join(dir, 'assets', 'photos', 'hook-16x9.jpg')) ? { bg: 'assets/photos/hook' } : {}),
+    ...(b.logo && fs.existsSync(path.join(dir, 'assets', 'logo.svg')) ? {} : { logo: false }) };
+  fs.writeFileSync(path.join(dir, 'film.js'), `// ${idOf(folder)} ${model.title}. Written by Clipwalk from clipwalk.json (launch style): edit in the app, not here.\n` +
+    `import { launch } from '/kit/launch.js';\n\nconst HITS = [\n${hits.map((h) => `  ${JSON.stringify(h)},`).join('\n')}\n];\n\nlaunch({ ...${JSON.stringify(cfgJs, null, 1)}, hits: HITS });\n`);
+  const cfg = readJSON(path.join(dir, 'film.json'), {});
+  for (const k2 of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills', 'music']) delete cfg[k2];
+  Object.assign(cfg, { title: model.title, duration, formats: ['9x16', '16x9'], brand: b.colors, publish: false, ...(model.owner ? { owner: model.owner } : {}),
+    ...(model.mood && model.mood !== 'none' && MOODS[model.mood] ? { music: MOODS[model.mood].replace('About one minute', `About ${Math.ceil(duration)} seconds`) } : {}) });
+  fs.writeFileSync(path.join(dir, 'film.json'), JSON.stringify(cfg, null, 1) + '\n');
+  fs.rmSync(path.join(dir, 'docs', 'vo', 'lines.txt'), { force: true });
+  if (!cfg.music) for (const f of ['music.wav', 'music.wav.json']) fs.rmSync(path.join(dir, 'audio', f), { force: true });
+}
+
 // the editor saves scenes, words, music, colour and voice; everything else in the model stays as it was
 function editFilm(folder, b) {
   const m = readJSON(modelPath(folder));
@@ -416,6 +464,7 @@ function editFilm(folder, b) {
   if (typeof b.provider === 'string') m.provider = b.provider === 'yarn' ? 'yarn' : '';
   if (b.color) m.brand.colors = { ...m.brand.colors, ...brandFromColor(b.color) };
   if (typeof b.tagline === 'string') m.brand.tagline = b.tagline.slice(0, 120);
+  if (b.copy && m.copy) for (const k of ['intro', 'accent', 'big', 'outro']) if (typeof b.copy[k] === 'string') m.copy[k] = b.copy[k].slice(0, 120);
   writeFilm(folder, m);
   return m;
 }
@@ -456,7 +505,9 @@ async function sniff(url) {
     const ir = await fetch(icon, { signal: AbortSignal.timeout(5000) }), buf = Buffer.from(await ir.arrayBuffer()), ct = (ir.headers.get('content-type') || '').split(';')[0];
     if (/^image\/(png|svg\+xml|jpeg|webp)$/.test(ct) && buf.length < 1.5e6) logo = `data:${ct};base64,${buf.toString('base64')}`;
   } catch {}
-  return { name: name?.slice(0, 40) || null, color: color || null, logo, site: `${u.protocol}//${u.hostname}` };
+  const desc = (meta(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i) || meta(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)/i) || '')
+    .replace(/&amp;/g, '&').replace(/&#39;|&rsquo;/g, "'").replace(/&quot;/g, '"').slice(0, 200);
+  return { name: name?.slice(0, 40) || null, color: color || null, logo, site: `${u.protocol}//${u.hostname}`, desc: desc || null };
 }
 
 // Credits: friends prepay, each finished video deducts its price; the owner (this computer) is never charged.
@@ -577,7 +628,7 @@ function enqueueMake(o, who = OWNER) {
   const nums = ls(FILMS).filter((f) => /^W\d+-/.test(f)).map((f) => Number(f.slice(1).split('-')[0]));
   const id = `W${(nums.length ? Math.max(...nums) : 0) + 1}`;
   const title = String(o.title || '').trim().slice(0, 80) || (() => { const g = views[0].goal.replace(/[."]/g, '').split(/\s+/).slice(0, 8).join(' '); return g.charAt(0).toUpperCase() + g.slice(1); })();
-  const voice = o.voice !== false, names = views.map((v, k) => (views.length > 1 ? `${base}-v${k + 1}` : base));
+  const voice = o.template === 'launch' ? false : o.voice !== false, names = views.map((v, k) => (views.length > 1 ? `${base}-v${k + 1}` : base));
   const brain = o.brain === 'gemini' ? 'gemini' : 'jev';
   // the opening shot: a free stock photo or clip behind the title (needs a Pexels or Pixabay key)
   const opener = ['photo', 'video'].includes(o.opener) && workspace().stock ? o.opener : null;
@@ -594,7 +645,7 @@ function enqueueMake(o, who = OWNER) {
       args: () => ACTIONS.walk.args('', { url: v.url, goal: v.goal, name: names[k], device: v.device, brain, steps: o.steps || 25, risky: !!o.risky }) })),
     { stage: 'build', fn: (job) => {
       const folder = filmFromWalk(views.map((v, k) => ({ name: names[k], role: v.role })), { id, name: base, title, voice, opener, provider, style: like ? readJSON(path.join(ROOT, styleFile)) : null,
-        brand: { ...(o.brand || {}), host: host.charAt(0).toUpperCase() + host.slice(1) }, voiceName: o.voiceName, owner: who.id });
+        brand: { ...(o.brand || {}), host: host.charAt(0).toUpperCase() + host.slice(1) }, voiceName: o.voiceName, owner: who.id, template: o.template === 'launch' ? 'launch' : '' });
       job.folder = folder; job.meta.folder = folder;
       log(job, `made films/${folder}`);
     } },
