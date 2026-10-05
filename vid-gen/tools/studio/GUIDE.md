@@ -30,7 +30,12 @@ Open the video. Tap a clip at the bottom to change its words, move it or remove 
 a ruler, with the music underneath (its beat and the drop). Drag a clip's right edge to make it longer or shorter, drag
 a clip to move it, click the ruler to move the playhead, and press **Cut** (or S) to split the clip under it. Selecting
 a clip opens its own panel: length, words, the tap circle or zoom, cut, duplicate (D), move, remove (Backspace).
-Launch films keep every cut on the beat, so lengths snap to it when you update. The preview changes straight away; press **Update video**, then **Download** (phones or computers).
+Launch films keep every cut on the beat, so lengths snap to it when you update.
+
+**Ask for a change:** with a clip selected, type what you want in the box at the top of its panel, e.g.
+`2 seconds, zoom in on the button and move it earlier` or `label it "See plans"`. Put new words in quotes. It can change
+a clip's length, words, voice line, zoom or tap circle and position, or cut, copy or remove it; **Undo** puts it back.
+It only changes that clip, costs nothing, and the rest of the video isn't made again. The preview changes straight away; press **Update video**, then **Download** (phones or computers).
 
 Then a few optional questions, filled in from your website where possible: product name, logo, colour, the line and
 link on the end card, the voice, an opening stock photo or video, and **another view** (e.g. the admin on a computer,

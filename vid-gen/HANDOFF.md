@@ -23,6 +23,9 @@ the Mac does full-quality renders (more cores). Either can do everything.
 - **Editor timeline** (Josh asked: a timeline for cutting and editing, plus a contextual clip editor): Simple/Timeline
   toggle under the preview. Trim by dragging an edge, drag to reorder, cut at the playhead (S), duplicate (D), remove,
   arrow keys move the playhead, and the music lane shows beats and the drop. Tested on W2 (launch) and W1 (walkthrough), desktop and phone.
+- **Ask for a change** on a selected clip (Josh: prompt an edit to one clip without regenerating the video): Jev
+  classifies, the server builds a patch, the editor applies it with Undo. Tested: length, words, move, remove + undo,
+  opening clip, and the refusals.
 - **Next:** UI cut-outs during capture (element crops for count-ups/cards), then the motion-design critique loop and
   the remake engine (see the entry below). Josh: Gemini still has no credit; music no longer needs it.
 

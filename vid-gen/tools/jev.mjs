@@ -13,6 +13,9 @@
 //   node tools/jev.mjs choose "question" --context "..." option1 option2 ...   [--json]
 //        Any multiple-choice decision (copy lines, hero word, music mood, template): prints the winner (or all
 //        options with probabilities, --json). Use this before reaching for a bigger model.
+//   node tools/jev.mjs edit "make this shorter and zoom on Pricing" --context "clip: a phone screen titled Pricing"
+//        Reads an editor request for one clip; prints JSON: how likely it asks for each edit (shorter, longer, zoomOn,
+//        zoomOff, remove, earlier, later, duplicate, cut, words, voice, other) and which words (big or small).
 //        Checks photo prompts BEFORE any picture is paid for (a rejected Gemini picture costs $0.13-0.24): no readable
 //        screens, specific enough, plus the brand's own rules from its profile (BreeUp: African, good-looking cast).
 //        Only prompts whose pictures don't exist yet, unless --all. One line per problem; exit 5 if any.
@@ -165,6 +168,28 @@ async function choose(a) {
   console.log(a.json ? JSON.stringify({ best: ranked[0][0], probabilities: Object.fromEntries(ranked) }) : ranked[0][0]);
 }
 
+// ------------------------------------------------------------ edit
+// The editor's "ask for a change" box: which of the clip's edits a request means. Jev classifies; the server reads
+// exact words and seconds from the request itself and applies the edits, so nothing here writes text.
+async function edit(a) {
+  const request = a._.slice(1).join(' ').trim() || die('edit needs a request');
+  const ins = (x) => `${x} \`request\` is what someone typed about one clip of a short product video, described in \`clip\`.`;
+  const yes = (k, x) => [k, { type: 'noul', instructions: ins(`Does \`request\` ask to ${x}?`) }];
+  const q = Object.fromEntries([
+    yes('shorter', 'make the clip shorter, quicker or faster'), yes('longer', 'make the clip longer, slower, or stay on screen for more time'),
+    yes('zoomOn', 'zoom in on, highlight, circle or point at a button or part of the screen'), yes('zoomOff', 'remove or turn off the zoom, circle or highlight'),
+    yes('remove', 'delete or remove this whole clip'), yes('earlier', 'move this clip earlier in the video'), yes('later', 'move this clip later in the video'),
+    yes('duplicate', 'repeat, duplicate or copy this clip'), yes('cut', 'cut or split this clip into two parts'),
+    yes('words', 'change the words or text shown on screen'), yes('voice', 'change what the voice-over says'),
+    yes('other', 'change something other than its length, zoom, position, on-screen words, voice-over, or removing, copying or splitting it (for example a new picture, colour, music or effect)'),
+  ]);
+  q.target = { type: 'choice', instructions: ins('Which text in `clip` does `request` most likely want changed?'), criteria: { big: 'the big title or label', small: 'the smaller line of text under it' } };
+  const ans = await ask({ request, clip: a.context || 'one clip of a product video' }, q);
+  const out = Object.fromEntries(Object.entries(ans).filter(([k]) => k !== 'target').map(([k, v]) => [k, +v.noul.toFixed(3)]));
+  out.target = ans.target.probabilities.big >= ans.target.probabilities.small ? 'big' : 'small';
+  console.log(JSON.stringify(out));
+}
+
 // ------------------------------------------------------------ vet
 async function vet(a) {
   const mf = a._[1] || die('vet needs a shots.json');
@@ -211,7 +236,7 @@ async function dupe(a) {
 export { ask };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = parseArgs(process.argv.slice(2));
-  const cmds = { pick, lint, dupe, vet, choose };
+  const cmds = { pick, lint, dupe, vet, choose, edit };
   if (!cmds[args._[0]]) {
     console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 15).map(l => l.replace(/^\/\/ ?/, '')).join('\n'));
     process.exit(args._[0] ? 1 : 0);

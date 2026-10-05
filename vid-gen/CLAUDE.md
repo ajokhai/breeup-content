@@ -131,6 +131,9 @@ film, so every tutorial gets it.
   playhead, the music lane with its beats and drop) with a contextual panel for the selected clip. Clip lengths are
   `len` on each scene in clipwalk.json; opening and ending lengths are `timing: { intro, end }`; a cut or duplicate is a
   new scene with `from: <id>`. `writeFilm`/`writeLaunch` write `spans` (each clip's real start and length) back for it.
+  Removed clips wait in `bin` (last 20) so Undo works. "Ask for a change" (`POST /api/films/<f>/ask`, `askEdit()`):
+  `jev.mjs edit` classifies the request into the clip's edits; words come only from quotes in the request and seconds
+  from the request (Jev never writes text), and requests outside those edits get a plain "can't do that yet".
 - Voices: `"provider": "yarn"` in film.json "voice" uses YarnGPT (Nigerian accent, free for now); default is Gemini.
 - "Make it like a video I saw": `tools/style.mjs` measures pace (motion + cuts), energy and shape for free; the video
   takes its pace and music feel, never its colours or words.

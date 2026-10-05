@@ -192,6 +192,12 @@ dialog::backdrop { background: rgba(4,5,7,.6); backdrop-filter: blur(4px); }
 .lenrow output { min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
 .acts .btn { justify-content: center; }
+.askbox { display: flex; gap: 6px; margin-bottom: 14px; }
+.askbox input { flex: 1; min-width: 0; }
+.askbox .btn { padding: 0 12px; }
+.askout { font-size: 13px; margin: -6px 0 14px; padding: 9px 11px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line2); display: flex; gap: 8px; align-items: center; }
+.askout span { flex: 1; }
+.askout.bad { color: var(--mute); }
 .kbd { font-size: 11.5px; color: var(--mute); margin-top: 14px; line-height: 1.6; }
 .kbd kbd { background: var(--panel2); border: 1px solid var(--line2); border-radius: 5px; padding: 0 5px; font: inherit; font-size: 11px; }
 .menu { position: absolute; right: 0; top: calc(100% + 8px); background: var(--panel2); border: 1px solid var(--line2); border-radius: 14px; padding: 6px; z-index: 20; min-width: 270px; box-shadow: var(--shadow); }
@@ -702,8 +708,11 @@ function drawClip() {
     : `${len(12)}<p class="hint">The title card shows the video's name. Change it at the top.</p>`;
   else if (c.kind === 'big') body = `<label class="f">Hero word</label><input type="text" id="cb" value="${esc(m.copy?.big || '')}"><p class="hint">Lands on the drop in the music.</p>`;
   else body = `${len(12)}<label class="f">Line at the end</label><input type="text" id="${launch ? 'co' : 'tag'}" value="${esc(launch ? m.copy?.outro || '' : m.brand.tagline || '')}">`;
+  const ask = `<form class="askbox" id="askf"><input type="text" id="askq" placeholder="${c.kind === 'scene' ? 'Ask for a change: "2 seconds, zoom on the button"' : 'Ask for a change'}" aria-label="Ask for a change to this clip" autocomplete="off"><button class="btn sm go" id="askb" aria-label="Apply">${icon('wand', 15)}</button></form>
+    ${lastAsk && lastAsk.clip === c.id ? `<div class="askout ${lastAsk.changed ? '' : 'bad'}"><span>${esc(lastAsk.say)}</span>${lastAsk.changed && lastAsk.undo ? '<button class="btn sm ghost" onclick="undoAsk()">Undo</button>' : ''}</div>` : ''}`;
   el.innerHTML = `<div class="cliphead"><b>${c.kind === 'scene' ? `Clip ${c.n} · ` : ''}${esc(clipName(c))}</b><span class="hint" style="margin:0">${fmtT(c.t)}</span>
-    <button class="btn sm ghost" aria-label="Close" title="Close (Esc)" onclick="sel=null;drawTools();drawTimeline()">${icon('x', 15)}</button></div><div class="toolbody">${body}</div>`;
+    <button class="btn sm ghost" aria-label="Close" title="Close (Esc)" onclick="sel=null;drawTools();drawTimeline()">${icon('x', 15)}</button></div><div class="toolbody">${ask}${body}</div>`;
+  $('#askf').onsubmit = (e) => { e.preventDefault(); askChange(c.id, $('#askq').value); };
   if (c.kind === 'scene') {
     const secs = () => { if ($('#slh')) $('#slh').textContent = `About ${Math.max(1, Math.round(words(s.line) / 2.5))} seconds of talking`; };
     const onT = () => { s.title = $('#st').value; if ($('#sbd')) s.body = $('#sbd').value; if ($('#sl')) s.line = $('#sl').value; secs(); queueSave(); const b = $(`.blk[data-id="${s.id}"] span`); if (b) b.textContent = s.title; };
@@ -714,6 +723,40 @@ function drawClip() {
   const copy = (q, k) => { if ($(q)) $(q).oninput = (e) => { m.copy = { ...(m.copy || {}), [k]: e.target.value }; pending.copy = { ...(pending.copy || {}), [k]: e.target.value }; queueSave(); }; };
   copy('#ci', 'intro'); copy('#ca', 'accent'); copy('#cb', 'big'); copy('#co', 'outro');
   if ($('#tag')) $('#tag').oninput = (e) => { m.brand.tagline = e.target.value; queueSave({ tagline: e.target.value }); };
+}
+// "Ask for a change": Jev reads the request on the server, we apply the edits here like any other (preview, autosave)
+let lastAsk = null;
+const snap = () => JSON.stringify({ scenes: cur.clipwalk.scenes, timing: cur.clipwalk.timing || {}, copy: cur.clipwalk.copy || null, tagline: cur.clipwalk.brand.tagline || '' });
+async function askChange(id, request) {
+  if (!request.trim()) return;
+  const b = $('#askb'); if (b) { b.disabled = true; b.textContent = '…'; }
+  if (saveT) { clearTimeout(saveT); await saveNow(); }   // the server reads the clip as it is now
+  try {
+    const r = await api(`/api/films/${cur.folder}/ask`, { method: 'POST', body: { clip: id, request } });
+    const before = snap(), m = cur.clipwalk, p = r.patch, s = m.scenes.find((x) => x.id === id);
+    if (p.len != null) { dirty.add(id); if (s) s.len = p.len; else { m.timing = { ...(m.timing || {}), [id]: p.len }; pending.timing = { ...(pending.timing || {}), [id]: p.len }; } }
+    if (s) for (const k of ['title', 'body', 'line']) if (p[k] != null) s[k] = p[k];
+    if (s && p.ringOff != null) s.ringOff = p.ringOff;
+    if (p.copy) { m.copy = { ...(m.copy || {}), ...p.copy }; pending.copy = { ...(pending.copy || {}), ...p.copy }; if (!isLaunch() && p.copy.outro != null) { m.brand.tagline = p.copy.outro; pending.tagline = p.copy.outro; } }
+    sel = id;
+    if (s && p.move) moveScene(p.move);
+    if (s && p.duplicate) duplicateScene();
+    if (s && p.cut) { const c = layout().clips.find((x) => x.id === id); setPlayhead(c.t + c.d / 2); splitAt(); }
+    if (s && p.remove) removeScene();
+    lastAsk = { clip: sel || id, say: r.say, changed: r.changed, undo: r.changed ? before : null };
+    if (r.changed) queueSave();
+    drawTools(); drawTimeline();
+    const c = layout().clips.find((x) => x.id === sel); if (c) { setPlayhead(c.t + 0.6); window.seekPreview?.(playT); }   // show the edited clip
+  } catch (x) { toast(x.message, true); if (b) { b.disabled = false; b.innerHTML = icon('wand', 15); } }
+}
+function undoAsk() {
+  const o = JSON.parse(lastAsk.undo), m = cur.clipwalk;
+  m.scenes = o.scenes; m.timing = o.timing; if (o.copy) m.copy = o.copy; m.brand.tagline = o.tagline;
+  pending.timing = Object.fromEntries(['intro', 'end'].map((k) => [k, o.timing[k] ?? null])); if (o.copy) pending.copy = o.copy; pending.tagline = o.tagline;
+  m.scenes.forEach((x) => dirty.add(x.id)); dirty.add('intro'); dirty.add('end');
+  if (!m.scenes.some((x) => x.id === sel)) sel = lastAsk.clip;
+  lastAsk = { ...lastAsk, say: 'Undone', changed: false, undo: null };
+  queueSave(); drawTools(); drawTimeline();
 }
 // keys for the timeline (never while typing)
 document.addEventListener('keydown', (e) => {

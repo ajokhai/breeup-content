@@ -333,6 +333,61 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
 }
 
 const modelPath = (folder) => path.join(FILMS, folder, 'clipwalk.json');
+// "Ask for a change" on one clip: Jev (cheap) says which edits the request means; exact words (in quotes) and seconds
+// come from the request itself. Returns a patch the editor applies and previews (nothing is saved or charged here).
+async function askEdit(folder, clipId, request) {
+  const m = readJSON(modelPath(folder)); if (!m) throw new Error('This video has no editor.');
+  request = String(request || '').trim().slice(0, 300); if (!request) throw new Error('Say what to change.');
+  const launch = m.template === 'launch', s = m.scenes.find((x) => x.id === clipId), span = (m.spans || []).find((x) => x.id === clipId);
+  const kind = s ? 'scene' : ['intro', 'big', 'end'].includes(clipId) ? clipId : null; if (!kind) throw new Error('Pick a clip first.');
+  const context = s ? `A ${s.device === 'laptop' ? 'computer' : 'phone'} screen. Big ${launch ? 'label' : 'title'}: "${s.title}".${!launch && s.body ? ` Smaller line: "${s.body}".` : ''}${m.voiceOn ? ` Voice-over: "${s.line}".` : ''}${s.ring || s.ringWas ? ' A button on it can be zoomed in on.' : ''}`
+    : kind === 'intro' ? `The opening: ${launch ? `the logo, then the line "${m.copy?.intro}"` : `a title card "${m.title}"`}.` : kind === 'big' ? `A single big hero word: "${m.copy?.big}".` : `The ending: the logo and the line "${launch ? m.copy?.outro : m.brand?.tagline}".`;
+  const out = await new Promise((ok) => { // async, so the server keeps serving while Jev thinks
+    const c = spawn(process.execPath, ['tools/jev.mjs', 'edit', request, '--context', context, '--profile', 'none'], { cwd: ROOT }); let o = '';
+    const t = setTimeout(() => c.kill(), 30000); c.stdout.on('data', (d) => { o += d; }); c.on('close', () => { clearTimeout(t); ok(o); }); c.on('error', () => ok(''));
+  });
+  let j = null; try { j = JSON.parse(out.trim().split('\n').pop()); } catch {}
+  if (!j) { // no Jev (no key or offline): plain keyword rules, so the box still works
+    const has = (re) => (re.test(request) ? 1 : 0);
+    j = { shorter: has(/shorter|quicker|faster|trim|less time/i), longer: has(/longer|slower|more time|hold/i), zoomOn: has(/zoom|highlight|circle|point/i) && !has(/no zoom|remove the zoom|turn off|without/i),
+      zoomOff: has(/no zoom|remove the zoom|without the (zoom|circle)|turn off/i), remove: has(/^(remove|delete)|remove (this|it)|delete (this|it)/i), earlier: has(/earlier|before|move (it )?(up|left|back)/i),
+      later: has(/later|after|move (it )?(down|right|forward)/i), duplicate: has(/duplicate|copy|repeat/i), cut: has(/\b(cut|split)\b/i), words: has(/["“”]|text|words|label|title|say/i), voice: has(/voice|narrat/i), other: 0, target: /small|subtitle|under/i.test(request) ? 'small' : 'big' };
+  }
+  const yes = (k) => (j[k] || 0) >= 0.6, did = [], patch = {};
+  const quotes = [...request.matchAll(/["“”]([^"“”]{1,160})["“”]/g)].map((x) => x[1].trim()).filter(Boolean);
+  const cur = span?.d || s?.len || 3, secs = /(\d+(?:\.\d+)?)\s*(?:s|secs?|seconds?)\b/i.exec(request), by = secs && /\bby\s+\d/i.test(request);
+  const max = s ? 20 : 12;
+  if (kind !== 'big' && (yes('shorter') || yes('longer') || (secs && !yes('cut')))) {
+    const n = secs ? Number(secs[1]) : null;
+    let len = n != null ? (by ? cur + (yes('shorter') ? -n : n) : n) : cur * (yes('shorter') ? 0.7 : 1.35);
+    len = +Math.min(max, Math.max(1, len)).toFixed(1); patch.len = len; did.push(`${len < cur ? 'shorter' : 'longer'}: ${cur.toFixed(1)}s → ${len.toFixed(1)}s`);
+  }
+  if (s && yes('zoomOff')) { patch.ringOff = true; did.push(launch ? 'no zoom' : 'no tap circle'); }
+  else if (s && yes('zoomOn')) { if (s.ring || s.ringWas) { patch.ringOff = false; did.push(launch ? 'zooms in on the button' : 'tap circle on'); } else did.push("this screen has no button marked, so it can't zoom in yet"); }
+  const wantWords = yes('words') || (quotes.length && !yes('voice')), wantVoice = yes('voice') && m.voiceOn;
+  if (wantWords || wantVoice) {
+    if (!quotes.length) did.push('put the new words in quotes, like: say "See our plans"');
+    else {
+      let q = 0;
+      if (wantWords) {
+        const t = quotes[q++];
+        if (kind === 'scene') { if (j.target === 'small' && !launch) patch.body = t.slice(0, 200); else patch.title = t.slice(0, 60); did.push(`words: "${t}"`); }
+        else { patch.copy = { [kind === 'intro' ? 'intro' : kind === 'big' ? 'big' : 'outro']: t.slice(0, 120) }; did.push(`words: "${t}"`); }
+      }
+      if (wantVoice && kind === 'scene') { const t = quotes[q] || quotes[0]; patch.line = t.slice(0, 300); did.push(`voice says: "${t}"`); }
+    }
+  }
+  if (s) {
+    if (yes('cut')) { patch.cut = true; did.push('cut in two'); }
+    if (yes('duplicate')) { patch.duplicate = true; did.push('duplicated'); }
+    if (yes('earlier') && !yes('later')) { patch.move = -1; did.push('moved earlier'); } else if (yes('later') && !yes('earlier')) { patch.move = 1; did.push('moved later'); }
+    if (yes('remove') && !yes('duplicate')) { patch.remove = true; did.push('removed'); }
+  }
+  const changed = Object.keys(patch).length;
+  if (!changed && !did.length) did.push(yes('other') ? "I can't do that one here yet. I can change a clip's length, words, zoom and order, or cut, copy or remove it. Colour, music and voice are in the tabs." : 'Not sure what to change. Try "make it 2 seconds", "zoom in on the button" or say "New words".');
+  return { say: did.join(' · '), patch, changed: !!changed };
+}
+
 // clipwalk.json -> film.js (scenes, rings, camera, device parts, sounds), film.json (title, length, brand, voice, music)
 // and docs/vo/lines.txt. Timing comes from how much each scene says, so edits re-time the video by themselves.
 function writeFilm(folder, model) {
@@ -490,7 +545,8 @@ function editFilm(folder, b) {
   if (typeof b.title === 'string' && b.title.trim()) m.title = b.title.trim().slice(0, 80);
   if (Array.isArray(b.scenes)) {
     // a scene is an existing one (by id), or a copy of one (split / duplicate on the timeline: a new id plus `from`)
-    const byId = Object.fromEntries(m.scenes.map((s) => [s.id, s])), seen = new Set();
+    // removed clips wait in a small bin, so Undo in the editor can bring them back
+    const byId = Object.fromEntries([...(m.bin || []), ...m.scenes].map((s) => [s.id, s])), seen = new Set();
     const next = b.scenes.map((s) => {
       const id = String(s.id || ''), base = byId[id] || (/^[\w-]{1,24}$/.test(id) && byId[s.from]);
       if (!base || seen.has(id)) return null; seen.add(id);
@@ -499,6 +555,8 @@ function editFilm(folder, b) {
         ring, ...(ring ? {} : { ringWas: base.ring || base.ringWas || null }), len: len >= 1 && len <= 20 ? +len.toFixed(2) : undefined };
     }).filter(Boolean);
     if (!next.length) throw new Error('Keep at least one scene.');
+    const kept = new Set(next.map((x) => x.id));
+    m.bin = [...(m.bin || []).filter((x) => !kept.has(x.id)), ...m.scenes.filter((x) => !kept.has(x.id))].slice(-20);
     m.scenes = next;
   }
   if (b.mood && (b.mood === 'none' || MOODS[b.mood])) m.mood = b.mood;
@@ -856,6 +914,8 @@ const server = http.createServer(async (req, res) => {
       .map((f) => ({ name: f, id: f.split(' ')[0], size: fs.statSync(path.join(FINAL, f)).size, updated: mtime(path.join(FINAL, f)) })));
     let m = /^\/api\/films\/([^/]+)\/clipwalk$/.exec(p);
     if (m && req.method === 'PUT' && filmDir(m[1])) { editFilm(m[1], await readBody(req)); return send(res, 200, detail(m[1])); }
+    m = /^\/api\/films\/([^/]+)\/ask$/.exec(p);
+    if (m && req.method === 'POST' && filmDir(m[1])) { const b = await readBody(req); return send(res, 200, await askEdit(m[1], b.clip, b.request)); }
     m = /^\/api\/films\/([^/]+)$/.exec(p);
     if (m) {
       if (!filmDir(m[1])) return send(res, 404, { error: 'No such film' });
@@ -937,6 +997,8 @@ async function friendRoute(req, res, p, url, who) {
   if (m && req.method === 'GET' && mine.has(m[1])) return send(res, 200, detail(m[1]));
   m = /^\/api\/films\/([^/]+)\/clipwalk$/.exec(p);
   if (m && req.method === 'PUT' && mine.has(m[1])) { editFilm(m[1], await readBody(req)); return send(res, 200, detail(m[1])); }
+  m = /^\/api\/films\/([^/]+)\/ask$/.exec(p);
+  if (m && req.method === 'POST' && mine.has(m[1])) { const b = await readBody(req); return send(res, 200, await askEdit(m[1], b.clip, b.request)); }
   if (p === '/api/jobs' && req.method === 'GET') return send(res, 200, jobs.filter((j) => j.owner === who.id).slice(-30).reverse().map(pub));
   if (p === '/api/jobs' && req.method === 'POST') {
     const b = await readBody(req);
