@@ -20,7 +20,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -43,6 +43,13 @@ const save = () => fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 1) + '\n'
 // 1. pictures
 const shots = path.join(ROOT, 'media', 'generated', id, 'shots.json');
 if (want('images') && fs.existsSync(shots)) {
+  // Jev vets the prompts first (fractions of a cent) so no picture is paid for that would be rejected anyway
+  step('pictures: Jev checks the prompts first');
+  const owned = !!cfg.owner;   // friends' videos aren't held to BreeUp's rule 1
+  const vet = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'jev.mjs'), 'vet', shots, ...(owned ? [] : ['--african'])], { cwd: ROOT, encoding: 'utf8' });
+  process.stdout.write(vet.stdout || '');
+  if (vet.status === 5 && !flag('force')) { console.error('make: fix those prompts in shots.json (or run again with --force), then re-run. Nothing was spent.'); process.exit(5); }
+  if (vet.status && vet.status !== 5) console.warn(`  jev couldn't check the prompts (exit ${vet.status}); generating anyway`);
   step('pictures (only missing ones are generated)');
   const gen = path.dirname(shots);
   const out = execFileSync('node', [path.join(ROOT, 'tools', 'gemini.mjs'), 'batch', shots], { cwd: ROOT }).toString();

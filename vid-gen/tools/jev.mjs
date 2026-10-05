@@ -9,6 +9,10 @@
 //        and (with --secs) fits its time on screen at 2.5 words a second. One line out per problem.
 //   node tools/jev.mjs dupe "lesson text" [--in moodboard/STYLE.md]
 //        Says whether a lesson is already covered, before anyone appends it to the style guide.
+//   node tools/jev.mjs vet media/generated/<ID>/shots.json [--african] [--all]
+//        Checks photo prompts BEFORE any picture is paid for (a rejected Gemini picture costs $0.13-0.24): people
+//        described as good-looking (and Black African with --african, rule 1), no readable screens, specific enough.
+//        Only prompts whose pictures don't exist yet, unless --all. One line per problem; exit 5 if any.
 //
 // Key: TYPESAFE_API_KEY in the environment or videos/.env. Exit codes match gemini.mjs:
 // 2 = out of credits or quota (stop and tell Josh) · 3 = bad key · 1 = other.
@@ -146,6 +150,35 @@ async function lint(a) {
 }
 
 // ------------------------------------------------------------ dupe
+// ------------------------------------------------------------ vet
+async function vet(a) {
+  const mf = a._[1] || die('vet needs a shots.json');
+  const m = JSON.parse(fs.readFileSync(mf, 'utf8')), dir = m.dir || path.dirname(mf), files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+  const todo = (m.shots || []).filter((s) => a.all || (s.aspects || ['16:9', '9:16']).some((asp) => !files.some((f) => f.startsWith(`${s.name}-${asp.replace(':', 'x')}`) && /\.(jpe?g|png)$/i.test(f))));
+  if (!todo.length) { console.log('ok: nothing new to generate'); return; }
+  const q = {};
+  todo.forEach((s, i) => {
+    const ins = (question) => ({ prompt: s.prompt, question });
+    q[`people${i}`] = { type: 'noul', instructions: ins('Does `prompt` show one or more people?') };
+    q[`looks${i}`] = { type: 'noul', instructions: ins('Does `prompt` describe the people as good-looking, attractive, well-groomed or stylish?') };
+    if (a.african) q[`african${i}`] = { type: 'noul', instructions: ins('Does `prompt` say the people are Black African or Nigerian, in an African setting?') };
+    q[`screen${i}`] = { type: 'noul', instructions: ins('Would a picture made from `prompt` likely show a readable phone, laptop or app screen facing the camera?') };
+    q[`vague${i}`] = { type: 'score', instructions: ins('How specific is `prompt` about who, what they are doing, where, and the light?'), criteria: ['Vague', 'Some detail', 'Specific', 'Very specific'] };
+  });
+  const ans = await ask({ purpose: 'Photo prompts for a product video, checked before paying to generate them' }, q);
+  let problems = 0;
+  todo.forEach((s, i) => {
+    const flags = [], hasPeople = ans[`people${i}`].noul > 0.5;
+    if (hasPeople && ans[`looks${i}`].noul < 0.5) flags.push('people not described as good-looking and well-groomed');
+    if (a.african && hasPeople && ans[`african${i}`].noul < 0.5) flags.push('people/place not clearly Black African or Nigerian (rule 1)');
+    if (ans[`screen${i}`].noul > 0.6) flags.push('likely shows a readable screen: add "phone screen facing away from camera"');
+    if (ans[`vague${i}`].score < 0.4) flags.push('too vague: say who, doing what, where, in what light');
+    if (flags.length) { problems++; console.log(`${s.name}: ${flags.join('; ')}`); }
+  });
+  console.log(problems ? `${problems} of ${todo.length} prompts need fixing before generating` : `ok: ${todo.length} prompts ready`);
+  process.exitCode = problems ? 5 : 0;
+}
+
 async function dupe(a) {
   const lesson = a._.slice(1).join(' ') || die('dupe needs the lesson text');
   const file = path.resolve(ROOT, a.in || 'moodboard/STYLE.md');
@@ -162,7 +195,7 @@ async function dupe(a) {
 export { ask };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = parseArgs(process.argv.slice(2));
-  const cmds = { pick, lint, dupe };
+  const cmds = { pick, lint, dupe, vet };
   if (!cmds[args._[0]]) {
     console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 15).map(l => l.replace(/^\/\/ ?/, '')).join('\n'));
     process.exit(args._[0] ? 1 : 0);

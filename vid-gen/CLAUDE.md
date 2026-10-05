@@ -152,6 +152,12 @@ film, so every tutorial gets it.
   `pick "<what the shot needs>"` chooses HyperFrames blocks (never read the full catalog), `lint --file <lines>`
   checks scripts and captions (pidgin, jargon, clarity, words per second) before any render, and
   `dupe "<lesson>"` checks STYLE.md before you add a lesson. Same exit codes as gemini.mjs, plus 5 = lint problems.
+- **Jev first, always (Josh, 2026-10-05).** Any decision about text goes to Jev before Gemini, Claude or your own
+  context: choosing copy lines, music mood, template, pace, which stock result, which scene matches which shot, whether
+  a prompt or script breaks a rule. Jev costs about $0.04 per million words read; Gemini Flash is ~20x that and Pro
+  ~50x. Use Gemini only for what needs eyes (looking at pictures and videos) or to generate media, and gate every paid
+  generation behind a Jev check: `make.mjs` runs `jev.mjs vet` on photo prompts before pictures and `jev.mjs lint`
+  before voice-over; the walkthrough defaults to the Jev brain. When you build something new, find the Jev step first.
 
 ## 8. Learning from references (self-improving)
 
@@ -200,6 +206,8 @@ Inside `vid-gen/`, keep to the map at the top of `README.md`:
 
 ## Josh's taste (keep updating)
 
+- 2026-10-05: Use Jev aggressively to cut costs in every workflow you build: Jev first for any text decision, paid
+  models only for vision and generation, and a Jev gate before anything paid. (Section 7.)
 - 2026-10-05: **Never more than 2-3 variants of anything**: hook versions per ad, picture variants per shot, music or
   voice retries. Extra hook versions burnt a lot of credits. Default to 2; use 3 only when testing really needs it.
   `gemini.mjs` and `render.mjs` enforce the cap. Same rule for the marketing plans.
