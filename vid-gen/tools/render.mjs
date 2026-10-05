@@ -83,7 +83,9 @@ const server = http.createServer((req, res) => {
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const port = server.address().port;
 
-const launch = { args: ['--disable-gpu-vsync', '--force-color-profile=srgb', '--autoplay-policy=no-user-gesture-required'] };
+// WebGL for the 3D phone (tools/kit/phone3d.js): the Mac's GPU through Metal, a software renderer elsewhere (cloud, Linux)
+const GL = process.platform === 'darwin' ? ['--use-angle=metal'] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
+const launch = { args: ['--disable-gpu-vsync', '--force-color-profile=srgb', '--autoplay-policy=no-user-gesture-required', ...GL] };
 if (fs.existsSync('/opt/pw-browsers/chromium')) launch.executablePath = '/opt/pw-browsers/chromium';
 const browser = await chromium.launch(launch).catch((e) => {
   console.error(`Couldn't start Chromium (${e.message.split('\n')[0]}). On a Mac run: npx playwright install chromium`);

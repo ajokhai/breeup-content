@@ -207,9 +207,11 @@ function route() {
   closePreview();
   const m = /^#\/v\/(.+)$/.exec(location.hash);
   if (m) return editor(m[1]);
+  if (location.hash === '#/pricing') return pricingPage();
   home();
 }
 const header = () => `<header class="top"><a class="logo" href="#/"><i>${icon('walk', 18)}</i>Clipwalk</a><div class="grow"></div>
+  <a class="pill" href="#/pricing">Pricing</a>
   ${isOwner() ? '<a class="pill" href="/pro#/settings">Admin</a>' : `<span class="pill">${me.credits} credits</span>`}
   <button class="pill" onclick="helpdlg.showModal()">How it works</button></header>`;
 function login(err) {
@@ -344,6 +346,28 @@ function renderVideos() {
   el.innerHTML = mine.map((f) => `<a class="vcard" href="#/v/${f.folder}"><div class="thumb" style="${f.poster ? `background-image:url('${f.poster}')` : ''}">
       ${f.renders.length ? '' : '<span class="badge">Not finished</span>'}</div><div class="meta">${esc(f.title)}</div></a>`).join('')
     || '<p class="hint">Your videos will show up here.</p>';
+}
+
+// ------------------------------------------------------------------ pricing: one number per video, extras below
+function pricingPage() {
+  const m = pricing.menu || { video: 5, extra_view: 1, screens_only: 3, ai_photo: 15, ai_clip: 70 }, usd = pricing.credit_usd || 0.1, cur = pricing.currency;
+  const money = (n) => `$${(n * usd).toFixed(2)}${cur?.per_usd ? ` · ${cur.symbol}${Math.round(n * usd * cur.per_usd).toLocaleString()}` : ''}`;
+  window.scrollTo(0, 0);
+  document.getElementById('app').innerHTML = `<div class="wrap">${header()}
+    <h1>Simple <em>pricing</em></h1>
+    <p class="hint" style="text-align:center;font-size:17px;margin:-8px auto 30px;max-width:560px">Buy credits once, spend them on videos. 1 credit is ${money(1)}. Credits only come off when your video is ready, so if anything goes wrong, it's free.</p>
+    <div class="card" style="max-width:520px;margin:0 auto;padding:32px;text-align:center;border-color:color-mix(in srgb, var(--accent) 50%, var(--line))">
+      <div class="hint" style="font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:12px">One video</div>
+      <div style="font:400 72px/1 var(--serif);margin:10px 0 4px">${m.video} <span style="font-size:28px">credits</span></div>
+      <div class="hint" style="font-size:15px">${money(m.video)}, everything included</div>
+      <ul style="text-align:left;margin:22px auto 0;max-width:380px;line-height:1.9;padding-left:20px">
+        <li>Clipwalk clicks through your app and keeps every screen</li><li>Words, voice-over, music and sound effects</li>
+        <li>A phone version and a computer version</li><li>Change it and update it as often as you like, free</li></ul>
+      <a class="btn go big" href="#/" style="margin-top:24px">Make a video</a></div>
+    <div class="card" style="max-width:520px;margin:16px auto 0"><h3 style="margin-bottom:8px">Extras</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:15px">${[['Another screen (e.g. the admin on a computer)', m.extra_view], ['AI lifestyle photo', m.ai_photo], ['AI video clip, 8 seconds', m.ai_clip], ['Screenshots only, no video', m.screens_only, true]]
+        .map(([n, c, alone]) => `<tr><td style="padding:10px 0;border-top:1px solid var(--line)">${n}</td><td style="padding:10px 0;border-top:1px solid var(--line);text-align:right;white-space:nowrap;font-weight:600">${alone ? '' : '+'}${c} credits</td></tr>`).join('')}</table></div>
+    ${isOwner() ? '<p class="hint" style="text-align:center;margin-top:20px">You set these prices in <a href="/pro#/pricing">Admin → Pricing</a>, and give friends credits in <a href="/pro#/settings">Admin → People</a>.</p>' : `<p class="hint" style="text-align:center;margin-top:20px">You have ${me.credits} credits. To get more, ask whoever gave you your code.</p>`}</div>`;
 }
 
 // ------------------------------------------------------------------ following jobs: friendly progress, never logs

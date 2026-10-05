@@ -25,6 +25,7 @@
 //   end:   { tagline: 'Dues, gate access, approvals and notices in one place.' }
 //   hits:  the same list as `const HITS` in film.js (seconds), for tools/sfx.mjs
 import * as M from '/kit/motion.js';
+import { phone3d } from '/kit/phone3d.js';
 
 const { W, H, FORMAT, E, prog, lerp, clamp, springU, springKeys, SPRING, wobble, font, layout, text, fill, cover, rrect } = M;
 // film.json is read once: "retime" (below) and an optional "brand" that recolours the kit for other products,
@@ -248,6 +249,21 @@ export function tutorial(cfg) {
     }
     ctx.restore();
   }
+  function ringOnGlass(sc, u, { r, a, b, tap }, I3) {
+    if (u < a - 0.05 || u > b + 0.3) return;
+    const k = I3.w / SRC.w, [x, y, w, h] = ph.regions[r], pad = 10;
+    const x0 = I3.x + (x - pad) * k, y0 = I3.y + (y - pad) * k, x1 = I3.x + (x + w + pad) * k, y1 = I3.y + (y + h + pad) * k, per = 2 * ((x1 - x0) + (y1 - y0));
+    sc.save(); sc.globalAlpha = 1 - E.inCubic(prog(u, b, b + 0.25));
+    sc.lineWidth = Math.max(5, 9 * k); sc.strokeStyle = C.gold; sc.lineCap = 'round';
+    sc.setLineDash([per * E.outCubic(prog(u, a, a + 0.5)), per]);
+    rrect(sc, x0, y0, x1 - x0, y1 - y0, 16 * k); sc.stroke(); sc.setLineDash([]);
+    if (tap != null && u >= tap) {
+      const tk = prog(u, tap, tap + 0.6);
+      sc.globalAlpha *= (1 - tk) * 0.9; sc.fillStyle = C.gold;
+      sc.beginPath(); sc.arc((x0 + x1) / 2, (y0 + y1) / 2, Math.max(14, (20 + 70 * E.outCubic(tk)) * k), 0, M.TAU); sc.fill();
+    }
+    sc.restore();
+  }
   function scenePhone(ctx, u, IMG) {
     const bg = blurred(IMG.stage || IMG.hook);
     if (bg) { ctx.drawImage(bg, 0, 0); ctx.fillStyle = rgba(C.cream, 0.88); ctx.fillRect(0, 0, W, H); } else fill(ctx, C.cream);
@@ -263,6 +279,34 @@ export function tutorial(cfg) {
     if (bn != null && u > bn - 0.35) ctx.translate(-E.inCubic(prog(u, bn - 0.35, bn)) * W, 0);
     else if (b != null && u < b + 0.45) ctx.translate((1 - E.outCubic(prog(u, b, b + 0.45))) * W, 0);
     ctx.save(); ctx.translate(ax, ay); ctx.scale(z * (1 + q), z * (1 - q)); ctx.translate(-fpx, -fpy);
+    if (!LAPTOP && P3) {   // the real 3D phone: screens and rings painted on its glass, a gentle turn, studio reflections
+      const sc = P3.screen.getContext('2d'), I3 = P3.inset, f = I3.w / PH.w;
+      sc.fillStyle = '#050605'; sc.fillRect(0, 0, P3.screen.width, P3.screen.height);
+      sc.save(); rrect(sc, I3.x, I3.y, I3.w, I3.h, I3.w * 0.11); sc.clip();
+      ph.seq.forEach(([key, at], i) => {
+        if (partAt(Math.max(at, 0.001)) !== pi && !(i === 0 && pi === 0)) return;
+        const first = i === 0 || partAt(ph.seq[i - 1][1]) !== partAt(at);
+        const img = IMG[key], s = first ? 1 : E.inOutCubic(prog(u, at, at + 0.5));
+        const nx = ph.seq[i + 1] ? E.inOutCubic(prog(u, ph.seq[i + 1][1], ph.seq[i + 1][1] + 0.5)) : 0;
+        if (s > 0 && nx < 1 && img) sc.drawImage(img, I3.x, I3.y + (1 - s) * I3.h - nx * I3.h * 0.3, I3.w, I3.h);
+      });
+      (ph.rings || []).forEach((r) => ringOnGlass(sc, u, r, I3));
+      sc.restore();
+      // where the glass lands in the frame: the kit's own layout and camera, mapped through the current transform
+      const gx = PH.x - I3.x / f, gy = PH.y - I3.y / f, gw = P3.screen.width / f, gh = P3.screen.height / f, m = ctx.getTransform();
+      const rect = { x: m.a * gx + m.e, y: m.d * gy + m.f, w: m.a * gw, h: m.d * gh };
+      const zoomed = Math.min(1, Math.max(0, (z - 1) / 0.25));
+      const yaw = (1 - k) * 0.55 + (0.16 * Math.sin((u - t0) * 0.42) + q * 3) * (1 - 0.75 * zoomed), pitch = 0.05 * (1 - zoomed) + (1 - k) * 0.12;
+      const gl = P3.draw(rect, { yaw, pitch });
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.shadowColor = 'rgba(0,0,0,0.38)'; ctx.shadowBlur = 70 * m.a; ctx.shadowOffsetY = 30 * m.a;
+      ctx.drawImage(gl, 0, 0); ctx.restore();
+      ctx.restore(); ctx.restore();
+      const i = steps.findLastIndex((st) => u >= st.t - 0.2);
+      drawStep(ctx, u, Math.max(0, i));
+      drawDots(ctx, u);
+      return afterPhone(ctx, u, IMG);
+    }
     ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 24;
     const FR = IMG['frame_' + (LAPTOP ? 'laptop' : 'phone')] && FRAMES?.[LAPTOP ? 'laptop' : 'phone'];
     let fr = null;   // where the real frame lands: its screen hole is fitted to the screenshot
@@ -296,6 +340,9 @@ export function tutorial(cfg) {
     const i = steps.findLastIndex((s) => u >= s.t - 0.2);
     drawStep(ctx, u, Math.max(0, i));
     drawDots(ctx, u);
+    afterPhone(ctx, u, IMG);
+  }
+  function afterPhone(ctx, u, IMG) {
     (cfg.chips || []).forEach((c) => {
       if (u < c.a || u > c.b + 0.3) return;
       ctx.save(); ctx.globalAlpha = 1 - E.inCubic(prog(u, c.b, c.b + 0.3));
@@ -422,7 +469,9 @@ export function tutorial(cfg) {
   for (const k of ['hook', 'why', 'tip']) if (photo(k)) images[k] = photo(k);
   const videos = {};   // a clip replaces the photo for that scene; it plays from the start of the film
   for (const k of ['hook', 'why', 'tip']) if (cfg.clips?.[k]) { videos[k] = `assets/clips/${cfg.clips[k]}-${P ? '9x16' : '16x9'}.webm`; delete images[k]; }
+  let P3 = null;
   M.film({ videos,
+    init: async () => { if (FILM.frame !== false && FILM.phone3d !== false && parts.some((q) => (q.device || 'phone') === 'phone')) P3 = await phone3d(W, H); },
     fonts: [font(100, 400, DISPLAY), font(40, 400, UI), font(40, 500, UI)],
     images, hits: cfg.hits || [],
     draw(ctx, u, t, IMG) {
