@@ -121,7 +121,7 @@ export function launch(cfg) {
   }
   // the control that matters, lifted off the screen and enlarged, with a highlight ring
   function callout(ctx, u, s, img, box) {
-    const a = s.t + s.d * 0.42, k = springU(u, a, SPRING.bouncy); if (k <= 0) return;
+    const a = s.zat ?? s.t + s.d * 0.42, k = springU(u, a, SPRING.bouncy); if (k <= 0) return;
     const [zx, zy, zw, zh] = s.zoom, pad = 14, srcW = img.naturalWidth / (box.w / box.sc / box.sc) || 1;
     const fx = box.x + (zx + zw / 2) * box.sc, fy = box.y + (zy + zh / 2) * box.sc;
     const big = Math.min((P ? W * 0.84 : W * 0.5) / (zw + pad * 2), (P ? H * 0.3 : H * 0.42) / (zh + pad * 2), 4.5), cw = (zw + pad * 2) * big, ch = (zh + pad * 2) * big;

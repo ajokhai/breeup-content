@@ -342,7 +342,7 @@ function writeFilm(folder, model) {
   if (!scenes.length) throw new Error('A video needs at least one scene.');
   for (const f of ls(path.join(dir, 'assets'))) if (/^logo\./.test(f)) fs.rmSync(path.join(dir, 'assets', f));
   if (b.logo && fs.existsSync(path.join(ROOT, b.logo))) fs.copyFileSync(path.join(ROOT, b.logo), path.join(dir, 'assets', `logo${path.extname(b.logo) === '.svg' ? '.svg' : '.svg'}`));
-  const hookTo = 4.5;
+  const hookTo = model.timing?.intro ? Math.max(1.5, model.timing.intro - 0.4) : 4.5, endLen = model.timing?.end || 4;
   let t = hookTo + 0.4;
   const screens = {}, seq = [], steps = [], rings = [], cam = [], regions = {}, parts = [], hits = [[0, 'hook', 'sub', { len: 0.8 }]], lines = [model.title], at = [0.3];
   scenes.forEach((s, i) => {
@@ -352,7 +352,7 @@ function writeFilm(folder, model) {
       if (i) hits.push([+(t - 0.35).toFixed(2), 'switch device', 'whoosh', { len: 0.6, from: 600, to: 2600 }]);
     } else hits.push([+t.toFixed(2), 'screen', 'whoosh', { len: 0.35, from: 2400, to: 700 }]);
     const w = Math.max(words(s.line), words(s.body)), pace = model.pace || 'slow';
-    const key = `s${i + 1}`, dur = pace === 'fast' ? Math.min(6, Math.max(2.6, w / 3 + 1)) : pace === 'medium' ? Math.min(8, Math.max(3.4, w / 2.7 + 1.4)) : Math.min(10, Math.max(4.2, w / 2.5 + 1.8));
+    const key = `s${i + 1}`, dur = s.len || (pace === 'fast' ? Math.min(6, Math.max(2.6, w / 3 + 1)) : pace === 'medium' ? Math.min(8, Math.max(3.4, w / 2.7 + 1.4)) : Math.min(10, Math.max(4.2, w / 2.5 + 1.8)));
     screens[key] = `assets/screens/${s.file}`;
     seq.push([key, i ? +t.toFixed(2) : 0]);
     steps.push({ t: +t.toFixed(2), title: s.title || ' ', body: s.body || '' });
@@ -369,9 +369,10 @@ function writeFilm(folder, model) {
     }
     t += dur;
   });
-  const phoneTo = +t.toFixed(2), duration = +(phoneTo + 4).toFixed(1);
+  const phoneTo = +t.toFixed(2), duration = +(phoneTo + endLen).toFixed(2);
   // where each scene starts and the whole length, for the editor's timeline (before any stretch for a long voice)
   model.times = Object.fromEntries(scenes.map((sc, i) => [sc.id, steps[i].t])); model.duration = duration;
+  model.spans = [{ id: 'intro', t: 0, d: steps[0].t }, ...scenes.map((sc, i) => ({ id: sc.id, t: steps[i].t, d: +((steps[i + 1]?.t ?? phoneTo) - steps[i].t).toFixed(2) })), { id: 'end', t: phoneTo, d: +(duration - phoneTo).toFixed(2) }];
   fs.writeFileSync(modelPath(folder), JSON.stringify(model, null, 1) + '\n');
   hits.push([phoneTo, 'end card', 'impact'], [+(phoneTo + 0.2).toFixed(2), 'logo', 'bell', { pitch: 'F6' }]);
   hits.sort((x, y) => x[0] - y[0]);
@@ -433,22 +434,38 @@ function writeLaunch(folder, model) {
   for (const f of ls(path.join(dir, 'assets'))) if (/^logo\./.test(f)) fs.rmSync(path.join(dir, 'assets', f));
   const logoFile = b.logo && fs.existsSync(path.join(ROOT, b.logo)) ? `logo${path.extname(b.logo)}` : null;   // keep its real type (PNG logos break as .svg)
   if (logoFile) fs.copyFileSync(path.join(ROOT, b.logo), path.join(dir, 'assets', logoFile));
-  const k = model.pace === 'slow' ? 1.35 : model.pace === 'medium' ? 1.15 : 1;
-  const shots = [], screens = {}, hits = [], add = (sh, d) => { const t = shots.length ? +(shots.at(-1).t + shots.at(-1).d).toFixed(2) : 0; shots.push({ ...sh, t, d: +(d * k).toFixed(2) }); return t; };
+  // every cut lands on the beat of the film's own music (tools/beat.mjs): pace sets the tempo, shots last whole beats,
+  // the first screen starts the groove on a bar line and the hero word lands on the drop (also a bar line)
+  const bpm = model.pace === 'slow' ? 100 : model.pace === 'medium' ? 112 : 124, beat = 60 / bpm, at = (n) => +(n * beat).toFixed(3);
+  const shots = [], screens = {}, hits = [];
+  let n = 0;   // beats so far
+  const add = (sh, beats) => { const t = at(n); shots.push({ ...sh, t, d: +(at(n + beats) - t).toFixed(3) }); n += beats; return t; };
+  const whip = (t) => hits.push([+(t - 0.28).toFixed(3), 'whip', 'whoosh', { len: 0.3, from: 2600, to: 600 }]);
   hits.push([0.05, 'logo', 'pop', { pitch: 'C6' }]);
-  add({ type: 'logo' }, 1.8);
-  let t = add({ type: 'words', text: c.intro || `Meet ${b.name}`, accent: c.accent || '' }, 2.2); hits.push([t - 0.28, 'whip', 'whoosh', { len: 0.3, from: 2600, to: 600 }]);
+  // shot lengths in beats; a trimmed clip (len, seconds) keeps to whole half-bars so the cuts stay on the beat
+  const beatsFor = (sec, def, step = 2) => sec ? Math.max(step, Math.round(sec / beat / step) * step) : def;
+  const intro = beatsFor(model.timing?.intro, 8, 4);
+  add({ type: 'logo' }, intro / 2);
+  let t = add({ type: 'words', text: c.intro || `Meet ${b.name}`, accent: c.accent || '' }, intro / 2); whip(t);
+  const groove = at(n);
   scenes.forEach((s, i) => {
     const key = `s${i + 1}`; screens[key] = `assets/screens/${s.file}`;
     const label = String(s.title || '').replace(/^(tap|press|click|open|choose|enter)\s+/i, '').replace(/[“”"]/g, '').replace(/^./, (x) => x.toUpperCase());
-    t = add({ type: 'screen', img: key, device: s.device, label, ...(s.ring?.box ? { zoom: s.ring.box } : {}) }, 2.6);
-    hits.push([t - 0.28, 'whip', 'whoosh', { len: 0.3, from: 2600, to: 600 }]);
-    if (s.ring?.box) hits.push([+(t + 2.6 * k * 0.42).toFixed(2), 'zoom', 'blip', { pitch: 'C6' }]);
+    // 6 beats a screen; the last one stretches to the next bar line so the drop is on the one
+    const own = beatsFor(s.len, 6), beats = i === scenes.length - 1 ? own + ((4 - ((n + own) % 4)) % 4) : own;
+    const zoom = s.ring?.box ? { zoom: s.ring.box, zat: at(n + 3) } : {};
+    t = add({ type: 'screen', img: key, device: s.device, label, ...zoom }, beats); whip(t);
+    if (zoom.zat) hits.push([zoom.zat, 'zoom', 'blip', { pitch: 'C6' }]);
   });
-  t = add({ type: 'big', text: c.big || 'Simple.' }, 1.7); hits.push([t, 'hero', 'impact']);
-  t = add({ type: 'end', line: c.outro || b.tagline || b.name }, 2.8); hits.push([t + 0.1, 'logo', 'bell', { pitch: 'F6' }]);
+  const drop = at(n);
+  t = add({ type: 'big', text: c.big || 'Simple.' }, 4); hits.push([t, 'hero', 'impact']);
+  const endAt = at(n);
+  t = add({ type: 'end', line: c.outro || b.tagline || b.name }, beatsFor(model.timing?.end, 6)); hits.push([+(t + 0.1).toFixed(3), 'logo', 'bell', { pitch: 'F6' }]);
   const duration = +(shots.at(-1).t + shots.at(-1).d).toFixed(2);
   model.times = Object.fromEntries(scenes.map((s, i) => [s.id, shots.find((x) => x.img === `s${i + 1}`).t])); model.duration = duration;
+  const sp = (x) => ({ t: x.t, d: x.d });
+  model.spans = [{ id: 'intro', t: 0, d: shots[2].t }, ...scenes.map((s, i) => ({ id: s.id, ...sp(shots[i + 2]) })), { id: 'big', ...sp(shots.at(-2)) }, { id: 'end', ...sp(shots.at(-1)) }];
+  model.beat = { bpm, drop };
   fs.writeFileSync(modelPath(folder), JSON.stringify(model, null, 1) + '\n');
   hits.sort((x, y) => x[0] - y[0]);
   const cfgJs = { brand: { name: b.name || '', site: b.site ? String(b.site).replace(/^https?:\/\//, '').replace(/\/$/, '') : '' }, shots, screens,
@@ -457,12 +474,13 @@ function writeLaunch(folder, model) {
   fs.writeFileSync(path.join(dir, 'film.js'), `// ${idOf(folder)} ${model.title}. Written by Clipwalk from clipwalk.json (launch style): edit in the app, not here.\n` +
     `import { launch } from '/kit/launch.js';\n\nconst HITS = [\n${hits.map((h) => `  ${JSON.stringify(h)},`).join('\n')}\n];\n\nlaunch({ ...${JSON.stringify(cfgJs, null, 1)}, hits: HITS });\n`);
   const cfg = readJSON(path.join(dir, 'film.json'), {});
-  for (const k2 of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills', 'music']) delete cfg[k2];
+  for (const k2 of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills', 'music', 'score']) delete cfg[k2];
   Object.assign(cfg, { title: model.title, duration, formats: ['9x16', '16x9'], brand: b.colors, publish: false, profile: model.profile || 'none', ...(model.owner ? { owner: model.owner } : {}),
-    ...(model.mood && model.mood !== 'none' && MOODS[model.mood] ? { music: MOODS[model.mood].replace('About one minute', `About ${Math.ceil(duration)} seconds`) } : {}) });
+    // the music is made in code to this exact grid (free, always in time); 'none' means no music
+    ...(model.mood && model.mood !== 'none' && MOODS[model.mood] ? { score: { bpm, mood: model.mood, groove, drop, end: endAt } } : {}) });
   fs.writeFileSync(path.join(dir, 'film.json'), JSON.stringify(cfg, null, 1) + '\n');
   fs.rmSync(path.join(dir, 'docs', 'vo', 'lines.txt'), { force: true });
-  if (!cfg.music) for (const f of ['music.wav', 'music.wav.json']) fs.rmSync(path.join(dir, 'audio', f), { force: true });
+  if (!cfg.score) for (const f of ['music.wav', 'music.wav.json']) fs.rmSync(path.join(dir, 'audio', f), { force: true });
 }
 
 // the editor saves scenes, words, music, colour and voice; everything else in the model stays as it was
@@ -471,9 +489,15 @@ function editFilm(folder, b) {
   if (!m) throw new Error('This video was not made in Clipwalk, so it has no simple editor.');
   if (typeof b.title === 'string' && b.title.trim()) m.title = b.title.trim().slice(0, 80);
   if (Array.isArray(b.scenes)) {
-    const byId = Object.fromEntries(m.scenes.map((s) => [s.id, s]));
-    const next = b.scenes.map((s) => byId[s.id] && { ...byId[s.id], title: String(s.title ?? byId[s.id].title).slice(0, 60), body: String(s.body ?? byId[s.id].body).slice(0, 200),
-      line: String(s.line ?? byId[s.id].line).slice(0, 300), ring: s.ring === false ? null : byId[s.id].ring }).filter(Boolean);
+    // a scene is an existing one (by id), or a copy of one (split / duplicate on the timeline: a new id plus `from`)
+    const byId = Object.fromEntries(m.scenes.map((s) => [s.id, s])), seen = new Set();
+    const next = b.scenes.map((s) => {
+      const id = String(s.id || ''), base = byId[id] || (/^[\w-]{1,24}$/.test(id) && byId[s.from]);
+      if (!base || seen.has(id)) return null; seen.add(id);
+      const len = Number(s.len), ring = s.ring === false ? null : s.ring === true ? base.ring || base.ringWas || null : base.ring;
+      return { ...base, id, title: String(s.title ?? base.title).slice(0, 60), body: String(s.body ?? base.body).slice(0, 200), line: String(s.line ?? base.line).slice(0, 300),
+        ring, ...(ring ? {} : { ringWas: base.ring || base.ringWas || null }), len: len >= 1 && len <= 20 ? +len.toFixed(2) : undefined };
+    }).filter(Boolean);
     if (!next.length) throw new Error('Keep at least one scene.');
     m.scenes = next;
   }
@@ -483,6 +507,8 @@ function editFilm(folder, b) {
   if (typeof b.provider === 'string') m.provider = b.provider === 'yarn' ? 'yarn' : '';
   if (b.color) m.brand.colors = { ...m.brand.colors, ...brandFromColor(b.color) };
   if (typeof b.tagline === 'string') m.brand.tagline = b.tagline.slice(0, 120);
+  // the opening and the ending can be trimmed on the advanced timeline (seconds; null puts the default back)
+  for (const k of ['intro', 'end']) if (k in (b.timing || {})) { const v = Number(b.timing[k]); m.timing = { ...(m.timing || {}), [k]: v >= 1 && v <= 12 ? +v.toFixed(2) : undefined }; }
   if (b.copy && m.copy) for (const k of ['intro', 'accent', 'big', 'outro']) if (typeof b.copy[k] === 'string') m.copy[k] = b.copy[k].slice(0, 120);
   writeFilm(folder, m);
   return m;

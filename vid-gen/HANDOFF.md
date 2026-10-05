@@ -13,9 +13,22 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
-## 2026-10-05 · Mac session · PAUSED (out of tokens): Clipwalk launch films, next steps
+## 2026-10-05 · Mac session · RESUMED: beat-matched launch films, free music in code, editor timeline
 
-**Josh will say when to resume.** State of things:
+- **Beat grid:** launch films cut on the beat (`writeLaunch`): the first screen on a bar line, the hero word on the drop,
+  the zoom on a beat. film.json "score" drives `tools/beat.mjs`, which writes `audio/music.wav` in about 2 s: drums, bass,
+  keys and a pad from sine waves and noise, moods upbeat/pro/calm/afro, a riser and a half-beat gap into the drop.
+  It is also the free fallback when Gemini music fails. `tools/synth.mjs` holds the shared synth blocks (sfx.mjs output
+  unchanged, byte for byte). With no voice-over, mix.mjs puts the music at -7 dB (it was -16) because it is the star.
+- **Editor timeline** (Josh asked: a timeline for cutting and editing, plus a contextual clip editor): Simple/Timeline
+  toggle under the preview. Trim by dragging an edge, drag to reorder, cut at the playhead (S), duplicate (D), remove,
+  arrow keys move the playhead, and the music lane shows beats and the drop. Tested on W2 (launch) and W1 (walkthrough), desktop and phone.
+- **Next:** UI cut-outs during capture (element crops for count-ups/cards), then the motion-design critique loop and
+  the remake engine (see the entry below). Josh: Gemini still has no credit; music no longer needs it.
+
+## 2026-10-05 · Mac session · Clipwalk launch films: state when paused
+
+State of things:
 - **Done and working:** Clipwalk simple app (`npm run studio`): Canva-style home, CapCut-style editor, Pricing page
   (5 credits a video), admin at /pro (connections checklist, people and credits). Real 3D phone in tutorials
   (`tools/kit/phone3d.js`, three.js vendored, Poly Haven HDRI). YarnGPT voice, style matching, friend access by code.

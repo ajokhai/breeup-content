@@ -15,8 +15,9 @@ import { execFileSync, spawnSync } from 'node:child_process';
 const args = process.argv.slice(2);
 const dir = path.resolve(args.find((a) => !a.startsWith('--')) || '');
 const num = (k, d) => { const i = args.indexOf(k); return i >= 0 ? Number(args[i + 1]) : d; };
-const musicDb = num('--music-db', -16), sfxDb = num('--sfx-db', -9);
 const cfg = JSON.parse(fs.readFileSync(path.join(dir, 'film.json'), 'utf8'));
+// with no voice-over the music is the star (launch films), so it sits much higher
+const musicDb = num('--music-db', (cfg.vo || []).length ? -16 : -7), sfxDb = num('--sfx-db', -9);
 const dur = Number(cfg.duration);
 const vo = (cfg.vo || []).map(([t, f]) => [Number(t), path.join(dir, f)]);
 const music = path.join(dir, 'audio', 'music.wav');

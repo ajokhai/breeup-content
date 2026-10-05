@@ -148,19 +148,27 @@ if (want('vo') && fs.existsSync(linesFile)) {
   save();
 }
 
-// 4. music, regenerated only when the prompt changes
-if (want('music') && cfg.music) {
+// 4. music, regenerated only when the prompt changes. A "score" (launch films) is made in code on the film's beat grid
+// (tools/beat.mjs: free, instant, in time). A Lyria prompt that fails (no credit, refused) falls back to the same.
+const beatBed = (mood, bpm) => { try { tool('beat.mjs', dir, ...(mood ? ['--mood', mood] : []), ...(bpm ? ['--bpm', String(bpm)] : [])); return true; } catch { return false; } };
+if (want('music') && cfg.score) {
+  const out = path.join(dir, 'audio', 'music.wav'), side = out + '.json', key = `beat:${JSON.stringify(cfg.score)}`;
+  const same = fs.existsSync(out) && fs.existsSync(side) && JSON.parse(fs.readFileSync(side, 'utf8')).prompt === key && JSON.parse(fs.readFileSync(side, 'utf8')).duration === cfg.duration;
+  if (!same) { step('music (made in code)'); tool('beat.mjs', dir); }
+} else if (want('music') && cfg.music) {
   const out = path.join(dir, 'audio', 'music.wav'), side = out + '.json';
   const same = fs.existsSync(out) && fs.existsSync(side) && JSON.parse(fs.readFileSync(side, 'utf8')).prompt === cfg.music;
+  // the fallback bed matches the prompt's feel and tempo
+  const fallback = () => beatBed(/calm|relaxed|soft/i.test(cfg.music) ? 'calm' : /african|afro/i.test(cfg.music) ? 'afro' : /upbeat|energetic|bright/i.test(cfg.music) ? 'upbeat' : 'pro', Number((/(\d{2,3})\s*BPM/i.exec(cfg.music) || [])[1]) || 0);
   if (!same) {
     step('music');
     try { tool('gemini.mjs', 'music', '--prompt', cfg.music, '--out', out); }
     catch (e) {
-      if (e.status === 2 || e.status === 3) console.warn('  no music: the Gemini key is out of credit or missing. The video continues with sound effects only.');
+      if (e.status === 2 || e.status === 3) console.warn(`  Gemini music unavailable (out of credit or no key): ${fallback() ? 'made a free beat in code instead' : 'continuing with sound effects only'}`);
       else try { // Lyria's copyright filter: one retry with a broader framing
         tool('gemini.mjs', 'music', '--prompt', `An original composition. ${cfg.music}`, '--out', out);
         fs.writeFileSync(side, JSON.stringify({ ...JSON.parse(fs.readFileSync(side, 'utf8')), prompt: cfg.music }, null, 1));
-      } catch (e2) { console.warn(`  no music this time (${e2.status === 2 ? 'out of credit' : 'the music model refused'}); continuing with sound effects only`); }
+      } catch (e2) { console.warn(`  no Lyria music this time (${e2.status === 2 ? 'out of credit' : 'the music model refused'}): ${fallback() ? 'made a free beat in code instead' : 'continuing with sound effects only'}`); }
     }
   }
 }

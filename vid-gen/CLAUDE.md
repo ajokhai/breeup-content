@@ -123,6 +123,14 @@ film, so every tutorial gets it.
   Clipwalk video keeps its scenes in `films/<film>/clipwalk.json`; the server's `writeFilm()` regenerates film.js,
   film.json and the script from it after every edit, so never hand-edit those three for a Clipwalk video. The owner's
   admin (connections checklist, people and credits, pricing, old step-by-step tools) is `pro.html` at /pro.
+- Launch films (`template: 'launch'`) are cut on a beat grid: pace sets the tempo (fast 124, medium 112, slow 100 BPM),
+  shots last whole beats, the first screen starts on a bar line and the hero word lands on the drop. film.json "score"
+  (`{ bpm, mood, groove, drop, end }`) makes `make.mjs` build the music with `tools/beat.mjs` (free, in time, no API).
+  `beat.mjs` is also the fallback whenever Lyria fails (no credit or refused), so a video never ships silent.
+- The editor has a Simple strip and an advanced **Timeline** (clips sized by length, trim, drag to move, cut at the
+  playhead, the music lane with its beats and drop) with a contextual panel for the selected clip. Clip lengths are
+  `len` on each scene in clipwalk.json; opening and ending lengths are `timing: { intro, end }`; a cut or duplicate is a
+  new scene with `from: <id>`. `writeFilm`/`writeLaunch` write `spans` (each clip's real start and length) back for it.
 - Voices: `"provider": "yarn"` in film.json "voice" uses YarnGPT (Nigerian accent, free for now); default is Gemini.
 - "Make it like a video I saw": `tools/style.mjs` measures pace (motion + cuts), energy and shape for free; the video
   takes its pace and music feel, never its colours or words.
