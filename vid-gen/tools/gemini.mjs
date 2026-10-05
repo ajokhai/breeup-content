@@ -277,7 +277,9 @@ function clean(a) {
 
 // ------------------------------------------------------------ image
 // genImage is shared by `image` and `batch`; returns the written paths.
+const MAX_VARIANTS = 3;   // Josh, 2026-10-05: never more than 2-3 variants of anything; each one costs credits
 async function genImage({ prompt: subject, out, model = 'gemini-3-pro-image', aspect = '16:9', size = '4K', n = 1, refs = [], raw = false }) {
+  if (n > MAX_VARIANTS) { console.error(`gemini: ${n} variants asked for; capped at ${MAX_VARIANTS} to save credits`); n = MAX_VARIANTS; }
   const prompt = raw ? subject : `${subject}\n\n${HOUSE_PHOTO}`;
   fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
   const imageConfig = { aspectRatio: aspect };
@@ -714,9 +716,13 @@ async function music(a) {
   console.log(a.out);
 }
 
+// Other tools (walk.mjs) import `call` for text requests, so they share the key, retries and exit codes.
+export { call };
 const cmds = { image, video, tts, music, check, sheet, batch, learn, review, clean, usage };
-if (!cmds[cmd]) {
-  console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 22).map(l => l.replace(/^\/\/ ?/, '')).join('\n'));
-  process.exit(cmd ? 1 : 0);
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (!cmds[cmd]) {
+    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 22).map(l => l.replace(/^\/\/ ?/, '')).join('\n'));
+    process.exit(cmd ? 1 : 0);
+  }
+  await cmds[cmd](args);
 }
-await cmds[cmd](args);

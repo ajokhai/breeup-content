@@ -43,7 +43,7 @@ For every shot that needs a person or a place, in this order:
 
    - The key lives in `videos/.env` (never commit it or print it). The tool adds the house photo style
      automatically; describe only the subject, action, place and light. `--raw` turns the house style off.
-   - Generate at least 2 variants (`--n 2`), look at every one, and keep the best. Reject anything with
+   - Generate 2 variants (`--n 2`, never more than 3: the tool caps it), look at every one, and keep the best. Reject anything with
      warped hands, extra fingers, melted faces, readable gibberish text, fake logos or a non-African feel.
    - Use `--size 2K` for anything shown full frame at 1080p. Use `4K` when the film pushes in or crops hard.
    - For a recurring character across shots, pass the first good picture as `--ref` so the face stays the same.
@@ -101,6 +101,25 @@ Write `docs/vo/lines.txt` and the photo prompts in `media/generated/<ID>/shots.j
 `node tools/make.mjs films/<film> --only vo` to get each line's start in `film.json` "vo", set the scene
 times from those, then `make --check` and look only at the contact sheet. Fix layout in the kit, not in a
 film, so every tutorial gets it.
+
+## 4d. Clipwalk (the web app) and walkthrough captures
+
+- `npm run studio` serves Clipwalk on http://localhost:4747 (`tools/studio/`). It only drives the same tools as the
+  command line, so anything it does can be done by hand and the other way round. Jobs run one at a time.
+- `tools/walk.mjs` captures product screens: Jev (default, cheapest) or Gemini Flash picks each click from a text list of
+  the page's controls. Logins come only from WALK_USER / WALK_PASS in the environment; never write them anywhere.
+- A capture becomes a tutorial film with `filmFromWalk` in the server: screens, captions, rings and taps come from
+  `walk.json`; colours, logo and end card from `tools/studio/workspace.json` (film.json "brand" recolours the kit).
+- Real device frames: `tools/kit/devices/` (rendered by `tools/frames.mjs` from the registry's 3D models). The kit
+  uses them automatically; `"frame": false` in film.json turns them off.
+- A video can have up to three views (e.g. the admin on a laptop, then a resident on a phone): the kit's
+  `phone.parts` switches device mid-film. Optional opener: a free stock photo or clip (`tools/stock.mjs`; the workspace's
+  "stock hint", "Black African, Nigerian" for BreeUp, is added to every search, so rule 1 still holds).
+- Friends pay in credits (1 credit = `credit_usd` in `tools/studio/pricing.json`; `menu` sets what each thing costs).
+  Accounts, codes and balances live in `tools/studio/accounts.json` (git-ignored). Credits come off only when a video
+  finishes. Anyone not on this computer, including through a tunnel, needs a code and only sees their own videos.
+- Clipwalk videos have `"publish": false` in film.json, so they stay in `renders/` and never land in `Final videos/`.
+- Prices: `tools/studio/pricing.json` holds API rates and the margin; update rates there when they change.
 
 ## 5. TikTok, Reels and Shorts
 
@@ -174,6 +193,15 @@ Inside `vid-gen/`, keep to the map at the top of `README.md`:
 
 ## Josh's taste (keep updating)
 
+- 2026-10-05: **Never more than 2-3 variants of anything**: hook versions per ad, picture variants per shot, music or
+  voice retries. Extra hook versions burnt a lot of credits. Default to 2; use 3 only when testing really needs it.
+  `gemini.mjs` and `render.mjs` enforce the cap. Same rule for the marketing plans.
+- 2026-10-05: Wants the tooling usable by friends for their own products, not only BreeUp. The app is called
+  **Clipwalk** (not BreeUp); BreeUp is just one brand in it. Making a video must be dead simple (link + what to show +
+  one button), with optional, skippable follow-up questions; granular controls stay under Advanced. A built-in tour.
+  Pricing in credits (one number per video, breakdown hidden). Keep it cheap: Jev first, Gemini only when needed.
+- 2026-10-05: Videos can mix devices (admin on a computer, user on a phone), use real device frames, and use stock
+  photos and video as well as generated ones.
 - 2026-10-03: Wants African and Nigerian faces and places throughout. Stock that feels foreign doesn't count.
 - 2026-10-03: Don't be lazy and keep reusing the website's stock images. Generate fresh pictures when stock is thin.
 - 2026-10-04: Mobile first. Portrait and landscape are nice to have, not compulsory: choose by the film's purpose.

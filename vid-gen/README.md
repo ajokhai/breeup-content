@@ -11,9 +11,10 @@ Josh's finished videos are in `../Final videos/`. Everything below is the agents
 | `films/` | One folder per video, named `<ID>-<short-name>` (e.g. `T2-pay-service-charge`). Each has `docs/` (shot list, reviews), `assets/`, `audio/` and the build files. |
 | `renders/` | Working renders and stills (local only). Finished videos are copied to `../Final videos/`. |
 | `media/generated/` | Pictures and clips made with Gemini, one folder per film. `_trials/` is experiments, safe to delete. |
+| `media/screens/` | Walkthrough captures: an AI clicked through a product and saved each screen (`walk.json` has captions and button boxes). |
 | `media/stock/` | Downloaded free stock photos and footage (list in `media/STOCK.md`). |
 | `moodboard/` | Drop reference videos you like into `moodboard/inbox/`. `STYLE.md` is the style guide learned from them. |
-| `tools/` | `jev.mjs` (cheap checks: picks motion blocks, lints scripts), `gemini.mjs` (images, video, voice, music, checks), `mix.mjs` (builds a film's soundtrack), `render.mjs` (turns a film into MP4s), `make.mjs` (runs the whole pipeline), `sfx.mjs` (sound effects), `kit/` (the shared tutorial template), `hf` (HyperFrames motion graphics), `PROMPTS.md` (prompt tips). |
+| `tools/` | `jev.mjs` (cheap checks: picks motion blocks, lints scripts), `gemini.mjs` (images, video, voice, music, checks), `mix.mjs` (builds a film's soundtrack), `render.mjs` (turns a film into MP4s), `make.mjs` (runs the whole pipeline), `sfx.mjs` (sound effects), `kit/` (the shared tutorial template; `kit/devices/` holds the real iPhone and MacBook frames), `hf` (HyperFrames motion graphics), `PROMPTS.md` (prompt tips), `walk.mjs` (AI clicks through a product and screenshots it), `stock.mjs` (free Pexels/Pixabay photos and clips, both shapes), `frames.mjs` (renders the device frames from 3D models), `studio/` (Clipwalk, the web app: `npm run studio`). |
 | `archive/` | Old versions. Nothing here is used. |
 | `node_modules/`, `package*.json`, `.env` | Software and the API key. Leave these alone. |
 
@@ -49,6 +50,12 @@ Formats: every film ships as 16:9 (YouTube, the blog) and 9:16 (Shorts, Reels, W
 - Tutorials: a consistent step counter (1, 2, 3...), a highlight ring on the exact control, and
   captions that use the app's own button labels.
 - Stock: Nigerian and African residents, guards, gates, homes and streets only. See `media/STOCK.md`.
+
+## The easy way: Clipwalk
+
+`npm run studio`, then open http://localhost:4747. Paste a product link, say what to show, press **Make my video**:
+an AI clicks through the product, keeps every screen and turns them into a narrated phone + widescreen video.
+Everything below is still available under Advanced in the app. Friends' guide: `tools/studio/GUIDE.md`.
 
 ## How a film gets made (any machine: your Mac or a cloud agent)
 

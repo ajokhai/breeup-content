@@ -129,11 +129,11 @@ async function lint(a) {
   lines.forEach((l, i) => {
     const instructions = (question) => ({ line: l, question });
     q[`pidgin${i}`] = { type: 'noul', instructions: instructions('Does `line` use Nigerian Pidgin, slang, or overly casual phrasing?') };
-    q[`clear${i}`] = { type: 'score', instructions: instructions('How easy is `line` for a 60-year-old Nigerian estate resident to understand on first hearing?'),
+    q[`clear${i}`] = { type: 'score', instructions: instructions('How easy is `line` for a non-technical 60-year-old to understand on first hearing?'),
       criteria: ['Confusing or jargon-heavy', 'Understandable with effort', 'Clear', 'Instantly clear, plain everyday English'] };
     q[`jargon${i}`] = { type: 'noul', instructions: instructions('Does `line` contain technical or financial jargon a non-technical person might not know?') };
   });
-  const ans = await ask({ purpose: 'Voice-over and on-screen captions for a BreeUp tutorial video', lines }, q);
+  const ans = await ask({ purpose: 'Voice-over and on-screen captions for a product tutorial video', lines }, q);
   lines.forEach((l, i) => {
     const flags = [];
     if (ans[`pidgin${i}`].noul > 0.5) flags.push('pidgin or slang');
@@ -158,10 +158,14 @@ async function dupe(a) {
   console.log(c > 0.6 ? `covered (${(c * 100).toFixed(0)}%): don't add it` : x > 0.6 ? `conflicts (${(x * 100).toFixed(0)}%): ask Josh which wins` : `new (${(100 - c * 100).toFixed(0)}%): add it`);
 }
 
-const args = parseArgs(process.argv.slice(2));
-const cmds = { pick, lint, dupe };
-if (!cmds[args._[0]]) {
-  console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 15).map(l => l.replace(/^\/\/ ?/, '')).join('\n'));
-  process.exit(args._[0] ? 1 : 0);
+// Other tools (walk.mjs) import `ask`, so they share the key, retries and exit codes.
+export { ask };
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const args = parseArgs(process.argv.slice(2));
+  const cmds = { pick, lint, dupe };
+  if (!cmds[args._[0]]) {
+    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 15).map(l => l.replace(/^\/\/ ?/, '')).join('\n'));
+    process.exit(args._[0] ? 1 : 0);
+  }
+  await cmds[args._[0]](args);
 }
-await cmds[args._[0]](args);

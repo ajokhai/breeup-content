@@ -6,13 +6,16 @@
 // Config (every scene optional except phone + steps):
 //   kicker: 'BREEUP TUTORIAL · RESIDENTS'
 //   photos: { hook: 'hook', why: 'why', tip: 'tip' }      -> assets/photos/<name>-<16x9|9x16>.jpg
+//   clips:  { hook: 'hook' }   a video instead of a photo -> assets/clips/<name>-<16x9|9x16>.webm (tools/stock.mjs video)
 //   hook:  { to: 4.8, lines: { '16x9': [...], '9x16': [...] }, gold: 'minutes' }
 //   why:   { to: 10.3, text: '...' }
 //   intro: { to: 12, lines: ["Here's how,", 'in four steps.'] }
 //   phone: { device: 'phone' | 'laptop' (desktop screenshots 2160x1350; regions then in those px),
 //            screens: { login: 'assets/screens/x.jpg', ... }, seq: [['login', 0], ['home', 27]],
 //            regions: { pin: [x, y, w, h] (screenshot px, 780x1688) }, cam: [[t, [zoom, fx, fy]], ...],
-//            rings: [{ r: 'pin', a: 21, b: 24, tap: 23 }], to: 49 }
+//            rings: [{ r: 'pin', a: 21, b: 24, tap: 23 }], to: 49,
+//            parts: [{ from: 0, device: 'laptop' }, { from: 30, device: 'phone' }] }   (switch device mid-film,
+//            e.g. an admin on a computer, then a resident on a phone; regions are in each device's screenshot px)
 //   steps: [{ t: 11, title: 'Sign in', body: '...' }]       (the counter says STEP n OF steps.length)
 //   chips: [{ text: '...', a: 33, b: 38 }]                 (a pill under the step text)
 //   codes: [{ text: 'GE-D3', label: 'YOUR UNIT REFERENCE', a: 32, b: 38 }]   (a big stamped code)
@@ -24,12 +27,18 @@
 import * as M from '/kit/motion.js';
 
 const { W, H, FORMAT, E, prog, lerp, clamp, springU, springKeys, SPRING, wobble, font, layout, text, fill, cover, rrect } = M;
-export const C = { green: '#1a472a', deep: '#123220', cream: '#f6f4ee', gold: '#c9a84c', ink: '#1c1f1b', mute: '#5d645c', white: '#ffffff' };
+// film.json is read once: "retime" (below) and an optional "brand" that recolours the kit for other products,
+// e.g. "brand": { "green": "#2b2d6e", "deep": "#1b1c4a", "gold": "#ff8a3d" } (keys as in C)
+const FILM = await fetch('film.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
+export const C = { green: '#1a472a', deep: '#123220', cream: '#f6f4ee', gold: '#c9a84c', ink: '#1c1f1b', mute: '#5d645c', white: '#ffffff', ...(FILM.brand || {}) };
+const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
 const DISPLAY = 'Display', UI = 'UI';
 const P = FORMAT.portrait;
 
 // film.json "retime" (written by make.mjs when the voice runs long): piecewise-linear map from authored to real times
-const RETIME = (await fetch('film.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({}))).retime;
+const RETIME = FILM.retime;
+// real device frames rendered from 3D models (tools/frames.mjs); without them the kit draws a plain frame
+const FRAMES = FILM.frame === false ? null : await fetch('/kit/devices/frames.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
 export function warp(x) {
   if (!RETIME || typeof x !== 'number') return x;
   for (let i = 1; i < RETIME.length; i++) {
@@ -123,6 +132,7 @@ export function tutorial(cfg) {
     for (const k of ['hook', 'why', 'intro', 'tip']) W1(cfg[k], ['to']);
     (cfg.steps || []).forEach((s) => W1(s, ['t']));
     W1(cfg.phone, ['to']);
+    (cfg.phone.parts || []).forEach((q) => W1(q, ['from']));
     cfg.phone.seq?.forEach((q) => { q[1] = warp(q[1]); });
     cfg.phone.cam?.forEach((q) => { q[0] = warp(q[0]); });
     (cfg.phone.rings || []).forEach((r) => W1(r, ['a', 'b', 'tap']));
@@ -131,15 +141,18 @@ export function tutorial(cfg) {
     (cfg.hits || []).forEach((h) => { h[0] = warp(h[0]); });
   }
   const ph = cfg.phone, steps = cfg.steps;
-  setDevice(ph.device);
+  // device per moment: one device, or "parts" that switch it (each part's screens, rings and camera stay its own)
+  const parts = ph.parts?.length ? ph.parts : [{ from: 0, device: ph.device || 'phone' }];
+  const partAt = (u) => { let i = 0; parts.forEach((q, k) => { if (u >= q.from) i = k; }); return i; };
+  const useDevice = (u) => { const d = parts[partAt(u)].device || 'phone'; if ((d === 'laptop') !== LAPTOP || !L) setDevice(d); };
+  setDevice(parts[0].device || 'phone');
   const t0 = steps[0].t - 0.4;                       // the phone rises just before step 1
   const tEnd = ph.to;                                // the phone scene ends (green swell) here
   const tipTo = cfg.tip?.to ?? tEnd;
   const cam = [[t0, [1, 0.5, 0.5]], ...(ph.cam || [])];
   // 9:16 laptop: desktop screens are unreadable whole on a phone, so the camera never zooms out past 1.7x
   // (it frames the part being explained); everywhere it is clamped so it never pans past the screenshot's edge
-  const MINZ = LAPTOP && P ? 1.7 : 1;
-  const camAt = (u) => { const c = springKeys(u, cam, SPRING.gentle); return [Math.max(MINZ, c[0]), c[1], c[2]]; };
+  const camAt = (u) => { const c = springKeys(u, cam, SPRING.gentle); return [Math.max(LAPTOP && P ? 1.7 : 1, c[0]), c[1], c[2]]; };
   const view = (u) => {
     const [z, fx, fy] = camAt(u);
     const fpx = PH.x + fx * PH.w, fpy = PH.y + fy * PH.h, zk = clamp((z - 1) / 0.5);
@@ -183,7 +196,7 @@ export function tutorial(cfg) {
       });
     });
     const kk = E.outCubic(prog(u, 0, 0.6));
-    if (cfg.kicker && !P) text(ctx, cfg.kicker, s.x, y0 - size * 1.05, font(30, 500, UI), `rgba(246,244,238,${0.85 * kk})`, 'left', 3);
+    if (cfg.kicker && !P) text(ctx, cfg.kicker, s.x, y0 - size * 1.05, font(30, 500, UI), rgba(C.cream, 0.85 * kk), 'left', 3);
   }
   function sceneWhy(ctx, u, IMG) {
     const a = cfg.hook.to;
@@ -237,7 +250,7 @@ export function tutorial(cfg) {
   }
   function scenePhone(ctx, u, IMG) {
     const bg = blurred(IMG.stage || IMG.hook);
-    if (bg) { ctx.drawImage(bg, 0, 0); ctx.fillStyle = 'rgba(246,244,238,0.88)'; ctx.fillRect(0, 0, W, H); } else fill(ctx, C.cream);
+    if (bg) { ctx.drawImage(bg, 0, 0); ctx.fillStyle = rgba(C.cream, 0.88); ctx.fillRect(0, 0, W, H); } else fill(ctx, C.cream);
     if (bg) { ctx.save(); ctx.beginPath(); ctx.rect(...L.stage); if (P) ctx.rect(0, sy0 + sh0, W, H - sy0 - sh0); ctx.clip(); ctx.drawImage(bg, 0, 0); ctx.restore(); }
     else { ctx.fillStyle = C.green; ctx.fillRect(...L.stage); }
     if (P && !bg) { ctx.fillStyle = C.deep; ctx.fillRect(0, sy0 + sh0, W, H - sy0 - sh0); }
@@ -245,9 +258,21 @@ export function tutorial(cfg) {
     const { z, fpx, fpy, ax, ay } = view(u);
     ctx.save(); ctx.beginPath(); ctx.rect(...L.stage); ctx.clip();
     ctx.translate(0, (1 - k) * (sh0 + 200));
+    // switching device: the old one slides out left, the new one in from the right
+    const pi = partAt(u), b = pi ? parts[pi].from : null, bn = parts[pi + 1]?.from;
+    if (bn != null && u > bn - 0.35) ctx.translate(-E.inCubic(prog(u, bn - 0.35, bn)) * W, 0);
+    else if (b != null && u < b + 0.45) ctx.translate((1 - E.outCubic(prog(u, b, b + 0.45))) * W, 0);
     ctx.save(); ctx.translate(ax, ay); ctx.scale(z * (1 + q), z * (1 - q)); ctx.translate(-fpx, -fpy);
     ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 24;
-    if (LAPTOP) {
+    const FR = IMG['frame_' + (LAPTOP ? 'laptop' : 'phone')] && FRAMES?.[LAPTOP ? 'laptop' : 'phone'];
+    let fr = null;   // where the real frame lands: its screen hole is fitted to the screenshot
+    if (FR) {
+      const [hx, hy, hw, hh] = FR.screen, b = LAPTOP ? 0 : 16, k = (PH.w + 2 * b) / hw;
+      const gx = PH.x - b, gy = LAPTOP ? PH.y - (FR.notch || 0) * k : PH.y + PH.h / 2 - (hh * k) / 2;   // laptop: screenshot starts under the notch
+      fr = { x: gx - hx * k, y: gy - hy * k, w: FR.w * k, h: FR.h * k, gx, gy, gw: hw * k, gh: hh * k };
+      // under the screenshot: the black glass (phone) or panel (laptop), carrying the drop shadow
+      rrect(ctx, gx, gy, hw * k, hh * k, LAPTOP ? 4 : hw * k * 0.13); ctx.fillStyle = '#050605'; ctx.fill();
+    } else if (LAPTOP) {
       rrect(ctx, PH.x - 14, PH.y - 14, PH.w + 28, PH.h + 28, 22); ctx.fillStyle = '#0d0f0d'; ctx.fill();
       ctx.shadowColor = 'transparent';
       rrect(ctx, PH.x - 70, PH.y + PH.h + 14, PH.w + 140, 22, 11); ctx.fillStyle = '#2a2d2a'; ctx.fill();
@@ -256,12 +281,16 @@ export function tutorial(cfg) {
     }
     ctx.shadowColor = 'transparent';
     ctx.save(); rrect(ctx, PH.x, PH.y, PH.w, PH.h, LAPTOP ? 6 : 50); ctx.clip();
-    ph.seq.forEach(([key, at], i) => {   // each screen slides up over the last
-      const img = IMG[key], s = i === 0 ? 1 : E.inOutCubic(prog(u, at, at + 0.5));
+    ph.seq.forEach(([key, at], i) => {   // each screen slides up over the last (only this part's screens)
+      if (partAt(Math.max(at, 0.001)) !== pi && !(i === 0 && pi === 0)) return;
+      const first = i === 0 || partAt(ph.seq[i - 1][1]) !== partAt(at);
+      const img = IMG[key], s = first ? 1 : E.inOutCubic(prog(u, at, at + 0.5));
       const nx = ph.seq[i + 1] ? E.inOutCubic(prog(u, ph.seq[i + 1][1], ph.seq[i + 1][1] + 0.5)) : 0;
       if (s > 0 && nx < 1 && img) ctx.drawImage(img, PH.x, PH.y + (1 - s) * PH.h - nx * PH.h * 0.3, PH.w, PH.h);
     });
-    ctx.restore(); ctx.restore();
+    ctx.restore();
+    if (fr) ctx.drawImage(IMG['frame_' + (LAPTOP ? 'laptop' : 'phone')], fr.x, fr.y, fr.w, fr.h);   // the hardware over the screen's edges
+    ctx.restore();
     (ph.rings || []).forEach((r) => ring(ctx, u, r));
     ctx.restore();
     const i = steps.findLastIndex((s) => u >= s.t - 0.2);
@@ -303,7 +332,7 @@ export function tutorial(cfg) {
     const c = L.cap, y = P ? c.y - 30 : c.y - 64, r = P ? 13 : 9, gap = P ? 56 : 46;
     steps.forEach((s, i) => {
       const k = u >= s.t ? springU(u, s.t, SPRING.bouncy) : 0, x = c.x + i * gap + r;
-      ctx.fillStyle = 'rgba(26,71,42,0.18)'; ctx.beginPath(); ctx.arc(x, y, r, 0, M.TAU); ctx.fill();
+      ctx.fillStyle = rgba(C.green, 0.18); ctx.beginPath(); ctx.arc(x, y, r, 0, M.TAU); ctx.fill();
       if (k > 0) { ctx.fillStyle = C.green; ctx.beginPath(); ctx.arc(x, y, r * k, 0, M.TAU); ctx.fill(); }
     });
   }
@@ -320,7 +349,7 @@ export function tutorial(cfg) {
     ctx.beginPath(); ctx.rect(0, y - size, W, size * 1.25); ctx.clip();
     text(ctx, c.text, L.cap.x, y - (1 - k) * size * 0.8, f, C.ink);
     ctx.restore();
-    if (c.label) text(ctx, c.label, L.cap.x, y - size - 22, font(P ? 44 : 24, 500, UI), `rgba(201,168,76,${E.outCubic(prog(u, c.a + 0.3, c.a + 0.8)) * (1 - ex)})`, 'left', 3);
+    if (c.label) text(ctx, c.label, L.cap.x, y - size - 22, font(P ? 44 : 24, 500, UI), rgba(C.gold, E.outCubic(prog(u, c.a + 0.3, c.a + 0.8)) * (1 - ex)), 'left', 3);
   }
   function drawCard(ctx, u, c, IMG) {
     const img = IMG[c.src];
@@ -360,9 +389,9 @@ export function tutorial(cfg) {
     const bf = font(FORMAT.pick({ '16x9': 42, '9x16': 56 }), 400, UI), bh = FORMAT.pick({ '16x9': 60, '9x16': 76 });
     const lines = wrap(ctx, cfg.tip.title, f, P ? s.w : 1200), bl = wrap(ctx, cfg.tip.body, bf, P ? s.w : 1200);
     const y = H - (P ? 440 : 120) - bl.length * bh - (lines.length - 1) * size * 1.1 - 30;
-    text(ctx, cfg.tip.kicker || 'GOOD TO KNOW', s.x, y - size - 24, font(P ? 44 : 26, 500, UI), `rgba(201,168,76,${E.outCubic(prog(u, a + 0.8, a + 1.3))})`, 'left', 3);
+    text(ctx, cfg.tip.kicker || 'GOOD TO KNOW', s.x, y - size - 24, font(P ? 44 : 26, 500, UI), rgba(C.gold, E.outCubic(prog(u, a + 0.8, a + 1.3))), 'left', 3);
     riseLines(ctx, lines, s.x, y, size * 1.1, f, C.cream, u, a + 0.9);
-    riseLines(ctx, bl, s.x, y + (lines.length - 1) * size * 1.1 + bh + 30, bh, bf, 'rgba(246,244,238,0.92)', u, a + 1.6, { stagger: 0.15 });
+    riseLines(ctx, bl, s.x, y + (lines.length - 1) * size * 1.1 + bh + 30, bh, bf, rgba(C.cream, 0.92), u, a + 1.6, { stagger: 0.15 });
     ctx.restore();
   }
   function sceneEnd(ctx, u, IMG) {
@@ -383,17 +412,21 @@ export function tutorial(cfg) {
     const tf = font(FORMAT.pick({ '16x9': 38, '9x16': 50 }), 400, UI), s = FORMAT.safe, lh = FORMAT.pick({ '16x9': 56, '9x16': 68 });
     const tl = wrap(ctx, cfg.end?.tagline || 'Dues, gate access, approvals and notices in one place.', tf, P ? s.w : 1400);
     const ty = P ? wy + 120 : H * 0.62;
-    riseLines(ctx, tl, W / 2, ty, lh, tf, 'rgba(246,244,238,0.85)', u, a + 0.8, { align: 'center', stagger: 0.12 });
+    riseLines(ctx, tl, W / 2, ty, lh, tf, rgba(C.cream, 0.85), u, a + 0.8, { align: 'center', stagger: 0.12 });
     riseLines(ctx, ['breeup.com'], W / 2, ty + tl.length * lh + 70, 70, font(P ? 60 : 52, 500, UI), C.gold, u, a + 1.2, { align: 'center' });
     ctx.restore();
   }
 
   const images = { logo: 'assets/logo.svg', ...ph.screens };
+  if (FRAMES) for (const d of new Set(parts.map((q) => q.device || 'phone'))) images['frame_' + d] = `/kit/devices/${d}-frame.png`;
   for (const k of ['hook', 'why', 'tip']) if (photo(k)) images[k] = photo(k);
-  M.film({
+  const videos = {};   // a clip replaces the photo for that scene; it plays from the start of the film
+  for (const k of ['hook', 'why', 'tip']) if (cfg.clips?.[k]) { videos[k] = `assets/clips/${cfg.clips[k]}-${P ? '9x16' : '16x9'}.webm`; delete images[k]; }
+  M.film({ videos,
     fonts: [font(100, 400, DISPLAY), font(40, 400, UI), font(40, 500, UI)],
     images, hits: cfg.hits || [],
     draw(ctx, u, t, IMG) {
+      useDevice(u);
       if (u < cfg.hook.to) sceneHook(ctx, u, IMG);
       else if (cfg.why && u < cfg.why.to) sceneWhy(ctx, u, IMG);
       else if (cfg.intro && u < cfg.intro.to) sceneIntro(ctx, u, IMG);

@@ -170,7 +170,7 @@ if (flag('check') || (only && only.includes('stills'))) {
   const outs = vs.flatMap((v) => formats.map((f) => path.join(ROOT, 'renders', `breeup-${path.basename(dir)}${v ? `-${v}` : ''}-${f}.mp4`))).filter(fs.existsSync);
   if (outs.length) tool('gemini.mjs', 'clean', ...outs);
   // 9. publish: full renders get a plain name in ../Final videos/, the only folder Josh looks at
-  if (!flag('draft') && outs.length) {
+  if (!flag('draft') && outs.length && cfg.publish !== false) {   // Clipwalk videos set publish: false and stay in renders/
     const final = path.join(ROOT, '..', 'Final videos');
     fs.mkdirSync(final, { recursive: true });
     const id = path.basename(dir).split('-')[0];

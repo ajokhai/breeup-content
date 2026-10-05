@@ -1,0 +1,47 @@
+{
+ "note": "API rates (USD, paid tier) checked 2026-10-05 at ai.google.dev/gemini-api/docs/pricing and TypeSafe's launch notes. Update here when they change; Studio's Pricing page recomputes everything. Friends pay in credits (menu; 1 credit = credit_usd). Pricing details suggest credit prices from these costs.",
+ "rates": {
+  "image_2k": 0.134,
+  "image_4k": 0.24,
+  "image_check": 0.002,
+  "veo_second_1080p": 0.4,
+  "veo_second_4k": 0.6,
+  "veo_fast_second_1080p": 0.12,
+  "music_song": 0.08,
+  "tts_output_per_m": 20.0,
+  "tts_tokens_per_second": 25,
+  "flash_in_per_m": 0.75,
+  "flash_out_per_m": 3.75,
+  "pro_in_per_m": 2.0,
+  "pro_out_per_m": 12.0,
+  "jev_in_per_m": 0.042
+ },
+ "assumptions": {
+  "retry_factor": 1.5,
+  "variants_per_photo": 2,
+  "veo_clip_seconds": 8,
+  "walk_steps": 20,
+  "walk_tokens_per_step_jev": 3000,
+  "walk_tokens_per_step_gemini": 3500,
+  "review_tokens_per_video_second": 300,
+  "payment_fee_pct": 3.5,
+  "hosting_per_month": 0,
+  "videos_per_month": 20
+ },
+ "buffer_pct": 25,
+ "profit_pct": 0,
+ "currency": {
+  "code": "NGN",
+  "symbol": "\u20a6",
+  "per_usd": 1500,
+  "note": "Set per_usd to today's rate before quoting in naira."
+ },
+ "credit_usd": 0.1,
+ "menu": {
+  "video": 5,
+  "extra_view": 1,
+  "screens_only": 3,
+  "ai_photo": 15,
+  "ai_clip": 70
+ }
+}

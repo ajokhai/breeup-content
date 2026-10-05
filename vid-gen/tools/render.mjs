@@ -36,7 +36,8 @@ const still = opt('still');
 const from = Number(opt('from', 0)), to = Number(opt('to', cfg.duration));
 const SIZES = { '16x9': [1920, 1080], '9x16': [1080, 1920], '4x5': [1080, 1350], '1x1': [1080, 1080] };
 // hook variants (ads): film.json "variants": ["a", "b"]; --variant picks some; each renders as -<v>
-const variants = opt('variant') ? opt('variant').split(',') : cfg.variants || [null];
+let variants = opt('variant') ? opt('variant').split(',') : cfg.variants || [null];
+if (variants.length > 3) { console.error(`render: ${variants.length} hook variants; only the first 3 are rendered (Josh: never more than 2-3)`); variants = variants.slice(0, 3); }
 let VAR = null;
 const base = `breeup-${path.basename(filmDir)}`;
 let name = base;

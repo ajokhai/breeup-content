@@ -19,7 +19,7 @@ Status: **Ready** = approved for use · **Review** = finished, waiting for Josh'
 | T7 | How to add admins and set permissions | 50 s | phone, wide | Committees, managers | Onboarding, blog, LinkedIn | Ready (site, wide); phone being improved |
 
 Coming (see `../vid-gen/HANDOFF.md` for progress): E1-E4 committee explainers, L1 launch film, A1-A6 ad cuts (each
-in 9:16, 4:5, 1:1 and 16:9, with 2-3 hook variants), H1 homepage hero loop.
+in 9:16, 4:5, 1:1 and 16:9, with 2 hook variants, never more than 3), H1 homepage hero loop.
 
 ## Ready-made captions
 

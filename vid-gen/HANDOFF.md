@@ -13,6 +13,23 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-05 · Mac session · Clipwalk (web app), walkthrough capture, device frames, credits
+
+- **Clipwalk** (`npm run studio`, http://localhost:4747; code in `tools/studio/`, friends' guide `tools/studio/GUIDE.md`):
+  paste a product link + what to show -> an AI clicks through it (`tools/walk.mjs`, Jev by default, ~$0.003) -> a
+  branded tutorial film is built from the screens (`filmFromWalk`) -> `make.mjs` voices, mixes and renders it. Optional
+  follow-up questions (pre-filled from the site), up to 3 views mixing laptop and phone, stock opener (`tools/stock.mjs`).
+  The old step-by-step pipeline is still there under Advanced.
+- **Kit changes (all tutorials):** real iPhone/MacBook frames (`tools/kit/devices/`, from `tools/frames.mjs`; film.json
+  `"frame": false` turns them off), `phone.parts` to switch device mid-film, `clips` for video instead of photos,
+  film.json `"brand"` recolours the kit. T3/T4 stills checked: fine. Re-render a film to pick up the frames.
+- **Credits:** 1 credit = $0.10, a video = 5 (menu in `tools/studio/pricing.json`). Friends' accounts/codes/balances in
+  `tools/studio/accounts.json` (git-ignored). Clipwalk films have `"publish": false`: they never go to `Final videos/`.
+- **Cost rule (Josh):** never more than 2-3 variants of anything; `gemini.mjs` (`--n`) and `render.mjs` (hooks) cap it.
+- **Needs Josh:** Gemini prepaid credit is out (402), so voice-over/music can't run; add a free Pexels key in Settings
+  for stock. Jev flags "wahala" (homepage headline) as slang in the plain-English lint.
+
+
 ## 2026-10-04 · website agent (subbyems-main) · handover: publishing steps written, everything pushed
 
 - **Publishing steps:** `vid-gen/docs/publishing.md` (where files go, which file lists each film, the database

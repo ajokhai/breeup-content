@@ -36,7 +36,7 @@ facility managers, landlords), not residents, until we see what converts.
 | A6 | 6-second bumpers (one line + logo) | Retargeting | 6 s | 9:16, 1:1 |
 
 Each ad: the hook in the first 1.5 s, captions burned in (most people watch muted), one message, end card with
-"Set up your estate free at breeup.com". Two or three hook variants per ad to test. Until the A-series lands,
+"Set up your estate free at breeup.com". Two hook variants per ad to test (three at most: each one costs render and picture credits). Until the A-series lands,
 use S1 and T4 (phone cut).
 
 ## Budget and testing (starting point; adjust with real numbers)

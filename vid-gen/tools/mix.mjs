@@ -57,7 +57,8 @@ if (hasMusic) {
     filters.push('[m][vo2]sidechaincompress=threshold=0.03:ratio=6:attack=40:release=500[md]');
     filters.push('[md][vo1]amix=inputs=2:normalize=0[pre]');
   } else filters.push('[m]anull[pre]');
-} else filters.push('[vo]anull[pre]');
+} else if (voMix) filters.push('[vo]anull[pre]');
+else filters.push(`anullsrc=r=48000:cl=stereo,atrim=0:${dur}[pre]`);   // no voice or music: sound effects only (or silence)
 if (fs.existsSync(sfx)) {
   inputs.push('-i', sfx);
   filters.push(`[${off + vo.length}:a]aresample=48000,volume=${sfxDb}dB,apad=whole_dur=${dur}[fx]`);
