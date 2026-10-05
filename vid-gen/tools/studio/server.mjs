@@ -14,6 +14,7 @@ import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { loadProfile, matchProfile } from '../profiles.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..');            // vid-gen/
@@ -156,7 +157,7 @@ function create({ id, name, title, from }) {
 // ------------------------------------------------------------------ workspace, keys, pricing
 // Clipwalk isn't only for BreeUp: the workspace (name, colours, logo, end-card line) brands every film made here.
 const WS = path.join(HERE, 'workspace.json'), BRAND = path.join(HERE, 'brand');
-const WS_DEFAULT = { name: 'BreeUp', tagline: 'Dues, gate access, approvals and notices in one place.', stockHint: 'Black African, Nigerian', accent: 'nigerian',
+const WS_DEFAULT = { name: 'BreeUp', tagline: 'Dues, gate access, approvals and notices in one place.',
   brand: { green: '#1a472a', deep: '#123220', cream: '#f6f4ee', gold: '#c9a84c' }, logo: 'films/T3-resident-account/assets/logo.svg' };
 const workspace = () => { const k = keyStatus(); return { ...WS_DEFAULT, ...readJSON(WS, {}), stock: !!(k.pexels || k.pixabay), nigerianVoice: !!k.yarngpt }; };
 function saveWorkspace(b) {
@@ -281,7 +282,7 @@ const human = (s) => { const t = String(s).replace(/-\d+$/, '').replace(/-/g, ' 
 const words = (s) => String(s || '').split(/\s+/).filter(Boolean).length;
 
 // Several walks make one video ("views"): e.g. the admin on a laptop, then a resident on a phone.
-function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, voiceName, owner, opener, provider, style, template }) {
+function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, voiceName, owner, opener, provider, style, template, profile }) {
   const views = (Array.isArray(walks) ? walks : [{ name: walks }]).map((v) => ({ ...v, w: readJSON(path.join(SCREENS, v.name, 'walk.json')) }))
     .filter((v) => v.w?.shots?.length);
   if (!views.length) throw new Error('That walkthrough has no screens.');
@@ -314,7 +315,7 @@ function filmFromWalk(walks, { id, name, title, voice = true, brand: vb = {}, vo
   }
   const last = scenes.at(-1); if (last && !(views.at(-1).w.shots.at(-1).does || []).length) last.line = `And you're there: ${last.line.charAt(0).toLowerCase()}${last.line.slice(1)}`;
   const model = {
-    title, scenes, voiceOn: voice, voiceName: voiceName || '', provider: provider || '', opener: opener || null,
+    title, scenes, voiceOn: voice, voiceName: voiceName || '', provider: provider || '', opener: opener || null, profile: profile || 'none',
     // a video they liked sets the pace and the music's feel (never its colours or words)
     mood: style?.mood || (voice ? 'calm' : 'none'), pace: style?.pace || 'slow', like: style?.source || undefined,
     brand: { name: vb.name || (friend ? vb.host || 'Product' : ws.name), tagline: vb.tagline || (friend ? '' : ws.tagline), site: vb.site || '',
@@ -394,7 +395,7 @@ function writeFilm(folder, model) {
   const voice = { ...(cfg.voice || {}), ...(model.provider ? { provider: model.provider } : {}) };
   if (!model.provider) delete voice.provider;
   if (model.voiceName) voice.voice = model.voiceName; else delete voice.voice;
-  Object.assign(cfg, { title: model.title, duration, formats: ['9x16', '16x9'], brand: model.brand.colors, publish: false, voice,
+  Object.assign(cfg, { title: model.title, duration, formats: ['9x16', '16x9'], brand: model.brand.colors, publish: false, voice, profile: model.profile || 'none',
     ...(model.owner ? { owner: model.owner } : {}), ...(model.voiceOn ? { vo_at: at } : {}), ...(model.mood && model.mood !== 'none' && MOODS[model.mood] ? { music: MOODS[model.mood] } : {}) });
   fs.writeFileSync(path.join(dir, 'film.json'), JSON.stringify(cfg, null, 1) + '\n');
   const lf = path.join(dir, 'docs', 'vo', 'lines.txt');
@@ -439,7 +440,7 @@ function writeLaunch(folder, model) {
     `import { launch } from '/kit/launch.js';\n\nconst HITS = [\n${hits.map((h) => `  ${JSON.stringify(h)},`).join('\n')}\n];\n\nlaunch({ ...${JSON.stringify(cfgJs, null, 1)}, hits: HITS });\n`);
   const cfg = readJSON(path.join(dir, 'film.json'), {});
   for (const k2 of ['vo', 'vo_at', 'retime', 'duration_authored', 'variants', 'stills', 'music']) delete cfg[k2];
-  Object.assign(cfg, { title: model.title, duration, formats: ['9x16', '16x9'], brand: b.colors, publish: false, ...(model.owner ? { owner: model.owner } : {}),
+  Object.assign(cfg, { title: model.title, duration, formats: ['9x16', '16x9'], brand: b.colors, publish: false, profile: model.profile || 'none', ...(model.owner ? { owner: model.owner } : {}),
     ...(model.mood && model.mood !== 'none' && MOODS[model.mood] ? { music: MOODS[model.mood].replace('About one minute', `About ${Math.ceil(duration)} seconds`) } : {}) });
   fs.writeFileSync(path.join(dir, 'film.json'), JSON.stringify(cfg, null, 1) + '\n');
   fs.rmSync(path.join(dir, 'docs', 'vo', 'lines.txt'), { force: true });
@@ -507,7 +508,8 @@ async function sniff(url) {
   } catch {}
   const desc = (meta(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i) || meta(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)/i) || '')
     .replace(/&amp;/g, '&').replace(/&#39;|&rsquo;/g, "'").replace(/&quot;/g, '"').slice(0, 200);
-  return { name: name?.slice(0, 40) || null, color: color || null, logo, site: `${u.protocol}//${u.hostname}`, desc: desc || null };
+  const profile = matchProfile({ name: name || '', site: u.hostname });
+  return { name: name?.slice(0, 40) || null, color: color || null, logo, site: `${u.protocol}//${u.hostname}`, desc: desc || null, profile, accent: loadProfile(profile).accent };
 }
 
 // Credits: friends prepay, each finished video deducts its price; the owner (this computer) is never charged.
@@ -632,19 +634,21 @@ function enqueueMake(o, who = OWNER) {
   const brain = o.brain === 'gemini' ? 'gemini' : 'jev';
   // the opening shot: a free stock photo or clip behind the title (needs a Pexels or Pixabay key)
   const opener = ['photo', 'video'].includes(o.opener) && workspace().stock ? o.opener : null;
-  const hint = who.role === 'owner' ? workspace().stockHint : '';
+  const hint = prof.stockHint || '';
   const openerQuery = `${String(o.openerQuery || '').trim().slice(0, 100) || (views[0].device === 'laptop' ? 'person working on a laptop in a bright modern office' : 'person smiling while using a smartphone')}${hint ? `, ${hint}` : ''}`;
   // "make one like this": a video they liked sets pace and music feel
   const like = /^https?:\/\//.test(String(o.like || '').trim()) ? String(o.like).trim() : null;
   const styleFile = path.join('media', 'styles', `${base}.json`);
+  // the brand's own rules (tools/profiles/) apply only when the video is for that brand, e.g. BreeUp
+  const profile = matchProfile({ name: o.brand?.name, site: `${o.brand?.site || ''} ${views[0].url}` }), prof = loadProfile(profile);
   // the voice: Nigerian English (YarnGPT, free) or international (Gemini)
-  const provider = (o.accent || (who.role === 'owner' ? workspace().accent : '')) === 'nigerian' && keyStatus().yarngpt ? 'yarn' : '';
+  const provider = (o.accent || prof.accent) === 'nigerian' && keyStatus().yarngpt ? 'yarn' : '';
   const steps = [
     ...(like ? [{ stage: 'style', soft: true, args: () => ['tools/style.mjs', like, '--out', styleFile] }] : []),
     ...views.map((v, k) => ({ stage: 'capture', walk: names[k], env: { WALK_USER: v.user, WALK_PASS: v.pass },
       args: () => ACTIONS.walk.args('', { url: v.url, goal: v.goal, name: names[k], device: v.device, brain, steps: o.steps || 25, risky: !!o.risky }) })),
     { stage: 'build', fn: (job) => {
-      const folder = filmFromWalk(views.map((v, k) => ({ name: names[k], role: v.role })), { id, name: base, title, voice, opener, provider, style: like ? readJSON(path.join(ROOT, styleFile)) : null,
+      const folder = filmFromWalk(views.map((v, k) => ({ name: names[k], role: v.role })), { id, name: base, title, voice, opener, provider, profile, style: like ? readJSON(path.join(ROOT, styleFile)) : null,
         brand: { ...(o.brand || {}), host: host.charAt(0).toUpperCase() + host.slice(1) }, voiceName: o.voiceName, owner: who.id, template: o.template === 'launch' ? 'launch' : '' });
       job.folder = folder; job.meta.folder = folder;
       log(job, `made films/${folder}`);
@@ -655,7 +659,7 @@ function enqueueMake(o, who = OWNER) {
     { stage: 'render', args: (job) => ['tools/make.mjs', path.join('films', job.folder), ...(o.quality === 'quick' ? ['--draft'] : [])] },
   ];
   const job = { meta: { kind: 'make', name: names[0], names, device: views[0].device, title, voice, price, opener }, owner: who.id, id: ++seq, action: 'make', label: `Make: ${title}`,
-    folder: null, steps, env: {}, state: 'queued', lines: [], progress: '', code: null, created: Date.now(), clients: new Set() };
+    folder: null, steps, env: { CLIPWALK_PROFILE: profile }, state: 'queued', lines: [], progress: '', code: null, created: Date.now(), clients: new Set() };
   jobs.push(job);
   pump();
   return job;
@@ -686,7 +690,9 @@ function runStep(job, i) {
   log(job, `$ node ${st.args.map((x) => (/\s/.test(x) ? JSON.stringify(x) : x)).join(' ')}`);
   if (st.gate) log(job, 'jev: the script changed since its last clean lint, so Jev checks it before Gemini is used');
   const isLint = st.args[1] === 'lint', key = isLint && job.folder ? lintKey(job.folder) : null;
-  const p = spawn(process.execPath, st.args, { cwd: ROOT, env: { ...process.env, FORCE_COLOR: '0', ...job.env, ...(st.env || {}) } });
+  const fp = job.folder && readJSON(path.join(FILMS, job.folder, 'film.json'), {});
+  const profEnv = fp ? { CLIPWALK_PROFILE: fp.profile || (fs.existsSync(path.join(FILMS, job.folder, 'clipwalk.json')) ? 'none' : 'breeup') } : {};
+  const p = spawn(process.execPath, st.args, { cwd: ROOT, env: { ...process.env, FORCE_COLOR: '0', ...job.env, ...profEnv, ...(st.env || {}) } });
   job.proc = p;
   let partial = '';
   const onData = (buf) => {

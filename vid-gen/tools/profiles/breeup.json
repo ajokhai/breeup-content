@@ -1,0 +1,15 @@
+{
+ "name": "breeup",
+ "match": ["breeup"],
+ "photo": "Photorealistic documentary-style photograph, shot on a full-frame camera with a 35mm or 50mm prime lens, natural light, true-to-life skin tones with visible texture, no plastic or airbrushed skin. Setting is a real, lived-in residential estate in Lagos or Abuja, Nigeria: tidy compounds, painted walls, interlocking paving, tropical plants, generators and water tanks where natural. People are good-looking Black Nigerian adults: attractive, well-groomed and photogenic, like a cast for a premium lifestyle campaign (clear skin, neat hair, healthy, confident), with varied ages and genders, dressed stylishly the way middle-class Nigerians dress (smart modern clothes and well-cut Ankara prints). Candid, unposed moment, nobody looking into the camera. Clean composition with room for text overlay. No text, no captions, no logos, no watermarks, no brand names on anything, no visible phone screen content. Car badges and number plates out of frame, turned away or too soft to read.",
+ "video": "Cinematic, realistic footage, steady handheld or slow gimbal move, natural light, real Nigerian residential estate in Lagos. Good-looking, well-groomed Black Nigerian people, natural and candid. No text, no logos, no subtitles, no music.",
+ "editor": "You are the photo editor for BreeUp, an estate-management app for Nigerian residential estates.",
+ "vision": { "african": true, "attractive": true },
+ "voiceStyle": "warmly and clearly, in a Nigerian English accent, unhurried",
+ "context": "BreeUp: mobile-first tutorial and promo videos for Nigerian residential estates",
+ "lint": { "slang": "Does `line` use Nigerian Pidgin, slang, or overly casual phrasing?", "audience": "a 60-year-old Nigerian estate resident" },
+ "vet": { "african": true, "looks": true },
+ "review": { "who": "a BreeUp video", "scores": "hook, readability on a phone, motion quality, pacing, image quality, African authenticity, attractiveness of people, brand consistency, sound", "rules": "CLAUDE.md" },
+ "stockHint": "Black African, Nigerian",
+ "accent": "nigerian"
+}

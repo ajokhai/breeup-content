@@ -768,7 +768,7 @@ function showSettings() {
       <form class="card" id="wsform"><h3 class="t">Brand</h3>
         <label class="f">Product name</label><input type="text" name="name" value="${esc(ws.name)}" required>
         <label class="f">End-card line</label><input type="text" name="tagline" value="${esc(ws.tagline)}" placeholder="What the product does, in one line">
-        <label class="f">Stock footage should show</label><input type="text" name="stockHint" value="${esc(ws.stockHint || '')}" placeholder="e.g. Black African, Nigerian (added to every stock search)">
+        <p class="hint" style="margin-top:12px">Brand-specific rules (BreeUp: African people and places, Nigerian voice, no pidgin) live in <code>tools/profiles/breeup.json</code> and apply only to that brand's videos.</p>
         <label class="f">Colours</label><div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
           ${[['green', 'Main colour'], ['deep', 'Dark backgrounds'], ['gold', 'Highlight: rings, accents'], ['cream', 'Light panels']].map(([k, n]) => `<div class="swatch"><input type="color" name="${k}" value="${b[k]}"><span class="hint">${n}</span></div>`).join('')}</div>
         <label class="f">Logo (SVG or PNG)</label><div class="row"><input type="file" id="logofile" accept="image/svg+xml,image/png,image/jpeg" style="flex:1">${ws.logo ? '<button type="button" class="btn sm ghost" onclick="clearLogo()">Remove logo</button>' : ''}</div>
@@ -784,7 +784,7 @@ function showSettings() {
   f.oninput = wsPreview; wsPreview();
   f.onsubmit = async (e) => {
     e.preventDefault();
-    const fd = new FormData(f), body = { name: fd.get('name'), tagline: fd.get('tagline'), stockHint: fd.get('stockHint'), brand: Object.fromEntries(['green', 'deep', 'gold', 'cream'].map((k) => [k, fd.get(k)])) };
+    const fd = new FormData(f), body = { name: fd.get('name'), tagline: fd.get('tagline'), brand: Object.fromEntries(['green', 'deep', 'gold', 'cream'].map((k) => [k, fd.get(k)])) };
     const file = $('#logofile').files[0];
     if (file) body.logo = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(file); });
     try { ws = await api('/api/workspace', { method: 'PUT', body }); applyBrand(); rail(); toast('Brand saved. New videos use it.'); showSettings(); } catch (err) { toast(err.message, true); }

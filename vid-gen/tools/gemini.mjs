@@ -9,7 +9,7 @@
 //   node tools/gemini.mjs music --prompt "..." --out films/<film>/audio/music.wav [--model lyria-3-pro-preview]
 //                              (instrumental bed; say length, BPM, instruments, "no vocals"; output is a clean WAV)
 //   node tools/gemini.mjs tts   --text "..." | --file script.txt --out audio/vo.wav [--voice Kore]
-//                               [--style "Read warmly, Nigerian English accent, unhurried"]
+//                               [--style "..."]   (default: the profile's voice style)
 //   node tools/gemini.mjs batch media/generated/<film>/shots.json [--force] [--no-check]   (whole film, cached)
 //   node tools/gemini.mjs check a.jpg b.jpg ...      (cheap AI QA: one KEEP/REJECT line per picture)
 //   node tools/gemini.mjs sheet a.jpg b.jpg ... --out sheet.jpg [--cell 300]   (one small contact sheet)
@@ -17,6 +17,7 @@
 //   node tools/gemini.mjs review renders/x.mp4 [--film <folder>]     (Gemini watches our render and critiques it)
 //   node tools/gemini.mjs clean files...       (strip EXIF/XMP/C2PA metadata losslessly; automatic on generation)
 //   node tools/gemini.mjs usage                (calls per model today / all time)
+// Every command takes --profile <name> (tools/profiles/; "none" = generic). Default: CLIPWALK_PROFILE, else breeup.
 // Exit codes: 2 out of credits or quota (stop and tell Josh) · 3 bad key · 4 safety block · 1 other.
 //
 // Every output gets a sidecar <out>.json with the model, the full prompt and the time, so a good
@@ -27,6 +28,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { loadProfile } from './profiles.mjs';
 
 // Image conversion: sips on macOS, ffmpeg everywhere else (Linux, cloud agents, CI).
 const HAS_SIPS = process.platform === 'darwin';
@@ -55,22 +57,11 @@ const API = 'https://generativelanguage.googleapis.com/v1beta';
 // ------------------------------------------------------------ house style
 // Appended to every image/video prompt unless --raw. Tuned in tools/PROMPTS.md: change it there first,
 // try it, then copy the winner here.
-const HOUSE_PHOTO = [
-  'Photorealistic documentary-style photograph, shot on a full-frame camera with a 35mm or 50mm prime lens,',
-  'natural light, true-to-life skin tones with visible texture, no plastic or airbrushed skin.',
-  'Setting is a real, lived-in residential estate in Lagos or Abuja, Nigeria: tidy compounds, painted walls,',
-  'interlocking paving, tropical plants, generators and water tanks where natural.',
-  'People are good-looking Black Nigerian adults: attractive, well-groomed and photogenic, like a cast for a',
-  'premium lifestyle campaign (clear skin, neat hair, healthy, confident), with varied ages and genders,',
-  'dressed stylishly the way middle-class Nigerians dress (smart modern clothes and well-cut Ankara prints).',
-  'Candid, unposed moment, nobody looking into the camera. Clean composition with room for text overlay.',
-  'No text, no captions, no logos, no watermarks, no brand names on anything, no visible phone screen content.',
-  'Car badges and number plates out of frame, turned away or too soft to read.',
-].join(' ');
-const HOUSE_VIDEO = [
-  'Cinematic, realistic footage, steady handheld or slow gimbal move, natural light, real Nigerian residential',
-  'estate in Lagos. Good-looking, well-groomed Black Nigerian people, natural and candid. No text, no logos, no subtitles, no music.',
-].join(' ');
+// The brand's profile (tools/profiles.mjs) supplies the house style: generic by default for other brands,
+// BreeUp's own rules for BreeUp films (the default in this repo).
+const PROFILE = loadProfile();
+const HOUSE_PHOTO = PROFILE.photo;
+const HOUSE_VIDEO = PROFILE.video;
 
 // ------------------------------------------------------------ args, key
 function parseArgs(argv) {
@@ -314,10 +305,10 @@ async function image(a) {
 // ------------------------------------------------------------ check (cheap vision QA)
 // Scores pictures against the rules in videos/CLAUDE.md with a fast model, so an agent can skip looking at
 // every full-size image. One line per file; the verdict is also saved into the sidecar.
-const RUBRIC = `You are the photo editor for BreeUp, an estate-management app for Nigerian residential estates.
+const RUBRIC = `${PROFILE.editor}
 Judge this image for use in a marketing video. Be strict. Check:
-- african: every person is Black African and the place reads as a Nigerian estate (not Europe/US/Asia).
-- attractive: the people are good-looking, well-groomed and stylish, like a premium lifestyle ad cast.
+${PROFILE.vision.african ? '- african: every person is Black African and the place reads as a Nigerian estate (not Europe/US/Asia).' : '- african: answer true (not judged for this brand).'}
+${PROFILE.vision.attractive ? '- attractive: the people are good-looking, well-groomed and stylish, like a premium lifestyle ad cast.' : '- attractive: answer true (not judged for this brand).'}
 - artifacts: AI flaws such as warped hands, extra fingers, melted faces, broken objects, odd eyes.
 - text: any readable text, gibberish lettering, number plates, logos or brand badges.
 - quality: sharp, well lit, natural skin tones, good composition with room for captions.
@@ -354,6 +345,8 @@ async function check(a) {
   if (!files.length) die('check needs image files');
   const out = await Promise.all(files.map(async f => [f, await checkOne(f)]));
   for (const [f, v] of out) {
+    if (!PROFILE.vision.african) v.african = true;
+    if (!PROFILE.vision.attractive) v.attractive = true;
     const flags = [!v.african && 'NOT-AFRICAN', !v.attractive && 'NOT-ATTRACTIVE',
       !/^(none|no|)$/i.test(v.artifacts.trim()) && `artifacts: ${v.artifacts}`,
       !/^(none|no|)$/i.test(v.text.trim()) && `text: ${v.text}`].filter(Boolean);
@@ -500,7 +493,7 @@ async function tts(a) {
   textIn = speakable(textIn);
   if (!textIn || !a.out) die('tts needs --text or --file, and --out');
   const model = a.model || 'gemini-2.5-pro-preview-tts';   // 3.8-flash-tts reads the style aloud (2026-10-03)
-  const style = a.style || 'warmly and clearly, in a Nigerian English accent, unhurried';
+  const style = a.style || PROFILE.voiceStyle;
   const body = {
     // "Say <style>: <text>" is the documented way to steer delivery; newer TTS models may read the style aloud,
     // so check the clip length (about 2.5 words a second) after generating.
@@ -569,9 +562,7 @@ const read = f => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '');
 // Each reference gets a breakdown in moodboard/refs/<slug>.md, then moodboard/STYLE.md is rewritten to fold
 // in what's new. STYLE.md is what agents read; it stays short because it is rewritten, not appended to.
 const MB = path.join(ROOT, 'moodboard');
-const BREAKDOWN = `You are a senior motion designer studying a reference for BreeUp, a mobile-first estate-management app
-for Nigerian residential estates (audience: residents and older estate committee members who prefer real
-photos and footage over flat graphics). Break this reference down so another designer can recreate its feel
+const BREAKDOWN = `You are a senior motion designer studying a reference for ${PROFILE.context}. Break this reference down so another designer can recreate its feel
 in an HTML + GSAP motion-graphics pipeline that composites real photos/footage with type and UI screenshots.
 Write markdown with these sections, concrete and measurable (seconds, px at 1080 wide, hex colours, easing names):
 ## Summary (2 lines)  ## Format and pacing (aspect, length, average shot length, cuts per 10 s, beat sync)
@@ -673,13 +664,12 @@ Typography, Colour and grade, Photography and footage, Transitions, Sound, Forma
 async function review(a) {
   const file = a._[1] || die('review needs a video file');
   const film = a.film ? path.join(ROOT, a.film) : null;
-  const prompt = `You are the creative director reviewing a BreeUp video before release. Be specific and strict.
-Rules: ${read(path.join(ROOT, 'CLAUDE.md')).slice(0, 6000)}
+  const prompt = `You are the creative director reviewing ${PROFILE.review.who} before release. Be specific and strict.
+${PROFILE.review.rules ? `Rules: ${read(path.join(ROOT, PROFILE.review.rules)).slice(0, 6000)}` : ''}
 Style guide: ${read(path.join(MB, 'STYLE.md')).slice(0, 8000) || '(none yet)'}
 ${film ? `Shot list: ${read(path.join(film, 'docs', 'shotlist.md')).slice(0, 6000)}` : ''}
 Watch the whole video. Reply in markdown:
-## Scores (1-10): hook, readability on a phone, motion quality, pacing, image quality, African authenticity,
-attractiveness of people, brand consistency, sound.
+## Scores (1-10): ${PROFILE.review.scores}.
 ## Top 5 fixes (each with timestamp, what's wrong, exact fix)
 ## Keep (what works)
 ## Lessons (1-3 general lessons worth adding to the style guide, or "none")`;

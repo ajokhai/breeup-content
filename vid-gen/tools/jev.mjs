@@ -9,9 +9,9 @@
 //        and (with --secs) fits its time on screen at 2.5 words a second. One line out per problem.
 //   node tools/jev.mjs dupe "lesson text" [--in moodboard/STYLE.md]
 //        Says whether a lesson is already covered, before anyone appends it to the style guide.
-//   node tools/jev.mjs vet media/generated/<ID>/shots.json [--african] [--all]
-//        Checks photo prompts BEFORE any picture is paid for (a rejected Gemini picture costs $0.13-0.24): people
-//        described as good-looking (and Black African with --african, rule 1), no readable screens, specific enough.
+//   node tools/jev.mjs vet media/generated/<ID>/shots.json [--all]     (all commands: --profile <name>)
+//        Checks photo prompts BEFORE any picture is paid for (a rejected Gemini picture costs $0.13-0.24): no readable
+//        screens, specific enough, plus the brand's own rules from its profile (BreeUp: African, good-looking cast).
 //        Only prompts whose pictures don't exist yet, unless --all. One line per problem; exit 5 if any.
 //
 // Key: TYPESAFE_API_KEY in the environment or videos/.env. Exit codes match gemini.mjs:
@@ -21,6 +21,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { loadProfile } from './profiles.mjs';
+const PROFILE = loadProfile();
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -106,7 +108,7 @@ async function pick(a) {
     instructions: 'Which HyperFrames registry item best delivers what the video needs?',
     criteria: Object.fromEntries(c.map(it => [it.name, `${it.type}: ${it.description} [${it.tags.join(', ')}]`])),
   }]));
-  const ans = await ask({ need, context: 'BreeUp: mobile-first tutorial and promo videos for Nigerian residential estates' }, questions);
+  const ans = await ask({ need, context: PROFILE.context }, questions);
   // weight each chunk's probabilities by how sure that chunk was, so a confident winner beats a flat chunk
   const scored = Object.values(ans).flatMap(x => Object.entries(x.probabilities).map(([n, p]) => [n, p * (0.5 + x.confidence / 2)]));
   scored.sort((x, y) => y[1] - x[1]);
@@ -132,15 +134,15 @@ async function lint(a) {
   const q = {};
   lines.forEach((l, i) => {
     const instructions = (question) => ({ line: l, question });
-    q[`pidgin${i}`] = { type: 'noul', instructions: instructions('Does `line` use Nigerian Pidgin, slang, or overly casual phrasing?') };
-    q[`clear${i}`] = { type: 'score', instructions: instructions('How easy is `line` for a non-technical 60-year-old to understand on first hearing?'),
+    q[`pidgin${i}`] = { type: 'noul', instructions: instructions(PROFILE.lint.slang) };
+    q[`clear${i}`] = { type: 'score', instructions: instructions(`How easy is \`line\` for ${PROFILE.lint.audience} to understand on first hearing?`),
       criteria: ['Confusing or jargon-heavy', 'Understandable with effort', 'Clear', 'Instantly clear, plain everyday English'] };
     q[`jargon${i}`] = { type: 'noul', instructions: instructions('Does `line` contain technical or financial jargon a non-technical person might not know?') };
   });
   const ans = await ask({ purpose: 'Voice-over and on-screen captions for a product tutorial video', lines }, q);
   lines.forEach((l, i) => {
     const flags = [];
-    if (ans[`pidgin${i}`].noul > 0.5) flags.push('pidgin or slang');
+    if (ans[`pidgin${i}`].noul > 0.5) flags.push(PROFILE.vet.african ? 'pidgin or slang' : 'slang');
     if (ans[`jargon${i}`].noul > 0.6) flags.push('jargon');
     if (ans[`clear${i}`].score < 0.5) flags.push(`hard to follow (clarity ${(ans[`clear${i}`].score * 100).toFixed(0)}%)`);
     if (flags.length) { problems++; console.log(`${i + 1}: ${flags.join(', ')}  "${l.slice(0, 80)}"`); }
@@ -154,6 +156,7 @@ async function lint(a) {
 async function vet(a) {
   const mf = a._[1] || die('vet needs a shots.json');
   const m = JSON.parse(fs.readFileSync(mf, 'utf8')), dir = m.dir || path.dirname(mf), files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+  const african = a.african || PROFILE.vet.african;   // the brand's rules, from its profile
   const todo = (m.shots || []).filter((s) => a.all || (s.aspects || ['16:9', '9:16']).some((asp) => !files.some((f) => f.startsWith(`${s.name}-${asp.replace(':', 'x')}`) && /\.(jpe?g|png)$/i.test(f))));
   if (!todo.length) { console.log('ok: nothing new to generate'); return; }
   const q = {};
@@ -161,7 +164,7 @@ async function vet(a) {
     const ins = (question) => ({ prompt: s.prompt, question });
     q[`people${i}`] = { type: 'noul', instructions: ins('Does `prompt` show one or more people?') };
     q[`looks${i}`] = { type: 'noul', instructions: ins('Does `prompt` describe the people as good-looking, attractive, well-groomed or stylish?') };
-    if (a.african) q[`african${i}`] = { type: 'noul', instructions: ins('Does `prompt` say the people are Black African or Nigerian, in an African setting?') };
+    if (african) q[`african${i}`] = { type: 'noul', instructions: ins('Does `prompt` say the people are Black African or Nigerian, in an African setting?') };
     q[`screen${i}`] = { type: 'noul', instructions: ins('Would a picture made from `prompt` likely show a readable phone, laptop or app screen facing the camera?') };
     q[`vague${i}`] = { type: 'score', instructions: ins('How specific is `prompt` about who, what they are doing, where, and the light?'), criteria: ['Vague', 'Some detail', 'Specific', 'Very specific'] };
   });
@@ -169,8 +172,8 @@ async function vet(a) {
   let problems = 0;
   todo.forEach((s, i) => {
     const flags = [], hasPeople = ans[`people${i}`].noul > 0.5;
-    if (hasPeople && ans[`looks${i}`].noul < 0.5) flags.push('people not described as good-looking and well-groomed');
-    if (a.african && hasPeople && ans[`african${i}`].noul < 0.5) flags.push('people/place not clearly Black African or Nigerian (rule 1)');
+    if (PROFILE.vet.looks && hasPeople && ans[`looks${i}`].noul < 0.5) flags.push('people not described as good-looking and well-groomed');
+    if (african && hasPeople && ans[`african${i}`].noul < 0.5) flags.push('people/place not clearly Black African or Nigerian (rule 1)');
     if (ans[`screen${i}`].noul > 0.6) flags.push('likely shows a readable screen: add "phone screen facing away from camera"');
     if (ans[`vague${i}`].score < 0.4) flags.push('too vague: say who, doing what, where, in what light');
     if (flags.length) { problems++; console.log(`${s.name}: ${flags.join('; ')}`); }

@@ -33,6 +33,8 @@ const cfgPath = path.join(dir, 'film.json');
 if (!fs.existsSync(cfgPath)) { console.error('usage: node tools/make.mjs films/<ID-name> [--check|--draft]'); process.exit(1); }
 const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
 const id = path.basename(dir).split('-')[0];
+// the brand profile every tool below uses: the film's own, else BreeUp for this repo's films, generic for Clipwalk videos
+process.env.CLIPWALK_PROFILE = cfg.profile || (fs.existsSync(path.join(dir, 'clipwalk.json')) ? 'none' : 'breeup');
 const want = (s) => !only || only.includes(s);
 const tool = (name, ...a) => execFileSync('node', [path.join(ROOT, 'tools', name), ...a], { cwd: ROOT, stdio: 'inherit' });
 const len = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
@@ -45,8 +47,7 @@ const shots = path.join(ROOT, 'media', 'generated', id, 'shots.json');
 if (want('images') && fs.existsSync(shots)) {
   // Jev vets the prompts first (fractions of a cent) so no picture is paid for that would be rejected anyway
   step('pictures: Jev checks the prompts first');
-  const owned = !!cfg.owner;   // friends' videos aren't held to BreeUp's rule 1
-  const vet = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'jev.mjs'), 'vet', shots, ...(owned ? [] : ['--african'])], { cwd: ROOT, encoding: 'utf8' });
+  const vet = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'jev.mjs'), 'vet', shots], { cwd: ROOT, encoding: 'utf8' });   // the profile's rules apply
   process.stdout.write(vet.stdout || '');
   if (vet.status === 5 && !flag('force')) { console.error('make: fix those prompts in shots.json (or run again with --force), then re-run. Nothing was spent.'); process.exit(5); }
   if (vet.status && vet.status !== 5) console.warn(`  jev couldn't check the prompts (exit ${vet.status}); generating anyway`);

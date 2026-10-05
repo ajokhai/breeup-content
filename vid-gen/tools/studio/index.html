@@ -292,7 +292,7 @@ async function confirmBrand() {
   $('#maker').innerHTML = `<div class="card panel" style="text-align:center;padding:30px"><div class="hint">Looking at your app…</div></div>`;
   const sn = await api('/api/sniff', { method: 'POST', body: { url: draft.url } }).catch(() => ({}));
   let host = 'Your app'; try { host = new URL(draft.url).hostname.replace(/^(www|app)\./, '').split('.')[0]; host = host.charAt(0).toUpperCase() + host.slice(1); } catch {}
-  brandCheck = { name: sn.name || host, logo: sn.logo || '', color: sn.color || '#3b5bdb', site: sn.site || '', desc: sn.desc || '' };
+  brandCheck = { name: sn.name || host, logo: sn.logo || '', color: sn.color || '#3b5bdb', site: sn.site || '', desc: sn.desc || '', accent: sn.accent || 'international' };
   drawBrand(false);
 }
 function drawBrand(editing) {
@@ -307,7 +307,7 @@ function drawBrand(editing) {
       <div class="row" style="gap:16px;align-items:flex-end;margin-top:4px"><div><label class="f">Colour</label><input type="color" name="color" value="${b.color}" style="width:64px;height:44px;border:0;background:none;cursor:pointer"></div>
         <div style="flex:1"><label class="f">Logo</label><input type="file" name="logo" accept="image/png,image/svg+xml,image/jpeg,image/webp"></div></div>
       <label class="check" style="margin-top:16px"><input type="checkbox" name="voice" checked> Voice-over</label>
-      ${ws.nigerianVoice ? `<label class="check" style="margin-top:10px;margin-left:18px"><input type="checkbox" name="naija" ${ws.accent === 'nigerian' && isOwner() ? 'checked' : ''}> Nigerian accent</label>` : ''}
+      ${ws.nigerianVoice ? `<label class="check" style="margin-top:10px;margin-left:18px"><input type="checkbox" name="naija" ${b.accent === 'nigerian' ? 'checked' : ''}> Nigerian accent</label>` : ''}
     </div>
     <div class="row between" style="margin-top:24px"><div class="row"><button type="button" class="btn ghost" onclick="home()">Back</button>${editing ? '' : '<button type="button" class="btn" onclick="drawBrand(true)">Change</button>'}</div>
       <button class="btn go big">${icon('wand', 20)} Yes, make it</button></div></form>`;
@@ -318,7 +318,7 @@ function drawBrand(editing) {
       b.name = f.name.value.trim() || b.name; b.color = f.color.value;
       const file = f.logo.files[0]; if (file) b.logo = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(file); });
     }
-    const voice = editing ? f.voice.checked : true, naija = editing ? !!f.naija?.checked : ws.accent === 'nigerian' && isOwner();
+    const voice = editing ? f.voice.checked : true, naija = editing ? !!f.naija?.checked : b.accent === 'nigerian';
     const d = draft;
     try {
       const j = await api('/api/jobs', { method: 'POST', body: { action: 'make', url: d.url, goal: d.goal, like: d.like, user: d.user, pass: d.pass, voice,

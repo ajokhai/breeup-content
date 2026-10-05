@@ -1,5 +1,12 @@
 # Rules for any agent working in `vid-gen/`
 
+> **Scope (Josh, 2026-10-05):** sections 1-3 and "Josh's taste" are **BreeUp's** rules, stored as the BreeUp profile
+> (`tools/profiles/breeup.json`) and applied only to BreeUp's videos: this repo's films, and Clipwalk videos whose
+> product is BreeUp. Clipwalk videos for any other product use the generic profile (`tools/profiles.mjs`): real-looking
+> pictures, no stray text or logos, clear scripts, and good motion. Never push BreeUp's taste (African cast, Nigerian
+> voice, no pidgin, "good-looking people only") onto someone else's video. Tools read the profile from
+> `--profile <name>` or `CLIPWALK_PROFILE`; make.mjs and the Clipwalk server set it per film.
+
 Run every command from inside `vid-gen/`. Read this whole file before you touch a film, generate a picture or write a shot list. Then read
 `README.md` (the slate and the shared look) and `tools/PROMPTS.md` (what has worked for image generation).
 
