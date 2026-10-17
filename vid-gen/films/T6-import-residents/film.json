@@ -1,93 +1,90 @@
 {
  "title": "How to import residents from a spreadsheet",
- "duration": 48.68,
+ "duration": 86,
+ "duration_authored": 86,
  "formats": [
   "16x9",
   "9x16"
  ],
  "voice": {
+  "style": "warmly and clearly, in a Nigerian English accent, unhurried",
+  "voice": "Kore",
   "gap": 0.5
  },
  "vo_at": [
   0.3,
-  9.5,
-  16.5,
-  24,
-  28,
-  36.5
+  8.0,
+  16.0,
+  24.5,
+  33.0,
+  41.5,
+  49.0,
+  58.0,
+  66.5,
+  75.5
  ],
- "music": "About fifty seconds of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending.",
- "vo": [
+ "music": "About eighty-five seconds of original, calm instrumental background music for a friendly how-to video. Warm West African flavour: soft hand percussion, light shaker, clean acoustic guitar picking, mellow keys. Relaxed tempo around 96 BPM, even dynamics so a voice can sit on top, no vocals, a soft resolved ending.",
+ "vo_draft_script": [
   [
    0.3,
    "audio/vo-1.wav",
-   "Most estates already keep their residents in a spreadsheet. You don't need to retype it. Here's how to import it.",
-   8.244
+   "Most estates already keep their residents in a spreadsheet. With BreeUp, you can import everyone in minutes, including houses and landlords.",
+   7.2
   ],
   [
-   9.5,
+   8.0,
    "audio/vo-2.wav",
-   "Open Households in the admin sidebar, then click Import CSV, and choose your file.",
-   8.896
+   "Go to Households in your admin sidebar, click Template to download our starter sheet, and open it.",
+   7.0
   ],
   [
-   18.55,
+   16.0,
    "audio/vo-3.wav",
-   "Check the preview. It shows how many rows are ready, and explains any that need fixing.",
-   7.038
+   "Each row is one household. Unit and name are required. Use clear unit codes like street, plot and flat, for example S2-14A.",
+   7.8
   ],
   [
-   25.73,
+   24.5,
    "audio/vo-4.wav",
-   "Click Import. Your households appear straight away.",
-   3.83
+   "Use the house column to group flats in the same building. For example, units 14A and 14B both belong to house S2-14.",
+   7.8
   ],
   [
-   29.71,
+   33.0,
    "audio/vo-5.wav",
-   "Each household gets a temporary four-digit PIN, shown once, with a download so you can share them privately.",
-   8.312
+   "Add the landlord name and phone number. Write their name the same way on every unit they own, so BreeUp links them automatically.",
+   8.0
   ],
   [
-   38.18,
+   41.5,
    "audio/vo-6.wav",
-   "Tip: you can download the template first, and paste your data into it.",
-   6.998
+   "Enter any current balance in naira without commas, then save your spreadsheet.",
+   5.5
+  ],
+  [
+   49.0,
+   "audio/vo-7.wav",
+   "Click Import in Households, choose your spreadsheet, and check the preview. It verifies your rows and highlights anything to adjust.",
+   8.2
+  ],
+  [
+   58.0,
+   "audio/vo-8.wav",
+   "Once imported, every household gets a temporary four-digit PIN. Download the list to share them securely with your residents.",
+   7.5
+  ],
+  [
+   66.5,
+   "audio/vo-9.wav",
+   "Open the Houses and Landlords tabs to see counts at a glance, with units and property owners neatly organised.",
+   7.8
+  ],
+  [
+   75.5,
+   "audio/vo-10.wav",
+   "If you already imported before, upload again with house and landlord columns. Existing units are updated, never duplicated.",
+   7.5
   ]
  ],
- "duration_authored": 47,
- "retime": [
-  [
-   0,
-   0
-  ],
-  [
-   0.3,
-   0.3
-  ],
-  [
-   9.5,
-   9.5
-  ],
-  [
-   16.5,
-   18.55
-  ],
-  [
-   24,
-   25.73
-  ],
-  [
-   28,
-   29.71
-  ],
-  [
-   36.5,
-   38.18
-  ],
-  [
-   47,
-   48.68
-  ]
- ]
+ "vo": []
 }

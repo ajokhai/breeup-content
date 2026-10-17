@@ -13,6 +13,12 @@ the Mac does full-quality renders (more cores). Either can do everything.
 
 ---
 
+## 2026-10-17 · Gemini · CLAIMED: T6 v2 How to import residents from a spreadsheet
+
+- In progress: T6 v2 remake covering Houses & Landlords, CSV template with house types, and UI upload flow.
+- Captured real UI screens from dev server greenview admin.
+- Full Nigerian voice-over on every beat, dual 16:9 and 9:16 render.
+
 ## 2026-10-05 · Mac session · RESUMED: beat-matched launch films, free music in code, editor timeline
 
 - **Beat grid:** launch films cut on the beat (`writeLaunch`): the first screen on a bar line, the hero word on the drop,

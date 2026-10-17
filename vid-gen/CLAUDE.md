@@ -238,6 +238,7 @@ Inside `vid-gen/`, keep to the map at the top of `README.md`:
 
 ## Josh's taste (keep updating)
 
+- 2026-10-17: I like voice-overs in videos.
 - 2026-10-05: Reverse-engineer the product's visuals from the site itself (its HTML, SVGs, fonts, colours, full-size
   images) so they can be redrawn and animated, rather than relying on rough screenshot crops. Crops are only a fallback.
 - 2026-10-05: Editing should never mean remaking the whole video: select a clip, change it (controls or a typed request),
